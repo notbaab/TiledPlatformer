@@ -1,70 +1,70 @@
-import pygame, sys
+import pygame
+import sys
+import ipdb
 from pygame.locals import *
 import world as wd
+import engine as eng
 loc = [] 
 FPS = pygame.time.Clock()
 
-GRID_SIZEX = 100 # will probably need to be rectangular
+GRID_SIZEX = 100  # will probably need to be rectangular
 GRID_SIZEY = 100
-GRAVITY_VELOCITY = -1 # lets cheat for now
-FLOOR_Y = 580
-JUMP_VELOCITY = 20
-
-class Player():
-  def __init__(self, startloc, color):
-    self.location = startloc
-    self.color = color
-    self.velocity = [0,0]
-    self.velocity[0] = 0 # x vel
-    self.velocity[1] = 0 # y vel
-  def jump(self):
-    self.velocity[1] = JUMP_VELOCITY
-  def moveleft(self):
-    self.velocity[0] = -1
-  def moveright(self):
-    self.velocity[0] = 1
-  def update(self):
-    self.location[0] += self.velocity[0]
-    # apply gravity
-    self.location[1] += self.velocity[1]
-    self.velocity += GRAVITY_VELOCITY
-    if self.location[1] < FLOOR_Y:
-      self.location[1] = FLOOR_Y + 20
-  def draw(self, surface):
-    pygame.draw.rect(surface, (255,0,0), (self.location[0], self.location[1], 20, 20) )
-
 
 
 if __name__ == '__main__':
   # Display stuff Should be segmented later
   pygame.init() 
 
-  player = Player( [30,30], (255,0,0) )
-  floor = wd.SimpleScenery(9, 9, 10, 10, (255,255,0) )
-  window = pygame.display.set_mode( (600, 600) )
+  game_objects = {}
+  window = pygame.display.set_mode((600, 600))
+  engine = eng.Engine()
 
+  # load map
+  floors = engine.parse_json("map.json")
+  game_objects['terrain'] = []
 
-  # Make a floor
-  pygame.draw.rect( window, (0,0,255), (0, 580, 600, 20) )
+  for floor in floors:
+    # TODO: MAP!!!!
+    game_objects['terrain'].append(wd.SimpleScenery(int(floor["x"]), int(floor["y"]), 
+                                   int(floor["width"]), int(floor["height"]), (255, 255, 000)))
 
+  # players
+  game_objects['players'] = []
+  game_objects['players'].append(wd.Player(70, 500, (255, 0, 0)))
+
+  print(game_objects)
 
   # MAKE THIS OO!!!! 
   while True:
-    floor.draw(window)
+    window.fill((0, 0, 0))
+
     # control block This will be the master node
     for event in pygame.event.get():
-          if event.type == pygame.QUIT:
-              sys.exit()
-          if event.type == KEYDOWN:
-              if event.key == K_LEFT:
-                player.moveleft()
-              if event.key == K_RIGHT:
-                player.moveright()
-              if event.key == K_UP:
-                player.jump()
-    player.draw(window)
+      if event.type == pygame.QUIT:
+          sys.exit()
+      if event.type == KEYDOWN:
+        for player in game_objects['players']:
+          if event.key == K_LEFT:
+            player.move_left()
+          if event.key == K_RIGHT:
+            player.move_right()
+          if event.key == K_SPACE:
+            player.jump()
+      if event.type == KEYUP:
+        for player in game_objects['players']:
+          if event.key == K_LEFT:
+            player.stop_left()
+          if event.key == K_RIGHT:
+            player.stop_right()
+            
+    engine.physics_simulation(game_objects['players'], game_objects['terrain'])
+
+    # This will be the call to the network to send the new rect and draw them.
+    for obj_type, obj_list in game_objects.items():
+      for game_obj in obj_list:
+        game_obj.draw(window)
 
     pygame.display.flip()
-    FPS.tick(60)
+    FPS.tick(10)
 
 
