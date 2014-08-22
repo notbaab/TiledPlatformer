@@ -42,6 +42,7 @@ class Engine(object):
             game_object.rect.right = wall.rect.left
           else:
             game_object.rect.left = wall.rect.right
+          game_object.velocity.dx = 0
            
       game_object.rect.y += game_object.velocity.dy
       game_object.velocity.dy += GRAVITY_VELOCITY
@@ -52,6 +53,7 @@ class Engine(object):
             game_object.rect.bottom = wall.rect.top
           else:
             game_object.rect.top = wall.rect.bottom
+          game_object.velocity.dy = 0
 
 
 

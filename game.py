@@ -7,10 +7,6 @@ import engine as eng
 loc = [] 
 FPS = pygame.time.Clock()
 
-GRID_SIZEX = 100  # will probably need to be rectangular
-GRID_SIZEY = 100
-
-
 if __name__ == '__main__':
   # Display stuff Should be segmented later
   pygame.init() 
@@ -65,6 +61,6 @@ if __name__ == '__main__':
         game_obj.draw(window)
 
     pygame.display.flip()
-    FPS.tick(10)
+    FPS.tick(60)
 
 
