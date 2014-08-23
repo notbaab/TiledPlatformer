@@ -15,6 +15,7 @@ class GameObject(object):
       self.id = 0  # static variable
     else:
       self.id += 1
+    self.render = True
 
   def update(self):
     return

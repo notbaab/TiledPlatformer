@@ -33,14 +33,17 @@ class MasterPlatformer(object):
     self.floors = self.engine.parse_json("map.json")
     self.game_objects['terrain'] = []
 
+    # TODO: make a unique map to each node
     for floor in self.floors:
       # TODO: MAP!!!!! Chanel the inner soring lerner and apply that functional programing 
       self.game_objects['terrain'].append(wd.SimpleScenery(int(floor["x"]), int(floor["y"]),
                                                            int(floor["width"]), int(floor["height"]), (255, 255, 000)))
+      self.game_objects['terrain'].append(wd.SimpleScenery(int(floor["x"]) + 600, int(floor["y"]),
+                                                           int(floor["width"]) + 600, int(floor["height"]), (255, 255, 000)))
 
     # TODO: Stop being lazy and read from file. 
     # ip_list
-    self.ip_list = [('localhost', 2000)]
+    self.ip_list = [('localhost', 2000), ('localhost', 2001)]
     self.socket_list = []
     for node in self.ip_list:
       self.socket_list.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
