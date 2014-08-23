@@ -6,7 +6,7 @@ FLOOR_Y = 580
 PLAYER_SPEED = 10
 JUMP_VELOCITY = -10
 
-
+# TODO: add more things to do
 class GameObject(object):
   """the top level game object. All game objects inherit from this class"""
 
@@ -19,7 +19,7 @@ class GameObject(object):
   def update(self):
     return
 
-
+# TODO: add sprites
 class SimpleScenery(GameObject):
   """Simple SimpleScenery object. Game objects that are just simple shapes"""
 
@@ -37,6 +37,7 @@ class SimpleScenery(GameObject):
     pygame.draw.rect(surface, self.color, self.rect)
 
 
+# TODO: add sprites
 class Player(GameObject):
   def __init__(self, startx, starty, color, sprite_sheet=None):
     super(Player, self).__init__()

@@ -2,6 +2,7 @@ import json
 
 GRAVITY_VELOCITY = 1
 
+
 class VelocityStruct(object):
     """A simple struct to hold velocities"""
     def __init__(self, dx, dy):

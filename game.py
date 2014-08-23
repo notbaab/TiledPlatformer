@@ -4,42 +4,75 @@ import ipdb
 from pygame.locals import *
 import world as wd
 import engine as eng
-loc = [] 
+import socket
+import pickle
+
+# TODO: Maybe it's time to move away from the socket del? That will also require moving off pickling
+SOCKET_DEL = '*ET*'.encode('utf-8')
+loc = []
 FPS = pygame.time.Clock()
+TICK = 60
 
-if __name__ == '__main__':
-  # Display stuff Should be segmented later
-  pygame.init() 
 
-  game_objects = {}
-  window = pygame.display.set_mode((600, 600))
-  engine = eng.Engine()
+# TODO: have a platformer game class that has all the similar components of the render and 
+# master node, and inherit from that?
+class MasterPlatformer(object):
+  """Class for the platformer head node"""
 
-  # load map
-  floors = engine.parse_json("map.json")
-  game_objects['terrain'] = []
+  def __init__(self):
+    super(MasterPlatformer, self).__init__()
+    pygame.init()
 
-  for floor in floors:
-    # TODO: MAP!!!!
-    game_objects['terrain'].append(wd.SimpleScenery(int(floor["x"]), int(floor["y"]), 
-                                   int(floor["width"]), int(floor["height"]), (255, 255, 000)))
+    self.game_objects = {}
+    self.window = pygame.display.set_mode((60, 60))
+    self.engine = eng.Engine()
 
-  # players
-  game_objects['players'] = []
-  game_objects['players'].append(wd.Player(70, 500, (255, 0, 0)))
+    # TODO: Somehow figure out how to read all the map files that each node will have and build a map
+    # off of those
+    # load map
+    self.floors = self.engine.parse_json("map.json")
+    self.game_objects['terrain'] = []
 
-  print(game_objects)
+    for floor in self.floors:
+      # TODO: MAP!!!!! Chanel the inner soring lerner and apply that functional programing 
+      self.game_objects['terrain'].append(wd.SimpleScenery(int(floor["x"]), int(floor["y"]),
+                                                           int(floor["width"]), int(floor["height"]), (255, 255, 000)))
 
-  # MAKE THIS OO!!!! 
-  while True:
-    window.fill((0, 0, 0))
+    # TODO: Stop being lazy and read from file. 
+    # ip_list
+    self.ip_list = [('localhost', 2000)]
+    self.socket_list = []
+    for node in self.ip_list:
+      self.socket_list.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+      print(node)
+      self.socket_list[-1].connect(node)
 
-    # control block This will be the master node
+    # TODO: add more players
+    # players
+    self.game_objects['players'] = []
+    self.game_objects['players'].append(wd.Player(70, 500, (255, 0, 0)))
+
+    # TODO: Send initial player objects to the nodes. That will require a kind 
+    # Setup state to be added. 
+    self.state = 'play'
+    print(self.game_objects)
+
+  def run(self):
+    while True:
+      if self.state == 'play':
+        data, self.state = self.play_frame()
+      else:
+        ipdb.set_trace()
+
+      FPS.tick(TICK)
+
+  def play_frame(self):
+    # TODO: Add ability to change controls
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
-          sys.exit()
+        sys.exit()
       if event.type == KEYDOWN:
-        for player in game_objects['players']:
+        for player in self.game_objects['players']:
           if event.key == K_LEFT:
             player.move_left()
           if event.key == K_RIGHT:
@@ -47,20 +80,42 @@ if __name__ == '__main__':
           if event.key == K_SPACE:
             player.jump()
       if event.type == KEYUP:
-        for player in game_objects['players']:
+        for player in self.game_objects['players']:
           if event.key == K_LEFT:
             player.stop_left()
           if event.key == K_RIGHT:
             player.stop_right()
-            
-    engine.physics_simulation(game_objects['players'], game_objects['terrain'])
 
-    # This will be the call to the network to send the new rect and draw them.
-    for obj_type, obj_list in game_objects.items():
-      for game_obj in obj_list:
-        game_obj.draw(window)
+    self.engine.physics_simulation(self.game_objects['players'], self.game_objects['terrain'])
 
-    pygame.display.flip()
-    FPS.tick(60)
+    # TODO: Build network packet in a little better
+    # build network packet
+    send_struct = {'state': 'play',
+                   'player_loc': [self.game_objects['players'][0].rect.x, self.game_objects['players'][0].rect.y]}
+
+    data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
+    for node in self.socket_list:
+      node.sendall(data)
+
+    return_list = []
+    for node in self.socket_list:
+      return_list.append(self.get_whole_packet(node))
+    # TODO: return real data
+    return '', 'play'
+
+  def get_whole_packet(self, sock):
+    """ensures that we receive the whole stream of data"""
+    data = ''.encode('utf-8')
+    while True:
+      data += sock.recv(4024)
+      split = data.split(SOCKET_DEL)  # split at newline, as per our custom protocol
+      if len(split) != 2:  # it should be 2 elements big if it got the whole message
+        pass
+      else:
+        x = pickle.loads(split[0])
+        return x
 
 
+if __name__ == '__main__':
+  game = MasterPlatformer()
+  game.run()
