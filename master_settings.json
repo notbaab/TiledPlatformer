@@ -1,0 +1,5 @@
+{
+  "package_delimeter" : "*ET*",
+  "FPS_TICK" : "60",
+  "grid_space" : ["0", "1"]
+}
