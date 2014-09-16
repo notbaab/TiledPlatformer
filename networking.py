@@ -24,6 +24,11 @@ class NetworkGame(object):
     else:
       self.info_tile = False
 
+  def init_game(self, data):
+    """over ride this method. This will be the true constructor of the networked
+    game, data will contain all the initial data for the game"""
+    pass
+
   def update(self, data):
     """override this method, only hook needed for the server"""
     pass
@@ -55,6 +60,10 @@ class Server():
   def open_connection(self):
     self.socket.listen(1)
     self.open_sock, addr = self.socket.accept()
+    init_data = self.get_whole_packet()
+    init_data = pickle.loads(init_data)
+    handshake = self.game.init_game(init_data)
+    self.sync(handshake)
     print("connection made to " + str(addr))
 
   def close_connection(self, msg):
@@ -64,9 +73,7 @@ class Server():
 
   def recev_connection(self):
     # todo return something to know if time to quit
-    # print "getting whole packet"
     data = self.get_whole_packet()
-    # print "got whole packet"
     state_struct = self.process_request(data)
     self.sync(state_struct)
 
@@ -96,12 +103,12 @@ class Server():
     x = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + SOCKET_DEL
     # print "at syning"
     self.open_sock.sendall(x)
-    if send_struct['state'] == 'over':
-      # clear screen and wait for handshake to proceed
-      data = self.get_whole_packet()
-      self.game.clear()
-      # once it recieves the signal to go, erase previous graphics
-      x = pickle.dumps('go', pickle.HIGHEST_PROTOCOL) + SOCKET_DEL
-      self.open_sock.sendall(x)
+    # if send_struct['state'] == 'over':
+    #   # clear screen and wait for handshake to proceed
+    #   data = self.get_whole_packet()
+    #   self.game.clear()
+    #   # once it recieves the signal to go, erase previous graphics
+    #   x = pickle.dumps('go', pickle.HIGHEST_PROTOCOL) + SOCKET_DEL
+    #   self.open_sock.sendall(x)
 
 

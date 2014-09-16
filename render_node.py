@@ -6,6 +6,6 @@ if __name__ == '__main__':
   game = DisplayPlatformer.ClientPlatformer([0, 0])
   server = n.Server('localhost', 2000, game)
   print(server.socket)
-  server.open_connection()
+  server.open_connection()  # open and receive the first data packet
   while True:
     server.recev_connection()
