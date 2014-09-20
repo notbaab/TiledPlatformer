@@ -3,6 +3,19 @@ import json
 GRAVITY_VELOCITY = 1
 
 
+class Colors(object):
+  """simple abstraction to have convenient color constants."""
+  BLACK = (0, 0, 0)
+  WHITE = (255, 255, 255)
+  RED = (255, 0, 0)
+  LRED = (128, 0, 0)
+  GREEN = (0, 255, 0)
+  LGREEN = (0, 128, 0)
+  BLUE = (0, 0, 255)
+  LBLUE = (0, 0, 128)
+  AQUA = (0, 255, 255)
+
+
 class Vector(object):
   def __init__(self, x, y):
     super(Vector, self).__init__()
@@ -17,7 +30,7 @@ class Vector(object):
     self.x -= vector.x
     self.y -= vector.y
 
-  def toTuple(self):
+  def to_tuple(self):
     return self.x, self.y
 
   def copy(self):
@@ -72,15 +85,17 @@ class Engine(object):
       game_object.rect.x += game_object.velocity.x
 
       for wall in static_objects:
+        if game_object == wall:
+          continue # don't do things with itself
         if game_object.rect.colliderect(wall.rect):
-          game_object.respond_to_x_collision(wall)
-      # TODO: either be smarter here or when you pass in the static objects
+          game_object.respond_to_collision(wall, 'x')
 
       game_object.rect.y += game_object.velocity.y
       game_object.velocity.y += GRAVITY_VELOCITY          
 
       for wall in static_objects:
         if game_object.rect.colliderect(wall.rect):
-          game_object.respond_to_y_collision(wall)
+          game_object.respond_to_collision(wall, 'y')
+
 
 

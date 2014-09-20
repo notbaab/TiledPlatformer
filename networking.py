@@ -89,7 +89,7 @@ class Server():
   def get_whole_packet(self):
     data = ''.encode('utf-8')
     while True:
-      data = self.open_sock.recv(self.amount_of_data)
+      data += self.open_sock.recv(self.amount_of_data)
       # data += self.open_sock.recv(self.amount_of_data)
       # print 'rdbuff is ' + rdbuf
       split = data.split(SOCKET_DEL)  # split at newline, as per our custom protocol
