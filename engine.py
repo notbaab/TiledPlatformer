@@ -38,13 +38,21 @@ class Engine(object):
     # if '__terrain__' in data:
     # return data['floors']
 
-  def loop_over_game_dict(self, func, *args):
+  def loop_over_game_dict(self, game_objects, func, *args):
     """looop over the given game dictionary and apply function, with the game_obj as
       the first argument, followed by the other arguments with the arguments to
       all objects"""
-    for obj_type, obj_list in self.game_objects.items():
+    for obj_type, obj_list in game_objects.items():
       for game_obj in obj_list:
         func(game_obj, *args)
+
+  def loop_over_game_dict_att(self, game_objects, func_string, *args):
+    """Loops over a game dictionary and calls the passed in function on the game object. 
+    The function must be an attribute of the game objects"""
+    for obj_type, obj_list in game_objects.items():
+      for game_obj in obj_list:
+        func = getattr(game_obj, func_string)
+        func(*args)
 
   def get_locations(self, game_obj):
     """returns a tuple with the game object locations, best used with the """
@@ -62,27 +70,17 @@ class Engine(object):
     # simulate
     for game_object in moving_objects:
       game_object.rect.x += game_object.velocity.x
-      # TODO: either be smarter here or when you pass in the static objects
+
       for wall in static_objects:
         if game_object.rect.colliderect(wall.rect):
-          # check which direction we have collided from
-          if game_object.velocity.x > 0:
-            game_object.rect.right = wall.rect.left
-          else:
-            game_object.rect.left = wall.rect.right
-          game_object.velocity.x = 0
+          game_object.respond_to_x_collision(wall)
+      # TODO: either be smarter here or when you pass in the static objects
 
       game_object.rect.y += game_object.velocity.y
-      game_object.velocity.y += GRAVITY_VELOCITY
+      game_object.velocity.y += GRAVITY_VELOCITY          
+
       for wall in static_objects:
         if game_object.rect.colliderect(wall.rect):
-          # check which direction we have collided from
-          if game_object.velocity.y > 0:
-            game_object.rect.bottom = wall.rect.top
-          else:
-            game_object.rect.top = wall.rect.bottom
-          game_object.velocity.y = 0
-
-
+          game_object.respond_to_y_collision(wall)
 
 
