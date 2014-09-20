@@ -1,6 +1,6 @@
 import pygame
 import sys
-import ipdb
+#import ipdb
 from pygame.locals import *
 import world as wd
 import engine as eng
@@ -99,29 +99,39 @@ class MasterPlatformer(object):
       if self.state == 'play':
         data, self.state = self.play_frame()
       else:
-        ipdb.set_trace()
+        pass#ipdb.set_trace()
 
       FPS.tick(TICK)
 
   def play_frame(self):
     # TODO: Add ability to change controls
+    player1 = self.game_objects['players'][0];
+    player2 = self.game_objects['players'][1];
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         sys.exit()
       if event.type == KEYDOWN:
-        for player in self.game_objects['players']:
-          if event.key == K_LEFT:
-            player.move_left()
-          if event.key == K_RIGHT:
-            player.move_right()
-          if event.key == K_SPACE:
-            player.jump()
+        if event.key == K_LEFT:
+          player1.move_left()
+        if event.key == K_RIGHT:
+          player1.move_right()
+        if event.key == K_UP:
+          player1.jump()
+        if event.key == K_a:
+          player2.move_left()
+        if event.key == K_d:
+          player2.move_right()
+        if event.key == K_w:
+          player2.jump()
       if event.type == KEYUP:
-        for player in self.game_objects['players']:
-          if event.key == K_LEFT:
-            player.stop_left()
-          if event.key == K_RIGHT:
-            player.stop_right()
+        if event.key == K_LEFT:
+          player1.stop_left()
+        if event.key == K_RIGHT:
+          player1.stop_right()
+        if event.key == K_a:
+          player2.stop_left()
+        if event.key == K_d:
+          player2.stop_right()
 
     self.engine.physics_simulation(self.game_objects['players'] + self.game_objects['data_object'],
                                    self.game_objects['terrain'])
@@ -129,7 +139,7 @@ class MasterPlatformer(object):
     # TODO: Build network packet in a little better
     # build network packet
     send_struct = {'state': 'play',
-                   'player_loc': [self.game_objects['players'][0].rect.x, self.game_objects['players'][0].rect.y]}
+                   'player_locs': [[player.rect.x, player.rect.y] for player in self.game_objects['players']]}
 
     send_struct['data_object'] = []
     for data_object in self.game_objects['data_object']:

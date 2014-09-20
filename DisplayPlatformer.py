@@ -2,7 +2,7 @@ import pygame
 from networking import NetworkGame
 import world as wd
 import engine as eng
-import ipdb
+#import ipdb
 
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 600
@@ -33,7 +33,7 @@ class ClientPlatformer(NetworkGame):
         self.game_objects[obj_type].append(constructor(game_obj["rect"][0], game_obj["rect"][1],
                                                        game_obj["rect"][2], game_obj["rect"][3],
                                                        color=game_obj["color"], obj_id=game_obj["id"]))
-    print(self.game_objects)
+    print(self.game_objects['players'])
     return data
 
   def update(self, data):
@@ -41,7 +41,7 @@ class ClientPlatformer(NetworkGame):
     if data['state'] == 'play':
       return self.play_state(data)
     else:
-      ipdb.set_trace()
+      pass#ipdb.set_trace()
 
   def clear(self, data):
     """override this method, only hook needed for the server"""
@@ -54,13 +54,14 @@ class ClientPlatformer(NetworkGame):
     # pygame.draw.rect(self.window, (255,0,255), pygame.Rect(20,20,100*self.load_time,20))
     # pygame.draw.rect(self.window, (128,0,128), pygame.Rect(20,20,100,20), 1)
     # self.load_time += .01
-    translated_pos = self.translate_to_local(data['player_loc'])
-    if translated_pos != 0:
-      self.game_objects['players'][0].rect.x = translated_pos[0]
-      self.game_objects['players'][0].rect.y = translated_pos[1]
-      self.game_objects['players'][0].render = True
-    else:
-      self.game_objects['players'][0].render = False
+    for i in range(len(data['player_locs'])):
+      translated_pos = self.translate_to_local(data['player_locs'][i])
+      if translated_pos != 0:
+        self.game_objects['players'][i].rect.x = translated_pos[0]
+        self.game_objects['players'][i].rect.y = translated_pos[1]
+        self.game_objects['players'][i].render = True
+      else:
+        self.game_objects['players'][i].render = False
 
     self.game_objects['data_object'] = []
     # print(data)

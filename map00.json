@@ -30,9 +30,16 @@
       "width" : "600",
       "height": "20",
       "color": "RED"
+    },
+    {
+      "x": "110",
+      "y": "500",
+      "width" : "600",
+      "height": "20",
+      "color": "RED"
     }
   ],
-  "data":
+  "data_object":
   [
     {
       "x": "300",
