@@ -111,30 +111,30 @@ class MasterPlatformer(object):
     player1 = self.game_objects['players'][0];
     player2 = self.game_objects['players'][1];
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            sys.exit()
-        if event.type == KEYDOWN:
-            if event.key == K_LEFT:
-                player1.move_left()
-            if event.key == K_RIGHT:
-                player1.move_right()
-            if event.key == K_UP:
-                player1.jump()
-            if event.key == K_a:
-                player2.move_left()
-            if event.key == K_d:
-                player2.move_right()
-            if event.key == K_w:
-                player2.jump()
-        if event.type == KEYUP:
-              if event.key == K_LEFT:
-                  player1.stop_left()
-              if event.key == K_RIGHT:
-                  player1.stop_right()
-              if event.key == K_a:
-                  player2.stop_left()
-              if event.key == K_d:
-                  player2.stop_right()
+      if event.type == pygame.QUIT:
+        sys.exit()
+      if event.type == KEYDOWN:
+        if event.key == K_LEFT:
+            player1.move_left()
+        if event.key == K_RIGHT:
+            player1.move_right()
+        if event.key == K_UP:
+            player1.jump()
+        if event.key == K_a:
+            player2.move_left()
+        if event.key == K_d:
+            player2.move_right()
+        if event.key == K_w:
+            player2.jump()
+      if event.type == KEYUP:
+        if event.key == K_LEFT:
+            player1.stop_left()
+        if event.key == K_RIGHT:
+            player1.stop_right()
+        if event.key == K_a:
+            player2.stop_left()
+        if event.key == K_d:
+            player2.stop_right()
     self.engine.physics_simulation(self.game_objects['players'] + self.game_objects['data_object'],
                      self.game_objects['terrain'] + self.game_objects['data_object'])
 
