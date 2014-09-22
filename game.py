@@ -135,11 +135,12 @@ class MasterPlatformer(object):
         if event.key == K_d:
             player2.stop_right()
     self.engine.physics_simulation(self.game_objects['players'] + self.game_objects['data_object'],
-                     self.game_objects['terrain'] + self.game_objects['data_object'])
+                     self.game_objects['terrain'] + self.game_objects['data_object'] + self.game_objects['data_device'])
 
     # This should be the final packet structure.
     send_struct = {'state': 'play'}
     game_objects_packets = []
+    self.engine.loop_over_game_dict_att(self.game_objects, 'update')
     self.engine.loop_over_game_dict_att(self.game_objects, 'build_packet', game_objects_packets)
     self.engine.loop_over_game_dict_att(self.game_objects, 'animate')
     # print(game_objects)

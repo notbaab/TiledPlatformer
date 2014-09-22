@@ -7,6 +7,7 @@ GRAVITY_VELOCITY = 1  # lets cheat for now
 FLOOR_Y = 580
 PLAYER_SPEED = 10
 JUMP_VELOCITY = -10
+DATA_DEVICE_TIMER = .01
 
 
 # TODO: add more things to do
@@ -24,6 +25,7 @@ class GameObject(object):
     self.render = True
 
   def update(self):
+    """anything that the object needs to do every frame"""
     return
 
   def build_packet(self, packet):
@@ -50,6 +52,9 @@ class MovableGameObject(GameObject):
 
   def move(self, velocity):
     self.velocity = velocity
+
+  def stop(self):
+    self.velocity = [0,0]
 
   def respond_to_collision(self, obj, axis=None):
     """Contains the callback for the collision between a player object and a game object passed in. Axis is needed
@@ -205,17 +210,52 @@ class DataDevice(SimpleScenery):
     print(self.startx)
     self.timer = None
     self.color = color
+    self.data = None
 
   def build_packet(self, accumulator):
-    packet = {'type': 'data_device', 'location': [self.rect.x, self.rect.y], 'frame': '', 'id': self.id,}
+    packet = {'type': 'data_device', 'location': [self.rect.x, self.rect.y], 'frame': '', 'id': self.id, 'timer':self.timer}
     accumulator.append(packet)
 
   def read_packet(self, packet):
     self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
+    if packet['timer']:
+      print(packet['timer'])
+      self.timer = packet['timer']
+    else:
+      self.timer = None
     self.render = True
 
   def draw(self, surface):
     pygame.draw.rect(surface, self.color, self.rect)
+    if self.timer:
+      pygame.draw.rect(surface, (255,0,255), pygame.Rect(20,20,100*self.timer,20))
+      pygame.draw.rect(surface, (128,0,128), pygame.Rect(20,20,100,20), 1)
+
+  def update(self):
+    if self.data:
+      self.timer += DATA_DEVICE_TIMER
+      if self.timer >= 100:
+        self.data.centerx = self.x
+        self.data.rect.bottom = self.y + self.height
+        self.data.velocity.y = 100
+        self.data = None
+        self.timer = None
+
+
+  def respond_to_collision(self, obj, axis):
+    if type(obj) == Data:
+      self.timer = DATA_DEVICE_TIMER # start timer
+      self.data = obj
+      # TODO: Make a better hide/delete function
+      obj.rect.move_ip(-100, -100)
+
+  def get_data(self, data):
+    self.timer = DATA_DEVICE_TIMER # start timer
+    self.data = data
+    # TODO: Make a better hide/delete function
+    data.rect.move_ip(-100, -100)
+    data.velocity.x = 0
+    data.velocity.y = 0 
 
 
 class Data(MovableGameObject):
@@ -238,3 +278,7 @@ class Data(MovableGameObject):
     self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
     self.render = True
 
+  def respond_to_collision(self, obj, axis=None):
+    super().respond_to_collision(obj, axis)
+    if type(obj) == DataDevice:
+      obj.get_data(self)
