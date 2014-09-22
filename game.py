@@ -22,7 +22,6 @@ BEZZEL_SIZE = [30, 30]
 # master node, and inherit from that?
 class MasterPlatformer(object):
   """Class for the platformer head node"""
-
   def __init__(self, localhosts=1):
     super(MasterPlatformer, self).__init__()
     pygame.init()
@@ -39,29 +38,27 @@ class MasterPlatformer(object):
     self.game_objects['data_object'] = []
     self.game_objects['data_device'] = []
 
-    for x in range(0, GRID_SPACE[0] + 1):
-      for y in range(0, GRID_SPACE[1] + 1):
-        map_json = self.engine.parse_json("map" + str(x) + str(y) + ".json")
-        for tile in map_json['floors']:
-          self.game_objects['terrain'].append(
-            wd.SimpleScenery(int(tile["x"]) + x * DISPLAY_SIZE["x"], int(tile["y"]) + y * DISPLAY_SIZE["y"],
-                     int(tile["width"]), int(tile["height"]), (255, 255, 000)))
-        for player in map_json['players']:
-          self.game_objects['players'].append(wd.Player(int(player["x"]) + x * DISPLAY_SIZE["x"],
-                                  int(player["y"]) + y * DISPLAY_SIZE["y"], 30, 30,
-                                  sprite_sheet='Player.png'))
-        for data in map_json['data_object']:
-          self.game_objects['data_object'].append(wd.Data(int(data["x"]) + x * DISPLAY_SIZE["x"],
-                                  int(data["y"]) + y * DISPLAY_SIZE["y"],
-                                  int(data["width"]),
-                                  int(data["height"]),
-                                  color=(255, 255, 0)))
-        for data_device in map_json['data_device']:
-          self.game_objects['data_device'].append(wd.DataDevice(int(data_device["x"]) + x * DISPLAY_SIZE["x"],
-                                  int(data_device["y"]) + y * DISPLAY_SIZE["y"],
-                                  int(data_device["width"]),
-                                  int(data_device["height"]),
-                                  color=eng.Colors.AQUA))
+    map_json = self.engine.parse_json("map.json")
+    for tile in map_json['floors']:
+      self.game_objects['terrain'].append(
+        wd.SimpleScenery(int(tile["x"]), int(tile["y"]),
+                 int(tile["width"]), int(tile["height"]), (255, 255, 000)))
+    for player in map_json['players']:
+      self.game_objects['players'].append(wd.Player(int(player["x"]),
+                              int(player["y"]), 30, 30,
+                              sprite_sheet='Player.png'))
+    for data in map_json['data_object']:
+      self.game_objects['data_object'].append(wd.Data(int(data["x"]),
+                              int(data["y"]),
+                              int(data["width"]),
+                              int(data["height"]),
+                              color=(255, 255, 0)))
+    for data_device in map_json['data_device']:
+      self.game_objects['data_device'].append(wd.DataDevice(int(data_device["x"]),
+                              int(data_device["y"]),
+                              int(data_device["width"]),
+                              int(data_device["height"]),
+                              color=eng.Colors.AQUA))
 
     send_struct = {}
     # build the initial data packet
@@ -120,6 +117,8 @@ class MasterPlatformer(object):
             player1.move_right()
         if event.key == K_UP:
             player1.jump()
+        if event.key == K_t:
+          player1.throw_data()
         if event.key == K_a:
             player2.move_left()
         if event.key == K_d:
@@ -169,5 +168,9 @@ class MasterPlatformer(object):
         return x
 
 if __name__ == '__main__':
-  game = MasterPlatformer(localhosts=1)
+  print(sys.argv)
+  if len(sys.argv) != 2:
+    game = MasterPlatformer(localhosts=1)
+  elif len(sys.argv) == 2:
+    game = MasterPlatformer(localhosts=int(sys.argv[1]))
   game.run()
