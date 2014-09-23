@@ -1,6 +1,6 @@
 import pygame
 import sys
-#import ipdb
+# import ipdb
 from pygame.locals import *
 import world as wd
 import engine as eng
@@ -22,6 +22,7 @@ BEZZEL_SIZE = [30, 30]
 # master node, and inherit from that?
 class MasterPlatformer(object):
   """Class for the platformer head node"""
+
   def __init__(self, localhosts=1):
     super(MasterPlatformer, self).__init__()
     pygame.init()
@@ -30,8 +31,6 @@ class MasterPlatformer(object):
     self.window = pygame.display.set_mode((60, 60))
     self.engine = eng.Engine()
 
-    # TODO: Somehow figure out how to read all the map files that each node will have and build a map
-    # off of those
     # load map
     self.game_objects['terrain'] = []
     self.game_objects['players'] = []
@@ -42,23 +41,23 @@ class MasterPlatformer(object):
     for tile in map_json['floors']:
       self.game_objects['terrain'].append(
         wd.SimpleScenery(int(tile["x"]), int(tile["y"]),
-                 int(tile["width"]), int(tile["height"]), (255, 255, 000)))
+                         int(tile["width"]), int(tile["height"]), (255, 255, 000)))
     for player in map_json['players']:
       self.game_objects['players'].append(wd.Player(int(player["x"]),
-                              int(player["y"]), 30, 30,
-                              sprite_sheet='Player.png'))
+                                                    int(player["y"]), 30, 30,
+                                                    sprite_sheet='Player.png'))
     for data in map_json['data_object']:
       self.game_objects['data_object'].append(wd.Data(int(data["x"]),
-                              int(data["y"]),
-                              int(data["width"]),
-                              int(data["height"]),
-                              color=(255, 255, 0)))
+                                                      int(data["y"]),
+                                                      int(data["width"]),
+                                                      int(data["height"]),
+                                                      color=(255, 255, 0)))
     for data_device in map_json['data_device']:
       self.game_objects['data_device'].append(wd.DataDevice(int(data_device["x"]),
-                              int(data_device["y"]),
-                              int(data_device["width"]),
-                              int(data_device["height"]),
-                              color=eng.Colors.AQUA))
+                                                            int(data_device["y"]),
+                                                            int(data_device["width"]),
+                                                            int(data_device["height"]),
+                                                            color=eng.Colors.AQUA))
 
     send_struct = {}
     # build the initial data packet
@@ -67,8 +66,8 @@ class MasterPlatformer(object):
       # print(obj_list)
       for game_obj in obj_list:
         send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
-                    game_obj.rect.height], "id": game_obj.id, "color": game_obj.color,
-               "constructor": type(game_obj).__name__}
+                              game_obj.rect.height], "id": game_obj.id, "color": game_obj.color,
+                     "constructor": type(game_obj).__name__}
         send_struct[obj_type].append(send_dict)
 
     print(send_struct)
@@ -105,47 +104,50 @@ class MasterPlatformer(object):
       FPS.tick(TICK)
 
   def play_frame(self):
-    player1 = self.game_objects['players'][0];
-    player2 = self.game_objects['players'][1];
+    player1 = self.game_objects['players'][0]
+    player2 = self.game_objects['players'][1]
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         sys.exit()
       if event.type == KEYDOWN:
         if event.key == K_LEFT:
-            player1.move_left()
+          player1.move_left()
         if event.key == K_RIGHT:
-            player1.move_right()
+          player1.move_right()
         if event.key == K_UP:
-            player1.jump()
+          player1.jump()
         if event.key == K_t:
           player1.throw_data()
         if event.key == K_a:
-            player2.move_left()
+          player2.move_left()
         if event.key == K_d:
-            player2.move_right()
+          player2.move_right()
         if event.key == K_w:
-            player2.jump()
+          player2.jump()
       if event.type == KEYUP:
         if event.key == K_LEFT:
-            player1.stop_left()
+          player1.stop_left()
         if event.key == K_RIGHT:
-            player1.stop_right()
+          player1.stop_right()
         if event.key == K_a:
-            player2.stop_left()
+          player2.stop_left()
         if event.key == K_d:
-            player2.stop_right()
-    self.engine.physics_simulation(self.game_objects['players'] + self.game_objects['data_object'],
-                     self.game_objects['terrain'] + self.game_objects['data_object'] + self.game_objects['data_device'])
+          player2.stop_right()
 
-    # This should be the final packet structure.
-    send_struct = {'state': 'play'}
-    game_objects_packets = []
+    self.engine.physics_simulation(self.game_objects['players'] + self.game_objects['data_object'],
+                                   self.game_objects['terrain'] + self.game_objects['data_object'] +
+                                   self.game_objects['data_device'])
+
     self.engine.loop_over_game_dict_att(self.game_objects, 'update')
-    self.engine.loop_over_game_dict_att(self.game_objects, 'build_packet', game_objects_packets)
     self.engine.loop_over_game_dict_att(self.game_objects, 'animate')
-    # print(game_objects)
+
+    # construct packet
+    send_struct = {'state': 'play'}
+    game_objects_packets = []  # accumulator for the build_packet function
+    self.engine.loop_over_game_dict_att(self.game_objects, 'build_packet', game_objects_packets)
     send_struct['game_objects'] = game_objects_packets
 
+    # serialize the data and send
     data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
     for node in self.socket_list:
       node.sendall(data)
@@ -168,10 +170,11 @@ class MasterPlatformer(object):
         x = pickle.loads(split[0])
         return x
 
+
 if __name__ == '__main__':
   print(sys.argv)
   if len(sys.argv) != 2:
     game = MasterPlatformer(localhosts=1)
-  elif len(sys.argv) == 2:
+  else:
     game = MasterPlatformer(localhosts=int(sys.argv[1]))
   game.run()

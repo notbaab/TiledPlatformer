@@ -31,11 +31,13 @@ class GameObject(object):
   def build_packet(self, packet):
     """accumulator function that will build the packet for each game object"""
     import ipdb
+
     ipdb.set_trace()
 
   def read_packet(self, packet):
     import ipdb
-    ipdb.set_trace()    
+
+    ipdb.set_trace()
 
   def animate(self):
     return
@@ -54,11 +56,12 @@ class MovableGameObject(GameObject):
     self.velocity = velocity
 
   def stop(self):
-    self.velocity = [0,0]
+    self.velocity = [0, 0]
 
   def respond_to_collision(self, obj, axis=None):
-    """Contains the callback for the collision between a player object and a game object passed in. Axis is needed
-    for collisions that halt movement
+    """Contains the callback for the collision between a move able object and the
+    object passed in. If the object passed in is the environment (i.e. SimpleScenery)
+    it will treate the environment as a wall and stop the object.
     :param obj: object player is colliding with
     :type obj: GameObject
     :param axis: which axis was the player moving along.
@@ -113,8 +116,8 @@ class Player(MovableGameObject):
       self.sprite = pygame.image.load(sprite_sheet).convert_alpha()
       self.rect = self.sprite.get_rect()
     # TODO: Each frame will be a tuple of where to go in the sprite sheet, not a color. With no graphics, it's now
-    # just a list of colors to cycle throug
-    self.animation_frames = {'moving':[eng.Colors.RED, eng.Colors.GREEN], 'hasdata':[eng.Colors.BLUE]}
+    # just a list of colors to cycle through
+    self.animation_frames = {'moving': [eng.Colors.RED, eng.Colors.GREEN], 'hasdata': [eng.Colors.BLUE]}
     self.current_animation = 'moving'
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
     self.current_frame = next(self.current_cycle)
@@ -126,42 +129,51 @@ class Player(MovableGameObject):
   def jump(self):
     self.velocity.y = JUMP_VELOCITY
 
+  # TODO: Why have two methods for move?
   def move_left(self):
+    """sets velocity of player to move left"""
     self.velocity.x = -PLAYER_SPEED
     self.direction = 'left'
 
   def move_right(self):
+    """sets velocity of player to move right"""
     self.velocity.x = PLAYER_SPEED
     self.direction = 'right'
 
+  # TODO: why have two methods for stop
   def stop_left(self):
+    """sets velocity to 0"""
     if self.velocity.x < 0:
       self.velocity.x = 0
 
   def stop_right(self):
+    """sets velocity to 0"""
     if self.velocity.x > 0:
       self.velocity.x = 0
 
   def draw(self, surface):
+    """Draws the player object onto surface
+    :param surface: the surface to draw the object, typically the window
+    :type surface: pygame.Surface"""
     if self.sprite:
       surface.blit(self.sprite, self.rect)
     else:
       pygame.draw.rect(surface, self.current_frame, self.rect)
 
-  def change_sprite(self, image):
-    # TODO: cycle through sprite sheet, not load another image
-    self.sprite = pygame.image.load(image)
-
   def change_animation(self, frame):
-    """change the frames that player object is currently cycling through"""
+    """change the frames that player object is currently cycling through.
+    :param frame: a key that maps to a list of animation frames in self.animation_frames
+    :type frame: String"""
     if not frame in self.animation_frames:
       import ipdb
+
       ipdb.set_trace()
-    self.current_animation = frame
+    self.current_animation = frame  # TODO: evaluate if we need this member
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
 
   def animate(self):
-    """goes to next frame in current animation frame"""
+    """Updates the animation timer goes to next frame in current animation cycle 
+    after the alloted animation time has passed."""
     self.animation_timer += 1
     if self.animation_timer == self.animation_time:
       self.current_frame = next(self.current_cycle)
@@ -185,9 +197,9 @@ class Player(MovableGameObject):
     ":type axis: String """
     super().respond_to_collision(obj, axis)
     if type(obj) == Data:
-      if self.data == None:
+      if self.data is None:
         self.data = obj
-        obj.rect.x, obj.rect.y = -100, -100 # TODO: have better way than move off screen
+        obj.rect.x, obj.rect.y = -100, -100  # TODO: have better way than move off screen
         self.change_animation('hasdata')
 
   def throw_data(self):
@@ -195,9 +207,9 @@ class Player(MovableGameObject):
       if self.direction == 'left':
         x_throw = self.rect.left + self.data.rect.width
       else:
-        x_throw = self.rect.right - self.data.rect.width        
+        x_throw = self.rect.right - self.data.rect.width
       self.data.rect.x = x_throw
-      self.data.rect.y = self.rect.y 
+      self.data.rect.y = self.rect.y
       self.data.velocity.y = 10
       self.data.velocity.x = 10
 
@@ -213,7 +225,8 @@ class DataDevice(SimpleScenery):
     self.data = None
 
   def build_packet(self, accumulator):
-    packet = {'type': 'data_device', 'location': [self.rect.x, self.rect.y], 'frame': '', 'id': self.id, 'timer':self.timer}
+    packet = {'type': 'data_device', 'location': [self.rect.x, self.rect.y], 'frame': '', 'id': self.id,
+              'timer': self.timer}
     accumulator.append(packet)
 
   def read_packet(self, packet):
@@ -228,34 +241,39 @@ class DataDevice(SimpleScenery):
   def draw(self, surface):
     pygame.draw.rect(surface, self.color, self.rect)
     if self.timer:
-      pygame.draw.rect(surface, (255,0,255), pygame.Rect(20,20,100*self.timer,20))
-      pygame.draw.rect(surface, (128,0,128), pygame.Rect(20,20,100,20), 1)
+      pygame.draw.rect(surface, (255, 0, 255), pygame.Rect(20, 20, 100 * self.timer, 20))
+      pygame.draw.rect(surface, (128, 0, 128), pygame.Rect(20, 20, 100, 20), 1)
 
   def update(self):
     if self.data:
       self.timer += DATA_DEVICE_TIMER
-      if self.timer >= 100:
-        self.data.centerx = self.x
-        self.data.rect.bottom = self.y + self.height
-        self.data.velocity.y = 100
+      if self.timer >= 1:
+        print('ented')
+        # self.data.rect.right = self.rect.left + 10
+        # self.data.rect.bottom = self.rect.y + self.height
+        self.data.rect.right = self.rect.left - self.data.rect.width
+        self.data.rect.y = self.rect.y
+        self.data.velocity.y = -50
+        self.data.velocity.x = -20
+        print(self.data.rect)
+        print(self.rect)
         self.data = None
         self.timer = None
 
-
-  def respond_to_collision(self, obj, axis):
+  def respond_to_collision(self, obj, axis=None):
     if type(obj) == Data:
-      self.timer = DATA_DEVICE_TIMER # start timer
+      self.timer = DATA_DEVICE_TIMER  # start timer
       self.data = obj
       # TODO: Make a better hide/delete function
       obj.rect.move_ip(-100, -100)
 
   def get_data(self, data):
-    self.timer = DATA_DEVICE_TIMER # start timer
+    self.timer = DATA_DEVICE_TIMER  # start timer
     self.data = data
     # TODO: Make a better hide/delete function
-    data.rect.move_ip(-100, -100)
+    data.rect.x, data.rect.y = (-100, -100)
     data.velocity.x = 0
-    data.velocity.y = 0 
+    data.velocity.y = 0
 
 
 class Data(MovableGameObject):

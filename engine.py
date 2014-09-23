@@ -52,24 +52,28 @@ class Engine(object):
     # return data['floors']
 
   def loop_over_game_dict(self, game_objects, func, *args):
-    """looop over the given game dictionary and apply function, with the game_obj as
+    """loop over nested (i.e game_objects[type] = list) game dictionary and apply function, with the game_obj as
       the first argument, followed by the other arguments with the arguments to
       all objects"""
     for obj_type, obj_list in game_objects.items():
       for game_obj in obj_list:
         func(game_obj, *args)
 
+  def map_attribute_flat(self, game_objects, func_string, *args):
+    """Maps the attribute (calls the attribute on each value) to list of GameObjects, with the 
+    given arguments"""
+    for game_obj in game_objects:
+      func = getattr(game_obj, func_string)
+      func(*args)
+
   def loop_over_game_dict_att(self, game_objects, func_string, *args):
     """Loops over a game dictionary and calls the passed in function on the game object. 
     The function must be an attribute of the game objects"""
     for obj_type, obj_list in game_objects.items():
+      # TODO: replace with call to map flat
       for game_obj in obj_list:
         func = getattr(game_obj, func_string)
         func(*args)
-
-  def get_locations(self, game_obj):
-    """returns a tuple with the game object locations, best used with the """
-    return game_obj.rect.x, game_obj.rect.y
 
   def physics_simulation(self, moving_objects, static_objects):
     """The worlds most bestest physics simulation. Updates moving_objects with
@@ -86,7 +90,7 @@ class Engine(object):
 
       for wall in static_objects:
         if game_object == wall:
-          continue # don't do things with itself
+          continue  # don't do things with itself
         if game_object.rect.colliderect(wall.rect):
           game_object.respond_to_collision(wall, 'x')
 
