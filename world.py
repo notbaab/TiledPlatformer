@@ -6,6 +6,7 @@ from itertools import cycle
 GRAVITY_VELOCITY = 1  # lets cheat for now
 FLOOR_Y = 580
 PLAYER_SPEED = 10
+FOLLOWER_SPEED = PLAYER_SPEED - 6 # just slower than the players
 JUMP_VELOCITY = -10
 DATA_DEVICE_TIMER = .01
 
@@ -206,12 +207,13 @@ class Player(MovableGameObject):
     if self.data:
       if self.direction == 'left':
         x_throw = self.rect.left + self.data.rect.width
+        self.data.velocity.x = -10
       else:
         x_throw = self.rect.right - self.data.rect.width
+        self.data.velocity.x = 10
       self.data.rect.x = x_throw
       self.data.rect.y = self.rect.y
       self.data.velocity.y = 10
-      self.data.velocity.x = 10
 
 
 class DataDevice(SimpleScenery):
@@ -300,3 +302,38 @@ class Data(MovableGameObject):
     super().respond_to_collision(obj, axis)
     if type(obj) == DataDevice:
       obj.get_data(self)
+
+class Follower(MovableGameObject):
+  """a class that follows it's leader"""
+
+  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
+    super(Follower, self).__init__(startx, starty, width, height, obj_id=obj_id)
+    self.color = color
+    self.sprite_sheet = sprite_sheet
+    self.leader = None
+    self.velocity = eng.Vector(0, 0)
+
+  def update(self):
+    if self.leader:
+      # figure out which direction to move
+      if self.leader.rect.x - self.rect.x > 0:
+        self.velocity.x = FOLLOWER_SPEED  # move right
+      elif self.leader.rect.x - self.rect.x < 0:
+        self.velocity.x = -FOLLOWER_SPEED  # move left
+      else:
+        self.velocity.x = 0
+    self.rect.x += self.velocity.x
+
+  def draw(self, surface):
+    pygame.draw.rect(surface, (0, 0, 155), self.rect)
+
+  # TODO: move this to MoveableGameObject
+  def build_packet(self, accumulator):
+    packet = {'type': 'data', 'location': [self.rect.x, self.rect.y], 'frame': '', 'id': self.id}
+    accumulator.append(packet)
+
+  def read_packet(self, packet):
+    self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
+    self.render = True
+
+

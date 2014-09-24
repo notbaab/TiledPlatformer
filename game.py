@@ -36,8 +36,12 @@ class MasterPlatformer(object):
     self.game_objects['players'] = []
     self.game_objects['data_object'] = []
     self.game_objects['data_device'] = []
+    self.game_objects['follower'] = []
 
     map_json = self.engine.parse_json("map.json")
+
+    # TODO: abstract this parsing to dynamically call the constructor based on the 
+    # attribute (reuse map)
     for tile in map_json['floors']:
       self.game_objects['terrain'].append(
         wd.SimpleScenery(int(tile["x"]), int(tile["y"]),
@@ -58,6 +62,15 @@ class MasterPlatformer(object):
                                                             int(data_device["width"]),
                                                             int(data_device["height"]),
                                                             color=eng.Colors.AQUA))
+    for follower in map_json['follower']:
+      self.game_objects['follower'].append(wd.Follower(int(follower["x"]),
+                                                            int(follower["y"]),
+                                                            int(follower["width"]),
+                                                            int(follower["height"]),
+                                                            color=eng.Colors.AQUA))
+
+    # TEST:
+    self.game_objects['follower'][-1].leader = self.game_objects['players'][0]
 
     send_struct = {}
     # build the initial data packet
