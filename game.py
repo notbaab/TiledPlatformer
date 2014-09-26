@@ -6,6 +6,7 @@ import world as wd
 import engine as eng
 import socket
 import pickle
+import os
 
 # TODO: Maybe it's time to move away from the socket del? That will also require moving off pickling
 SOCKET_DEL = '*ET*'.encode('utf-8')
@@ -25,6 +26,7 @@ class MasterPlatformer(object):
 
   def __init__(self, localhosts=1):
     super(MasterPlatformer, self).__init__()
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0,0)  # move window to upper left corner
     pygame.init()
 
     self.game_objects = {}
