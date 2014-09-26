@@ -53,13 +53,14 @@ class ClientPlatformer(NetworkGame):
     else:
       ipdb.set_trace()
 
-  def clear(self, data):
+  def clear(self, color=(0, 0, 0)):
     """override this method, only hook needed for the server"""
-    self.window.fill((0, 0, 0))
+    self.window.blit(self.background, self.background_rect)
+    # self.window.fill(color)
 
   def play_state(self, data):
     # TODO: why am I passing data in here?
-    self.clear('Why does this need an argument?')
+    self.clear(eng.Colors.WHITE)
     for packet in data['game_objects']:
       translated_pos = self.translate_to_local(packet['location'])
       if translated_pos != 0:
