@@ -70,6 +70,11 @@ class MasterPlatformer(object):
                                                        int(follower["height"]),
                                                        color=eng.Colors.LRED))
 
+    self.all_objects = self.game_objects['players'] + self.game_objects['data_object'] + self.game_objects['terrain'] + self.game_objects['data_device']
+
+
+    self.static_objects = self.game_objects['terrain'] + self.game_objects['data_device']
+
     send_struct = {}
     # build the initial data packet
     for obj_type, obj_list in self.game_objects.items():
@@ -109,10 +114,16 @@ class MasterPlatformer(object):
     while True:
       if self.state == 'play':
         data, self.state = self.play_frame()
+      elif self.state == 'loading':
+        return
       else:
         ipdb.set_trace()
 
       FPS.tick(TICK)
+
+  def load(self):
+    return
+
 
   def play_frame(self):
     player1 = self.game_objects['players'][0]
@@ -145,9 +156,7 @@ class MasterPlatformer(object):
         if event.key == K_d:
           player2.stop_right()
 
-    self.engine.physics_simulation(self.game_objects['players'] + self.game_objects['data_object'],
-                                   self.game_objects['terrain'] + self.game_objects['data_object'] +
-                                   self.game_objects['data_device'])
+    self.engine.physics_simulation(self.all_objects, self.static_objects)
 
     self.engine.loop_over_game_dict_att(self.game_objects, 'update')
     self.engine.loop_over_game_dict_att(self.game_objects, 'animate')
@@ -159,16 +168,7 @@ class MasterPlatformer(object):
     self.engine.loop_over_game_dict_att(self.game_objects, 'build_packet', game_objects_packets)
     send_struct['game_objects'] = game_objects_packets
 
-    # serialize the data and send
-    data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
-    for node in self.socket_list:
-      node.sendall(data)
-
-    return_list = []
-    for node in self.socket_list:
-      return_list.append(self.get_whole_packet(node))
-    # TODO: return real data
-    return '', 'play'
+    return self.serialize_and_sync(send_struct)
 
   def get_whole_packet(self, sock):
     """ensures that we receive the whole stream of data"""
@@ -182,6 +182,18 @@ class MasterPlatformer(object):
         x = pickle.loads(split[0])
         return x
 
+  def serialize_and_sync(self, send_struct):
+    """serialize data and send it to the nodes."""
+    # serialize the data and send
+    data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
+    for node in self.socket_list:
+      node.sendall(data)
+
+    return_list = []
+    for node in self.socket_list:
+      return_list.append(self.get_whole_packet(node))
+    # TODO: return real data
+    return '', 'play'
 
 if __name__ == '__main__':
   print(sys.argv)
