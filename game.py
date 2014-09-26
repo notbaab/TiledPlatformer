@@ -28,7 +28,6 @@ class MasterPlatformer(object):
     super(MasterPlatformer, self).__init__()
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0,0)  # move window to upper left corner
     pygame.init()
-
     self.game_objects = {}
     self.window = pygame.display.set_mode((60, 60))
     self.engine = eng.Engine()
@@ -38,7 +37,7 @@ class MasterPlatformer(object):
     self.game_objects['players'] = []
     self.game_objects['data_object'] = []
     self.game_objects['data_device'] = []
-    self.game_objects['follower'] = []
+    self.game_objects['followers'] = []
 
     map_json = self.engine.parse_json("map.json")
 
@@ -64,15 +63,12 @@ class MasterPlatformer(object):
                                                             int(data_device["width"]),
                                                             int(data_device["height"]),
                                                             color=eng.Colors.AQUA))
-    for follower in map_json['follower']:
-      self.game_objects['follower'].append(wd.Follower(int(follower["x"]),
-                                                            int(follower["y"]),
-                                                            int(follower["width"]),
-                                                            int(follower["height"]),
-                                                            color=eng.Colors.AQUA))
-
-    # TEST:
-    self.game_objects['follower'][-1].leader = self.game_objects['players'][0]
+    for follower in map_json['followers']:
+      self.game_objects['followers'].append(wd.Follower(int(follower["x"]),
+                                                       int(follower["y"]),
+                                                       int(follower["width"]),
+                                                       int(follower["height"]),
+                                                       color=eng.Colors.LRED))
 
     send_struct = {}
     # build the initial data packet
@@ -155,6 +151,7 @@ class MasterPlatformer(object):
 
     self.engine.loop_over_game_dict_att(self.game_objects, 'update')
     self.engine.loop_over_game_dict_att(self.game_objects, 'animate')
+    self.engine.map_attribute_flat(self.game_objects['followers'], 'check_for_leader', self.game_objects['players'])
 
     # construct packet
     send_struct = {'state': 'play'}

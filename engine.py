@@ -1,4 +1,5 @@
 import json
+import math
 
 GRAVITY_VELOCITY = 1
 
@@ -35,6 +36,12 @@ class Vector(object):
 
   def copy(self):
     return Vector(self.x, self.y)
+
+  def distance(self, vector2):
+    return math.sqrt((self.x - vector2.x)**2 + (self.y - vector2.y)**2)
+
+def distance(rect1, rect2):
+  return math.sqrt((rect1.centerx - rect2.centerx)**2 + (rect1.centery - rect2.centery)**2)
 
 
 class Engine(object):
@@ -100,6 +107,8 @@ class Engine(object):
       for wall in static_objects:
         if game_object.rect.colliderect(wall.rect):
           game_object.respond_to_collision(wall, 'y')
+
+
 
 
 
