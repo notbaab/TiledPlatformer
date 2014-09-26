@@ -91,8 +91,6 @@ class Engine(object):
         :type static_objects: list of objects with a pygame rect and velocity
         """
     # simulate
-    print(objects)
-    print(static_objects, ...)
     for game_object in objects:
       if game_object in static_objects:
         continue
