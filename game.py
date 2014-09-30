@@ -25,7 +25,7 @@ class MasterPlatformer(object):
   """Class for the platformer head node"""
 
   def __init__(self, localhosts=1):
-    super(MasterPlatformer, self).__init__()
+    super().__init__()
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0,0)  # move window to upper left corner
     pygame.init()
     self.game_objects = {}

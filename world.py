@@ -50,7 +50,7 @@ class MovableGameObject(GameObject):
   """any game object that moves"""
 
   def __init__(self, startx, starty, width, height, obj_id=None):
-    super(MovableGameObject, self).__init__(obj_id=obj_id)
+    super().__init__(obj_id=obj_id)
     # print(self.render)
     self.velocity = eng.Vector(0, 0)
     self.rect = pygame.Rect((startx, starty, width, height))
@@ -89,7 +89,7 @@ class SimpleScenery(GameObject):
   """Simple SimpleScenery object. Game objects that are just simple shapes"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
-    super(SimpleScenery, self).__init__(obj_id=obj_id)
+    super().__init__(obj_id=obj_id)
     self.startx = startx
     self.starty = starty
     self.width = width
@@ -109,7 +109,7 @@ class SimpleScenery(GameObject):
 # TODO: add sprites
 class Player(MovableGameObject):
   def __init__(self, startx, starty, width, height, sprite_sheet=None, color=None, obj_id=None):
-    super(Player, self).__init__(startx, starty, width, height, obj_id=obj_id)
+    super().__init__(startx, starty, width, height, obj_id=obj_id)
     self.color = color
     self.rect = pygame.Rect((startx, starty, width, height))
     sprite_sheet = 'PlayerRunning.png'
@@ -197,7 +197,7 @@ class Player(MovableGameObject):
     :type obj: GameObject
     :param axis: which axis was the player moving along.
     ":type axis: String """
-    super(Player, self).respond_to_collision(obj, axis)
+    super().respond_to_collision(obj, axis)
     if type(obj) == Data:
       if self.data is None:
         self.data = obj
@@ -224,7 +224,7 @@ class DataDevice(SimpleScenery):
   """Devices that are scenery, but output data when interacted with"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
-    super(DataDevice, self).__init__(startx, starty, width, height, color, obj_id=obj_id)
+    super().__init__(startx, starty, width, height, color, obj_id=obj_id)
     print(self.startx)
     self.timer = None
     self.color = color
@@ -288,7 +288,7 @@ class DataDevice(SimpleScenery):
 
 class Data(MovableGameObject):
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
-    super(Data, self).__init__(startx, starty, width, height, obj_id=obj_id)
+    super().__init__(startx, starty, width, height, obj_id=obj_id)
     self.color = color
     self.sprite_sheet = sprite_sheet
 
@@ -307,7 +307,7 @@ class Data(MovableGameObject):
     self.render = True
 
   def respond_to_collision(self, obj, axis=None):
-    super(Data, self).respond_to_collision(obj, axis)
+    super().respond_to_collision(obj, axis)
     if type(obj) == DataDevice:
       obj.get_data(self)
 
@@ -316,7 +316,7 @@ class Follower(MovableGameObject):
   """a class that follows it's leader"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, site_range=200):
-    super(Follower, self).__init__(startx, starty, width, height, obj_id=obj_id)
+    super().__init__(startx, starty, width, height, obj_id=obj_id)
     self.color = color
     self.sprite_sheet = sprite_sheet
     self.leader = None
@@ -367,7 +367,7 @@ class Patroller(Follower):
   """class that patrols it's give area"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, range=40):
-    super(Patroller, self).__init__(startx, starty, width, height, obj_id=obj_id)
+    super().__init__(startx, starty, width, height, obj_id=obj_id)
 
 
 

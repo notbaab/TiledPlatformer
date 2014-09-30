@@ -20,7 +20,7 @@ class Colors(object):
 
 class Vector(object):
   def __init__(self, x, y):
-    super(Vector, self).__init__()
+    super().__init__()
     self.x = x
     self.y = y
 
@@ -49,7 +49,7 @@ class Engine(object):
   """A game engine that handles managing physics and game related"""
 
   def __init__(self):
-    super(Engine, self).__init__()
+    super().__init__()
 
   def parse_json(self, file):
     json_data = open(file)

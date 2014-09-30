@@ -13,7 +13,7 @@ SCREEN_HEIGHT = 600
 class ClientPlatformer(NetworkGame):
   def __init__(self, tile, window_coordinates=None):
     """Sets up all the needed client settings"""
-    super(ClientPlatformer, self).__init__(tile)
+    super().__init__(tile)
     if(window_coordinates):
       # passed in the location for the window to be at. Used for debugging
       os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (window_coordinates[0],window_coordinates[1])
