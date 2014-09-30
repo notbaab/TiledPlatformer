@@ -10,6 +10,7 @@ PLAYER_SPEED = 10
 FOLLOWER_SPEED = PLAYER_SPEED - 6 # just slower than the players
 JUMP_VELOCITY = -10
 DATA_DEVICE_TIMER = .01
+TIMER_WIDTH = 100
 
 
 # TODO: add more things to do
@@ -207,14 +208,17 @@ class Player(MovableGameObject):
   def throw_data(self):
     if self.data:
       if self.direction == 'left':
-        x_throw = self.rect.left + self.data.rect.width
+        self.data.rect.right = self.rect.left - 1
         self.data.velocity.x = -10
       else:
-        x_throw = self.rect.right - self.data.rect.width
+        # x_throw = self.rect.right - self.data.rect.rect.width
+        self.data.rect.left = self.rect.right + 1
         self.data.velocity.x = 10
-      self.data.rect.x = x_throw
+      # self.data.rect.x = x_throw
       self.data.rect.y = self.rect.y
       self.data.velocity.y = 10
+      self.data = None
+      self.change_animation('moving')
 
 
 class DataDevice(SimpleScenery):
@@ -244,14 +248,18 @@ class DataDevice(SimpleScenery):
   def draw(self, surface):
     pygame.draw.rect(surface, self.color, self.rect)
     if self.timer:
-      pygame.draw.rect(surface, (255, 0, 255), pygame.Rect(20, 20, 100 * self.timer, 20))
-      pygame.draw.rect(surface, (128, 0, 128), pygame.Rect(20, 20, 100, 20), 1)
+      outline_rect = pygame.Rect(0, 0, TIMER_WIDTH, 20)
+      outline_rect.centerx = self.rect.centerx
+      outline_rect.centery = self.rect.y - outline_rect.height
+      timer_rect = pygame.Rect(outline_rect)
+      timer_rect.width = TIMER_WIDTH * self.timer
+      pygame.draw.rect(surface, (255, 0, 255), timer_rect)
+      pygame.draw.rect(surface, (128, 0, 128), outline_rect, 1)
 
   def update(self):
     if self.data:
       self.timer += DATA_DEVICE_TIMER
       if self.timer >= 1:
-        print('ented')
         # self.data.rect.right = self.rect.left + 10
         # self.data.rect.bottom = self.rect.y + self.height
         self.data.rect.right = self.rect.left - self.data.rect.width
@@ -304,29 +312,47 @@ class Data(MovableGameObject):
     if type(obj) == DataDevice:
       obj.get_data(self)
 
+
 class Follower(MovableGameObject):
   """a class that follows it's leader"""
 
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
+  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, site_range=200):
     super(Follower, self).__init__(startx, starty, width, height, obj_id=obj_id)
     self.color = color
     self.sprite_sheet = sprite_sheet
     self.leader = None
     self.velocity = eng.Vector(0, 0)
+    self.site = site_range
 
   def update(self):
-    if self.leader:
+    if self.leader and eng.distance(self.rect, self.leader.rect) < self.site:
       # figure out which direction to move
-      if self.leader.rect.x - self.rect.x > 0:
+      if self.leader.rect.centerx - self.rect.centerx > 0:
         self.velocity.x = FOLLOWER_SPEED  # move right
-      elif self.leader.rect.x - self.rect.x < 0:
+      elif self.leader.rect.centerx - self.rect.centerx < 0:
         self.velocity.x = -FOLLOWER_SPEED  # move left
       else:
         self.velocity.x = 0
-    self.rect.x += self.velocity.x
+    elif self.leader:
+      self.leader = None
+      self.velocity.x = 0
+    self.rect.centerx += self.velocity.x
+
+  def check_for_leader(self, leader_list):
+    self.leader = None
+    closest_leader = leader_list[0]
+    closest_distance = eng.distance(self.rect, closest_leader.rect)
+    for potential_leader in leader_list[1:]:
+      distance = eng.distance(self.rect, potential_leader.rect)
+      if  distance < closest_distance:
+        closest_leader = potential_leader
+        closest_distance = distance
+    if closest_distance < self.site:
+      self.leader = closest_leader
+
 
   def draw(self, surface):
-    pygame.draw.rect(surface, (0, 0, 155), self.rect)
+    pygame.draw.rect(surface, self.color, self.rect)
 
   # TODO: move this to MoveableGameObject
   def build_packet(self, accumulator):
@@ -336,5 +362,13 @@ class Follower(MovableGameObject):
   def read_packet(self, packet):
     self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
     self.render = True
+
+
+class Patroller(Follower):
+  """class that patrols it's give area"""
+
+  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, range=40):
+    super(Patroller, self).__init__(startx, starty, width, height, obj_id=obj_id)
+
 
 

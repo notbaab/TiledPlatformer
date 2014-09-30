@@ -1,4 +1,6 @@
 import json
+import math
+import world as wd
 
 GRAVITY_VELOCITY = 1
 
@@ -36,6 +38,12 @@ class Vector(object):
   def copy(self):
     return Vector(self.x, self.y)
 
+  def distance(self, vector2):
+    return math.sqrt((self.x - vector2.x)**2 + (self.y - vector2.y)**2)
+
+def distance(rect1, rect2):
+  return math.sqrt((rect1.centerx - rect2.centerx)**2 + (rect1.centery - rect2.centery)**2)
+
 
 class Engine(object):
   """A game engine that handles managing physics and game related"""
@@ -48,8 +56,6 @@ class Engine(object):
     data = json.load(json_data)
     # TODO: do more fancy things
     return data
-    # if '__terrain__' in data:
-    # return data['floors']
 
   def loop_over_game_dict(self, game_objects, func, *args):
     """loop over nested (i.e game_objects[type] = list) game dictionary and apply function, with the game_obj as
@@ -75,31 +81,37 @@ class Engine(object):
         func = getattr(game_obj, func_string)
         func(*args)
 
-  def physics_simulation(self, moving_objects, static_objects):
-    """The worlds most bestest physics simulation. Updates moving_objects with
+  def physics_simulation(self, objects, static_objects):
+    """The worlds most bestest physics simulation. Updates objects with
         there velocities and checks if there is an collision with the static_objects
         objects.
-        :param moving_objects: list of game objects that could be in motion
-        :type moving_objects: list of objects with a pygame rect and velocity
+        :param objects: list of game objects that could be in motion
+        :type objects: list of objects with a pygame rect and velocity
         :param static_objects: list of game objects that don't move. Things like Scenery
         :type static_objects: list of objects with a pygame rect and velocity
         """
     # simulate
-    for game_object in moving_objects:
+    for game_object in objects:
+      if game_object in static_objects:
+        continue
       game_object.rect.x += game_object.velocity.x
 
-      for wall in static_objects:
-        if game_object == wall:
+      for other_object in objects:
+        if game_object == other_object:
           continue  # don't do things with itself
-        if game_object.rect.colliderect(wall.rect):
-          game_object.respond_to_collision(wall, 'x')
+        if game_object.rect.colliderect(other_object.rect):
+          game_object.respond_to_collision(other_object, 'x')
 
       game_object.rect.y += game_object.velocity.y
       game_object.velocity.y += GRAVITY_VELOCITY          
 
-      for wall in static_objects:
-        if game_object.rect.colliderect(wall.rect):
-          game_object.respond_to_collision(wall, 'y')
+      for other_object in objects:
+        if game_object == other_object:
+          continue  # don't do things with itself
+        if game_object.rect.colliderect(other_object.rect):
+          game_object.respond_to_collision(other_object, 'y')
+
+
 
 
 

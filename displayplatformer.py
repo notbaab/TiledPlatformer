@@ -4,21 +4,27 @@ import world as wd
 import engine as eng
 import json
 # import ipdb
-
+import os
+# os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 600
 
 
 class ClientPlatformer(NetworkGame):
-  def __init__(self, tile):
+  def __init__(self, tile, window_coordinates=None):
     """Sets up all the needed client settings"""
     super(ClientPlatformer, self).__init__(tile)
+    if(window_coordinates):
+      # passed in the location for the window to be at. Used for debugging
+      os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (window_coordinates[0],window_coordinates[1])
     pygame.init()
     self.load_time = .01
 
     self.engine = eng.Engine()
     self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     self.game_objects = {}
+    self.background = pygame.image.load("background" + str(self.tile[0]) + str(self.tile[1]) + ".png")
+    self.background_rect = self.background.get_rect()
 
   def init_game(self, data):
     """Get the initial configuration of the game from the master node."""
@@ -47,13 +53,14 @@ class ClientPlatformer(NetworkGame):
     else:
       ipdb.set_trace()
 
-  def clear(self, data):
+  def clear(self, color=(0, 0, 0)):
     """override this method, only hook needed for the server"""
-    self.window.fill((0, 0, 0))
+    self.window.blit(self.background, self.background_rect)
+    # self.window.fill(color)
 
   def play_state(self, data):
     # TODO: why am I passing data in here?
-    self.clear('Why does this need an argument?')
+    self.clear(eng.Colors.WHITE)
     for packet in data['game_objects']:
       translated_pos = self.translate_to_local(packet['location'])
       if translated_pos != 0:
