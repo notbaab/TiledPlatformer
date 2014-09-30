@@ -1,5 +1,6 @@
 import pygame
 import engine as eng
+from graphics import *
 from itertools import cycle
 
 
@@ -107,19 +108,17 @@ class SimpleScenery(GameObject):
 
 # TODO: add sprites
 class Player(MovableGameObject):
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
+  def __init__(self, startx, starty, width, height, sprite_sheet=None, color=None, obj_id=None):
     super(Player, self).__init__(startx, starty, width, height, obj_id=obj_id)
     self.color = color
-    self.sprite = sprite_sheet
-    if not sprite_sheet:
-      self.rect = pygame.Rect((startx, starty, width, height))
-    else:
-      # TODO: Add sprite sheet parsing to engine
+    self.rect = pygame.Rect((startx, starty, width, height))
+    sprite_sheet = 'PlayerRunning.png'
+    if sprite_sheet:
       self.sprite = pygame.image.load(sprite_sheet).convert_alpha()
-      self.rect = self.sprite.get_rect()
-    # TODO: Each frame will be a tuple of where to go in the sprite sheet, not a color. With no graphics, it's now
-    # just a list of colors to cycle through
-    self.animation_frames = {'moving': [eng.Colors.RED, eng.Colors.GREEN], 'hasdata': [eng.Colors.BLUE]}
+    else:
+      self.sprite = None
+    moving_frames = [pygame.Rect(x, y, self.rect.width, self.rect.height) for x in range(0, self.rect.width * 9, self.rect.width) for y in range(0, self.rect.height * 8, self.rect.height) if not (y == 7 and x > 6)]
+    self.animation_frames = {'moving': moving_frames, 'hasdata': [pygame.Rect(0, 0, self.rect.width, self.rect.height)]}
     self.current_animation = 'moving'
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
     self.current_frame = next(self.current_cycle)
@@ -158,9 +157,10 @@ class Player(MovableGameObject):
     :param surface: the surface to draw the object, typically the window
     :type surface: pygame.Surface"""
     if self.sprite:
-      surface.blit(self.sprite, self.rect)
+      surface.blit(self.sprite, self.rect, area = self.current_frame)
     else:
-      pygame.draw.rect(surface, self.current_frame, self.rect)
+      # Player is a black rectangle if there is no sprite sheet.
+      pygame.draw.rect(surface, (0, 0, 0), self.rect)
 
   def change_animation(self, frame):
     """change the frames that player object is currently cycling through.
@@ -197,7 +197,7 @@ class Player(MovableGameObject):
     :type obj: GameObject
     :param axis: which axis was the player moving along.
     ":type axis: String """
-    super().respond_to_collision(obj, axis)
+    super(Player, self).respond_to_collision(obj, axis)
     if type(obj) == Data:
       if self.data is None:
         self.data = obj
@@ -307,7 +307,7 @@ class Data(MovableGameObject):
     self.render = True
 
   def respond_to_collision(self, obj, axis=None):
-    super().respond_to_collision(obj, axis)
+    super(Data, self).respond_to_collision(obj, axis)
     if type(obj) == DataDevice:
       obj.get_data(self)
 
