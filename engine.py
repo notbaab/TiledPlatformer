@@ -81,6 +81,9 @@ class Engine(object):
         func = getattr(game_obj, func_string)
         func(*args)
 
+  def slide_animation(self, game_obj, end_location):
+    return
+
   def physics_simulation(self, objects, static_objects):
     """The worlds most bestest physics simulation. Updates objects with
         there velocities and checks if there is an collision with the static_objects

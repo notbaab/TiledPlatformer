@@ -50,6 +50,8 @@ class ClientPlatformer(NetworkGame):
     """override this method, only hook needed for the server"""
     if data['state'] == 'play':
       return self.play_state(data)
+    elif data['state'] == 'load':
+      return self.load_state()
     else:
       ipdb.set_trace()
 
@@ -57,6 +59,12 @@ class ClientPlatformer(NetworkGame):
     """override this method, only hook needed for the server"""
     self.window.blit(self.background, self.background_rect)
     # self.window.fill(color)
+
+  def load_state(self):
+    # move every object on screen out
+    obj_on_screen = [ game_obj for game_obj in self.game_objects if game_obj.render == True ]
+    print(obj_on_screen)
+    return {'state': 'play'}
 
   def play_state(self, data):
     # TODO: why am I passing data in here?

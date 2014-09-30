@@ -1,6 +1,6 @@
 import pygame
 import sys
-# import ipdb
+import ipdb
 from pygame.locals import *
 import world as wd
 import engine as eng
@@ -70,10 +70,13 @@ class MasterPlatformer(object):
                                                        int(follower["height"]),
                                                        color=eng.Colors.LRED))
 
-    self.all_objects = self.game_objects['players'] + self.game_objects['data_object'] + self.game_objects['terrain'] + self.game_objects['data_device']
 
+    # ipdb.set_trace()
 
-    self.static_objects = self.game_objects['terrain'] + self.game_objects['data_device']
+    # Sometimes you need a list, sometimes you need a dict. We have both.
+    self.all_objects = [game_obj for k,v in self.game_objects.items() for game_obj in v]
+    self.static_objects = [ game_obj for game_obj in self.all_objects if not isinstance(game_obj, wd.MovableGameObject)]
+
 
     send_struct = {}
     # build the initial data packet
@@ -122,8 +125,9 @@ class MasterPlatformer(object):
       FPS.tick(TICK)
 
   def load(self):
+    send_struct = {'state':'load'}
+    self.serialize_and_sync(send_struct)
     return
-
 
   def play_frame(self):
     player1 = self.game_objects['players'][0]
