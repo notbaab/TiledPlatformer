@@ -1,5 +1,6 @@
 import pygame
 import engine as eng
+from graphics import *
 from itertools import cycle
 
 
@@ -196,7 +197,7 @@ class Player(MovableGameObject):
     :type obj: GameObject
     :param axis: which axis was the player moving along.
     ":type axis: String """
-    super().respond_to_collision(obj, axis)
+    super(Player, self).respond_to_collision(obj, axis)
     if type(obj) == Data:
       if self.data is None:
         self.data = obj
@@ -299,7 +300,7 @@ class Data(MovableGameObject):
     self.render = True
 
   def respond_to_collision(self, obj, axis=None):
-    super().respond_to_collision(obj, axis)
+    super(Data, self).respond_to_collision(obj, axis)
     if type(obj) == DataDevice:
       obj.get_data(self)
 
