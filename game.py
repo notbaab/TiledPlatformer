@@ -49,8 +49,8 @@ class MasterPlatformer(object):
                          int(tile["width"]), int(tile["height"]), (255, 255, 000)))
     for player in map_json['players']:
       self.game_objects['players'].append(wd.Player(int(player["x"]),
-                                                    int(player["y"]), 30, 30,
-                                                    sprite_sheet='Player.png'))
+                                                    int(player["y"]), 180, 340,
+                                                    sprite_sheet = "PlayerRunning.png"))
     for data in map_json['data_object']:
       self.game_objects['data_object'].append(wd.Data(int(data["x"]),
                                                       int(data["y"]),

@@ -32,6 +32,7 @@ class ClientPlatformer(NetworkGame):
       for game_obj in obj_list:
         constructor = getattr(wd, game_obj['constructor'])
         translate_pos = self.translate_to_local((game_obj['rect'][0], game_obj['rect'][1]))
+#Send Spritesheet also
         if translate_pos != 0:
           self.game_objects[game_obj['id']] = constructor(translate_pos[0], translate_pos[1],
                                                           game_obj['rect'][2], game_obj['rect'][3],
