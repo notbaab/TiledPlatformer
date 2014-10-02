@@ -114,10 +114,10 @@ class Player(MovableGameObject):
     self.rect = pygame.Rect((startx, starty, width, height))
     sprite_sheet = 'PlayerRunning.png'
     if sprite_sheet:
-      self.sprite = pygame.image.load(sprite_sheet).convert_alpha()
+      self.sprite, moving_frames = graphics.get_frames(sprite_sheet, 9, 8, des_width=width, des_height=height)
+      image_rect = self.sprite.get_rect()
     else:
       self.sprite = None
-    moving_frames = [pygame.Rect(x, y, self.rect.width, self.rect.height) for x in range(0, self.rect.width * 9, self.rect.width) for y in range(0, self.rect.height * 8, self.rect.height) if not (y == 7 and x > 6)]
     self.animation_frames = {'moving': moving_frames, 'hasdata': [pygame.Rect(0, 0, self.rect.width, self.rect.height)]}
     self.current_animation = 'moving'
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
@@ -157,7 +157,7 @@ class Player(MovableGameObject):
     :param surface: the surface to draw the object, typically the window
     :type surface: pygame.Surface"""
     if self.sprite:
-      surface.blit(self.sprite, self.rect, area = self.current_frame)
+      surface.blit(self.sprite, self.rect, area=self.current_frame)
     else:
       # Player is a black rectangle if there is no sprite sheet.
       pygame.draw.rect(surface, (0, 0, 0), self.rect)
