@@ -1,13 +1,14 @@
 import pygame
 import engine as eng
-from graphics import *
+# from graphics import *
 from itertools import cycle
+import graphics
 
 
 GRAVITY_VELOCITY = 1  # lets cheat for now
 FLOOR_Y = 580
 PLAYER_SPEED = 10
-FOLLOWER_SPEED = PLAYER_SPEED - 6 # just slower than the players
+FOLLOWER_SPEED = PLAYER_SPEED - 6  # just slower than the players
 JUMP_VELOCITY = -10
 DATA_DEVICE_TIMER = .01
 TIMER_WIDTH = 100
@@ -165,7 +166,7 @@ class Player(MovableGameObject):
   def change_animation(self, frame):
     """change the frames that player object is currently cycling through.
     :param frame: a key that maps to a list of animation frames in self.animation_frames
-    :type frame: String"""
+    :type frame: str"""
     if not frame in self.animation_frames:
       import ipdb
 
@@ -238,7 +239,6 @@ class DataDevice(SimpleScenery):
   def read_packet(self, packet):
     self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
     if packet['timer']:
-      print(packet['timer'])
       self.timer = packet['timer']
     else:
       self.timer = None
@@ -265,8 +265,6 @@ class DataDevice(SimpleScenery):
         self.data.rect.y = self.rect.y
         self.data.velocity.y = -50
         self.data.velocity.x = -20
-        print(self.data.rect)
-        print(self.rect)
         self.data = None
         self.timer = None
 
@@ -343,7 +341,7 @@ class Follower(MovableGameObject):
     closest_distance = eng.distance(self.rect, closest_leader.rect)
     for potential_leader in leader_list[1:]:
       distance = eng.distance(self.rect, potential_leader.rect)
-      if  distance < closest_distance:
+      if distance < closest_distance:
         closest_leader = potential_leader
         closest_distance = distance
     if closest_distance < self.site:
@@ -366,7 +364,7 @@ class Follower(MovableGameObject):
 class Patroller(Follower):
   """class that patrols it's give area"""
 
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, range=40):
+  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, site_range=40):
     super().__init__(startx, starty, width, height, obj_id=obj_id)
 
 

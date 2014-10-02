@@ -57,6 +57,7 @@ class Server():
     self.socket.bind((ip_address, port))
     self.game = game  # will handle giving data back to the game
 
+  # noinspection PyAttributeOutsideInit
   def open_connection(self):
     self.socket.listen(1)
     self.open_sock, addr = self.socket.accept()

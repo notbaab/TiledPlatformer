@@ -5,18 +5,21 @@ import engine as eng
 import json
 # import ipdb
 import os
+import random
 # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 600
+
+FPS = pygame.time.Clock()
 
 
 class ClientPlatformer(NetworkGame):
   def __init__(self, tile, window_coordinates=None):
     """Sets up all the needed client settings"""
     super().__init__(tile)
-    if(window_coordinates):
+    if window_coordinates:
       # passed in the location for the window to be at. Used for debugging
-      os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (window_coordinates[0],window_coordinates[1])
+      os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (window_coordinates[0], window_coordinates[1])
     pygame.init()
     self.load_time = .01
 
@@ -32,7 +35,7 @@ class ClientPlatformer(NetworkGame):
       for game_obj in obj_list:
         constructor = getattr(wd, game_obj['constructor'])
         translate_pos = self.translate_to_local((game_obj['rect'][0], game_obj['rect'][1]))
-#Send Spritesheet also
+        # Send Spritesheet also
         if translate_pos != 0:
           self.game_objects[game_obj['id']] = constructor(translate_pos[0], translate_pos[1],
                                                           game_obj['rect'][2], game_obj['rect'][3],
@@ -44,7 +47,7 @@ class ClientPlatformer(NetworkGame):
 
           self.game_objects[game_obj['id']].render = False
 
-    print(self.game_objects)
+    # print(self.game_objects)
     return data
 
   def update(self, data):
@@ -52,7 +55,7 @@ class ClientPlatformer(NetworkGame):
     if data['state'] == 'play':
       return self.play_state(data)
     elif data['state'] == 'load':
-      return self.load_state()
+      return self.load_state(data)
     else:
       ipdb.set_trace()
 
@@ -61,10 +64,46 @@ class ClientPlatformer(NetworkGame):
     self.window.blit(self.background, self.background_rect)
     # self.window.fill(color)
 
-  def load_state(self):
+  def load_state(self, data):
     # move every object on screen out
-    obj_on_screen = [ game_obj for game_obj in self.game_objects if game_obj.render == True ]
+    obj_on_screen = [game_obj for game_obj in self.game_objects.values() if game_obj.render]
     print(obj_on_screen)
+    end_points = {}
+    distance_to_move = {}
+    step_dict = {}
+    steps_total = 30
+    for obj in obj_on_screen:
+      start_pointx, start_pointy = random.randint(-1900, 1900), random.randint(-500, 200)
+      # how much to change by
+      dx, dy = (obj.rect.x - start_pointx, obj.rect.y - start_pointy)
+      # how much to move at each step
+      # Since there is no subpixels with pygame we need to keep track of all 
+      # the steps
+
+      step_sizex, step_sizey = (dx / float(steps_total), dy / float(steps_total))
+      step_dict[obj] = []
+      for i in range(1, steps_total + 1):
+        step_dict[obj].append((start_pointx + step_sizex * i, start_pointy + step_sizey * i))
+
+      obj.rect.x, obj.rect.y = (start_pointx, start_pointy)
+
+    for steps in step_dict.values():
+      print(steps)
+
+    for i in range(steps_total):
+      # draw objects
+      self.clear()
+      print(obj_on_screen[0])
+      print(obj_on_screen[0].rect)
+      for game_obj, step in step_dict.items():
+        game_obj.draw(self.window)
+        new_x_loc, new_y_loc = step_dict[game_obj].pop(0)  # grap the new place
+        game_obj.rect.x, game_obj.rect.y = new_x_loc, new_y_loc
+
+      pygame.display.flip()
+      FPS.tick(60)
+
+    # FPS.tick(TICK)
     return {'state': 'play'}
 
   def play_state(self, data):

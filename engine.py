@@ -39,10 +39,15 @@ class Vector(object):
     return Vector(self.x, self.y)
 
   def distance(self, vector2):
-    return math.sqrt((self.x - vector2.x)**2 + (self.y - vector2.y)**2)
+    return math.sqrt((self.x - vector2.x) ** 2 + (self.y - vector2.y) ** 2)
+
 
 def distance(rect1, rect2):
-  return math.sqrt((rect1.centerx - rect2.centerx)**2 + (rect1.centery - rect2.centery)**2)
+  return math.sqrt((rect1.centerx - rect2.centerx) ** 2 + (rect1.centery - rect2.centery) ** 2)
+
+
+def distance_cart(cart1, cart2):
+  return math.sqrt((cart1[0] - cart2[0]) ** 2 + (cart1[1] - cart2[1]) ** 2)
 
 
 class Engine(object):
@@ -106,7 +111,7 @@ class Engine(object):
           game_object.respond_to_collision(other_object, 'x')
 
       game_object.rect.y += game_object.velocity.y
-      game_object.velocity.y += GRAVITY_VELOCITY          
+      game_object.velocity.y += GRAVITY_VELOCITY
 
       for other_object in objects:
         if game_object == other_object:

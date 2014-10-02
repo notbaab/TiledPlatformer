@@ -7,6 +7,7 @@ import engine as eng
 import socket
 import pickle
 import os
+import graphics
 
 # TODO: Maybe it's time to move away from the socket del? That will also require moving off pickling
 SOCKET_DEL = '*ET*'.encode('utf-8')
@@ -26,7 +27,7 @@ class MasterPlatformer(object):
 
   def __init__(self, localhosts=1):
     super().__init__()
-    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0,0)  # move window to upper left corner
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0, 0)  # move window to upper left corner
     pygame.init()
     self.game_objects = {}
     self.window = pygame.display.set_mode((60, 60))
@@ -41,9 +42,11 @@ class MasterPlatformer(object):
 
     map_json = self.engine.parse_json("map.json")
 
+    # graphics.get_frames('PlayerRunning.png', 9, 8)
     # TODO: abstract this parsing to dynamically call the constructor based on the 
     # attribute (reuse map)
     for tile in map_json['floors']:
+      # noinspection PyPep8
       self.game_objects['terrain'].append(
         wd.SimpleScenery(int(tile["x"]), int(tile["y"]),
                          int(tile["width"]), int(tile["height"]), (255, 255, 000)))
@@ -65,18 +68,17 @@ class MasterPlatformer(object):
                                                             color=eng.Colors.AQUA))
     for follower in map_json['followers']:
       self.game_objects['followers'].append(wd.Follower(int(follower["x"]),
-                                                       int(follower["y"]),
-                                                       int(follower["width"]),
-                                                       int(follower["height"]),
-                                                       color=eng.Colors.LRED))
+                                                        int(follower["y"]),
+                                                        int(follower["width"]),
+                                                        int(follower["height"]),
+                                                        color=eng.Colors.LRED))
 
 
     # ipdb.set_trace()
 
     # Sometimes you need a list, sometimes you need a dict. We have both.
-    self.all_objects = [game_obj for k,v in self.game_objects.items() for game_obj in v]
-    self.static_objects = [ game_obj for game_obj in self.all_objects if not isinstance(game_obj, wd.MovableGameObject)]
-
+    self.all_objects = [game_obj for k, v in self.game_objects.items() for game_obj in v]
+    self.static_objects = [game_obj for game_obj in self.all_objects if not isinstance(game_obj, wd.MovableGameObject)]
 
     send_struct = {}
     # build the initial data packet
@@ -84,6 +86,7 @@ class MasterPlatformer(object):
       send_struct[obj_type] = []
       # print(obj_list)
       for game_obj in obj_list:
+        # TODO: have a 2 pass constructor like BB
         send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
                               game_obj.rect.height], "id": game_obj.id, "color": game_obj.color,
                      "constructor": type(game_obj).__name__}
@@ -110,24 +113,24 @@ class MasterPlatformer(object):
 
     # TODO: Send initial player objects to the nodes. That will require a kind
     # Setup state to be added.
-    self.state = 'play'
+    self.state = 'load'
     print(self.game_objects)
 
   def run(self):
     while True:
       if self.state == 'play':
         data, self.state = self.play_frame()
-      elif self.state == 'loading':
-        return
+      elif self.state == 'load':
+        data, self.state = self.load()
       else:
         ipdb.set_trace()
 
       FPS.tick(TICK)
 
   def load(self):
-    send_struct = {'state':'load'}
-    self.serialize_and_sync(send_struct)
-    return
+    send_struct = {'state': 'load'}
+    # clients handle the load state so wait for their response and play the game
+    return self.serialize_and_sync(send_struct)
 
   def play_frame(self):
     player1 = self.game_objects['players'][0]
@@ -198,6 +201,7 @@ class MasterPlatformer(object):
       return_list.append(self.get_whole_packet(node))
     # TODO: return real data
     return '', 'play'
+
 
 if __name__ == '__main__':
   print(sys.argv)
