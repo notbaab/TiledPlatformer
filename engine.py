@@ -1,6 +1,9 @@
 import json
 import math
 import world as wd
+import random
+import pygame
+import ipdb
 
 GRAVITY_VELOCITY = 1
 
@@ -119,7 +122,54 @@ class Engine(object):
         if game_object.rect.colliderect(other_object.rect):
           game_object.respond_to_collision(other_object, 'y')
 
+  def load_animation(self, game_objects, clear_fun, window):
+    # TODO: Add some randomness
+    game_pieces = {}
+    for game_obj in game_objects:
+      game_pieces[game_obj] = self.split_sprite(game_obj, 8, 8)
 
+    # move every object on screen out
+    end_points = {}
+    distance_to_move = {}
+    step_dict = {}
+    steps_total = 45
 
+    print(game_pieces)
+    for obj, list_pieces in game_pieces.items():
+      step_dict[obj] = {}
+      for i, (rect, area) in enumerate(list_pieces):
+        start_pointx, start_pointy = random.randint(-500, 1200), random.randint(-2000, 0)
+        # how much to change by
+        dx, dy = (rect.x - start_pointx, rect.y - start_pointy)
+        step_sizex, step_sizey = (dx / float(steps_total), dy / float(steps_total))
+        step_dict[obj][i] = []
+        for x in range(1, steps_total + 1):
+          step_dict[obj][i].append((start_pointx + step_sizex * x, start_pointy + step_sizey * x))
 
+        rect.x, rect.y = (start_pointx, start_pointy)
 
+    for i in range(steps_total):
+      # draw objects
+      clear_fun()
+      for game_obj, inner_step_dict in step_dict.items():
+        for idx, (rect, area) in enumerate(game_pieces[game_obj]):
+          window.blit(game_obj.sprite, rect, area=area)
+          rect.x, rect.y = inner_step_dict[idx].pop(0)  # grap the new place
+
+      pygame.display.flip()
+      #ipdb.set_trace()
+      FPS.tick(60)
+
+  def split_sprite(self, game_obj, des_width_peices, des_height_peices):
+    """split the sprite into various pieces"""
+    width = int(math.ceil(game_obj.rect.width/des_width_peices))
+    height = int(math.ceil(game_obj.rect.height/des_height_peices))
+    split_peices = []
+    for x in range(0, game_obj.rect.width, width):
+      for y in range(0, game_obj.rect.height, height):
+        rect = pygame.Rect(game_obj.rect.x + x, game_obj.rect.y + y, 0, 0)
+        area = pygame.Rect(game_obj.current_frame.x + x, game_obj.current_frame.y + y, width, height)
+        split_peices.append((rect, area))
+        print("split_peices")
+        print(split_peices[-1])
+    return split_peices

@@ -65,44 +65,12 @@ class ClientPlatformer(NetworkGame):
     # self.window.fill(color)
 
   def load_state(self, data):
-    # move every object on screen out
+    """Fires off a load animation for every game object that is on this nodes screen
+    :param data: TODO: make this fire off a specific load animation
+    :type data: dict"""
     obj_on_screen = [game_obj for game_obj in self.game_objects.values() if game_obj.render]
     print(obj_on_screen)
-    end_points = {}
-    distance_to_move = {}
-    step_dict = {}
-    steps_total = 30
-    for obj in obj_on_screen:
-      start_pointx, start_pointy = random.randint(-1900, 1900), random.randint(-500, 200)
-      # how much to change by
-      dx, dy = (obj.rect.x - start_pointx, obj.rect.y - start_pointy)
-      # how much to move at each step
-      # Since there is no subpixels with pygame we need to keep track of all 
-      # the steps
-
-      step_sizex, step_sizey = (dx / float(steps_total), dy / float(steps_total))
-      step_dict[obj] = []
-      for i in range(1, steps_total + 1):
-        step_dict[obj].append((start_pointx + step_sizex * i, start_pointy + step_sizey * i))
-
-      obj.rect.x, obj.rect.y = (start_pointx, start_pointy)
-
-    for steps in step_dict.values():
-      print(steps)
-
-    for i in range(steps_total):
-      # draw objects
-      self.clear()
-      print(obj_on_screen[0])
-      print(obj_on_screen[0].rect)
-      for game_obj, step in step_dict.items():
-        game_obj.draw(self.window)
-        new_x_loc, new_y_loc = step_dict[game_obj].pop(0)  # grap the new place
-        game_obj.rect.x, game_obj.rect.y = new_x_loc, new_y_loc
-
-      pygame.display.flip()
-      FPS.tick(60)
-
+    self.engine.load_animation(obj_on_screen, self.clear, self.window)
     # FPS.tick(TICK)
     return {'state': 'play'}
 
