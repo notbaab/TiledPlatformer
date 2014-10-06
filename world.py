@@ -5,11 +5,11 @@ from itertools import cycle
 import graphics
 
 
-GRAVITY_VELOCITY = 1  # lets cheat for now
+GRAVITY_VELOCITY = 4  # lets cheat for now
 FLOOR_Y = 580
 PLAYER_SPEED = 10
 FOLLOWER_SPEED = PLAYER_SPEED - 6  # just slower than the players
-JUMP_VELOCITY = -10
+JUMP_VELOCITY = -20
 DATA_DEVICE_TIMER = .01
 TIMER_WIDTH = 100
 
