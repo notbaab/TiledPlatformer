@@ -85,7 +85,6 @@ class MovableGameObject(GameObject):
         self.velocity.y = 0
 
 
-# TODO: add sprites
 class SimpleScenery(GameObject):
   """Simple SimpleScenery object. Game objects that are just simple shapes"""
 
@@ -97,17 +96,27 @@ class SimpleScenery(GameObject):
     self.height = height
     self.color = color
     self.rect = pygame.Rect((startx, starty, width, height))
+    # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
+    self.sprite_sheet = 'Floor.png'
+    if self.sprite_sheet:
+      self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
+    else:
+      self.sprite = None
+    self.current_frame = self.frames[0]
+
 
   def draw(self, surface):
     """Draw the simple scenery object"""
-    pygame.draw.rect(surface, self.color, self.rect)
+    if self.sprite:
+      surface.blit(self.sprite, self.rect, area=self.current_frame)
+    else:
+      pygame.draw.rect(surface, self.color, self.rect)
 
   def build_packet(self, accumulator):
     """Not needed for static objects"""
     return
 
 
-# TODO: add sprites
 class Player(MovableGameObject):
   def __init__(self, startx, starty, width, height, sprite_sheet=None, color=None, obj_id=None):
     super().__init__(startx, starty, width, height, obj_id=obj_id)
@@ -230,6 +239,13 @@ class DataDevice(SimpleScenery):
     self.timer = None
     self.color = color
     self.data = None
+    # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
+    self.sprite_sheet = 'green.png'
+    if self.sprite_sheet:
+      self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
+    else:
+      self.sprite = None
+    self.current_frame = self.frames[0]
 
   def build_packet(self, accumulator):
     packet = {'type': 'data_device', 'location': [self.rect.x, self.rect.y], 'frame': '', 'id': self.id,
@@ -245,7 +261,10 @@ class DataDevice(SimpleScenery):
     self.render = True
 
   def draw(self, surface):
-    pygame.draw.rect(surface, self.color, self.rect)
+    if self.sprite:
+      surface.blit(self.sprite, self.rect, area=self.current_frame)
+    else:
+      pygame.draw.rect(surface, self.color, self.rect)
     if self.timer:
       outline_rect = pygame.Rect(0, 0, TIMER_WIDTH, 20)
       outline_rect.centerx = self.rect.centerx
@@ -289,10 +308,17 @@ class Data(MovableGameObject):
     super().__init__(startx, starty, width, height, obj_id=obj_id)
     self.color = color
     self.sprite_sheet = sprite_sheet
+    # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
+    self.sprite_sheet = 'light_blue.png'
+    if self.sprite_sheet:
+      self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
+    else:
+      self.sprite = None
+    self.current_frame = self.frames[0]
 
   def draw(self, surface):
     if self.sprite_sheet:
-      surface.blit(self.sprite_sheet, self.rect)
+      surface.blit(self.sprite, self.rect, area=self.current_frame)
     else:
       pygame.draw.rect(surface, (155, 0, 0), self.rect)
 
@@ -316,10 +342,16 @@ class Follower(MovableGameObject):
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, site_range=200):
     super().__init__(startx, starty, width, height, obj_id=obj_id)
     self.color = color
-    self.sprite_sheet = sprite_sheet
     self.leader = None
     self.velocity = eng.Vector(0, 0)
     self.site = site_range
+    # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
+    self.sprite_sheet = 'Follower.png'
+    if self.sprite_sheet:
+      self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
+    else:
+      self.sprite = None
+    self.current_frame = self.frames[0]
 
   def update(self):
     if self.leader and eng.distance(self.rect, self.leader.rect) < self.site:
@@ -349,7 +381,11 @@ class Follower(MovableGameObject):
 
 
   def draw(self, surface):
-    pygame.draw.rect(surface, self.color, self.rect)
+    # pygame.draw.rect(surface, self.color, self.rect)
+    if self.sprite:
+      surface.blit(self.sprite, self.rect, area=self.current_frame)
+    else:
+      pygame.draw.rect(surface, self.color, self.rect)
 
   # TODO: move this to MoveableGameObject
   def build_packet(self, accumulator):
