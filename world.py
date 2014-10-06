@@ -47,12 +47,15 @@ class GameObject(object):
     return
 
 
+class SpriteGameObject(GameObject):
+  pass
+
+
 class MovableGameObject(GameObject):
   """any game object that moves"""
 
   def __init__(self, startx, starty, width, height, obj_id=None):
     super().__init__(obj_id=obj_id)
-    # print(self.render)
     self.velocity = eng.Vector(0, 0)
     self.rect = pygame.Rect((startx, starty, width, height))
 
@@ -140,7 +143,6 @@ class Player(MovableGameObject):
   def jump(self):
     self.velocity.y = JUMP_VELOCITY
 
-  # TODO: Why have two methods for move?
   def move_left(self):
     """sets velocity of player to move left"""
     self.velocity.x = -PLAYER_SPEED
@@ -206,7 +208,7 @@ class Player(MovableGameObject):
     :param obj: object player is colliding with
     :type obj: GameObject
     :param axis: which axis was the player moving along.
-    ":type axis: String """
+    :type axis: String """
     super().respond_to_collision(obj, axis)
     if type(obj) == Data:
       if self.data is None:
@@ -215,6 +217,7 @@ class Player(MovableGameObject):
         self.change_animation('hasdata')
 
   def throw_data(self):
+    """Through the data that the player is holding"""
     if self.data:
       if self.direction == 'left':
         self.data.rect.right = self.rect.left - 1
@@ -235,7 +238,6 @@ class DataDevice(SimpleScenery):
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
     super().__init__(startx, starty, width, height, color, obj_id=obj_id)
-    print(self.startx)
     self.timer = None
     self.color = color
     self.data = None
@@ -278,8 +280,6 @@ class DataDevice(SimpleScenery):
     if self.data:
       self.timer += DATA_DEVICE_TIMER
       if self.timer >= 1:
-        # self.data.rect.right = self.rect.left + 10
-        # self.data.rect.bottom = self.rect.y + self.height
         self.data.rect.right = self.rect.left - self.data.rect.width
         self.data.rect.y = self.rect.y
         self.data.velocity.y = -50
@@ -379,9 +379,7 @@ class Follower(MovableGameObject):
     if closest_distance < self.site:
       self.leader = closest_leader
 
-
   def draw(self, surface):
-    # pygame.draw.rect(surface, self.color, self.rect)
     if self.sprite:
       surface.blit(self.sprite, self.rect, area=self.current_frame)
     else:

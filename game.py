@@ -42,7 +42,6 @@ class MasterPlatformer(object):
 
     map_json = self.engine.parse_json("map.json")
 
-    # graphics.get_frames('PlayerRunning.png', 9, 8)
     # TODO: abstract this parsing to dynamically call the constructor based on the 
     # attribute (reuse map)
     for tile in map_json['floors']:
@@ -73,9 +72,6 @@ class MasterPlatformer(object):
                                                         int(follower["height"]),
                                                         color=eng.Colors.LRED))
 
-
-    # ipdb.set_trace()
-
     # Sometimes you need a list, sometimes you need a dict. We have both.
     self.all_objects = [game_obj for k, v in self.game_objects.items() for game_obj in v]
     self.static_objects = [game_obj for game_obj in self.all_objects if not isinstance(game_obj, wd.MovableGameObject)]
@@ -84,15 +80,11 @@ class MasterPlatformer(object):
     # build the initial data packet
     for obj_type, obj_list in self.game_objects.items():
       send_struct[obj_type] = []
-      # print(obj_list)
       for game_obj in obj_list:
-        # TODO: have a 2 pass constructor like BB
         send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
                               game_obj.rect.height], "id": game_obj.id, "color": game_obj.color,
                      "constructor": type(game_obj).__name__}
         send_struct[obj_type].append(send_dict)
-
-    print(send_struct)
 
     data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
     # TODO: Stop being lazy and read from file.
@@ -111,10 +103,7 @@ class MasterPlatformer(object):
     for node in self.socket_list:
       self.get_whole_packet(node)
 
-    # TODO: Send initial player objects to the nodes. That will require a kind
-    # Setup state to be added.
     self.state = 'load'
-    print(self.game_objects)
 
   def run(self):
     while True:

@@ -3,10 +3,19 @@ import pygame
 
 def get_frames(filename, columns, rows, des_width=30, des_height=30):
   """returns a new sprite sheet and a list of rectangular coordinates in the
-  file that correspond to frames in the file name"""
+  file that correspond to frames in the file name. It also manipulates the spritesheet 
+  so each frame will have the des_width and des_height
+  :param filename: sprite sheet file
+  :type filename: str
+  :param columns: the number of columns in the sprite sheet
+  :type columns: int
+  :param rows: the number of rows in the sprite sheet
+  :type rows: int
+  :param des_width: the desired width of a single frame
+  :type des_width: int
+  :param des_height: the desired height of a single frame
+  :type des_height: int"""
   image = pygame.image.load(filename)
-  print(image.get_rect())
-  # find how big we should make the sprite sheet
   image_width = columns * des_width
   image_height = rows * des_height
 
@@ -17,6 +26,3 @@ def get_frames(filename, columns, rows, des_width=30, des_height=30):
     for y in range(0, image_rect.height, des_height):
       frames.append(pygame.Rect(x, y, des_width, des_height))
   return image, frames
-
-  # [pygame.Rect(x, y, self.rect.width, self.rect.height) for x in range(0, self.rect.width * 9, self.rect.width) for y in range(0, self.rect.height * 8, self.rect.height) if not (y == 7 and x > 6)]
-  # print(image.get_rect())

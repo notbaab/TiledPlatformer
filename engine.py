@@ -5,7 +5,8 @@ import random
 import pygame
 import ipdb
 
-GRAVITY_VELOCITY = 1
+GRAVITY_VELOCITY = 2
+FPS = pygame.time.Clock()
 
 
 class Colors(object):
@@ -62,7 +63,6 @@ class Engine(object):
   def parse_json(self, file):
     json_data = open(file)
     data = json.load(json_data)
-    # TODO: do more fancy things
     return data
 
   def loop_over_game_dict(self, game_objects, func, *args):
@@ -84,10 +84,7 @@ class Engine(object):
     """Loops over a game dictionary and calls the passed in function on the game object. 
     The function must be an attribute of the game objects"""
     for obj_type, obj_list in game_objects.items():
-      # TODO: replace with call to map flat
-      for game_obj in obj_list:
-        func = getattr(game_obj, func_string)
-        func(*args)
+      self.map_attribute_flat(obj_list, func_string, *args)
 
   def slide_animation(self, game_obj, end_location):
     return
@@ -123,6 +120,14 @@ class Engine(object):
           game_object.respond_to_collision(other_object, 'y')
 
   def load_animation(self, game_objects, clear_fun, window):
+    """breaks the game objects into pieces and has them fly into their spots
+    :param game_objects: a list of game objects too apply the loading animation too
+    :type game_objects: list of GameObjects
+    :param clear_fun: the function used to clear the screen
+    :type clear_fun: function
+    :param window: the window to draw the game_objects on
+    :type window: pygame.surface
+    """
     # TODO: Add some randomness
     game_pieces = {}
     for game_obj in game_objects:
@@ -134,18 +139,15 @@ class Engine(object):
     step_dict = {}
     steps_total = 45
 
-    print(game_pieces)
     for obj, list_pieces in game_pieces.items():
       step_dict[obj] = {}
       for i, (rect, area) in enumerate(list_pieces):
         start_pointx, start_pointy = random.randint(-500, 1200), random.randint(-2000, 0)
-        # how much to change by
         dx, dy = (rect.x - start_pointx, rect.y - start_pointy)
         step_sizex, step_sizey = (dx / float(steps_total), dy / float(steps_total))
         step_dict[obj][i] = []
         for x in range(1, steps_total + 1):
           step_dict[obj][i].append((start_pointx + step_sizex * x, start_pointy + step_sizey * x))
-
         rect.x, rect.y = (start_pointx, start_pointy)
 
     for i in range(steps_total):
@@ -157,11 +159,18 @@ class Engine(object):
           rect.x, rect.y = inner_step_dict[idx].pop(0)  # grap the new place
 
       pygame.display.flip()
-      #ipdb.set_trace()
       FPS.tick(60)
 
   def split_sprite(self, game_obj, des_width_peices, des_height_peices):
-    """split the sprite into various pieces"""
+    """split the sprite into various pieces
+    :param game_obj: the game object that is going to be split
+    :type game_obj: GameObject
+    :param des_width_peices: the number of horizontal pieces 
+    :type des_width_peices: int
+    :param des_height_peices: the number of vertical pieces
+    :type des_height_peices: int
+    :return split_peices: a list of rect area tuples
+    :rtype: list of (pygame.Rect, pygame.Rect)"""
     width = int(math.ceil(game_obj.rect.width/des_width_peices))
     height = int(math.ceil(game_obj.rect.height/des_height_peices))
     split_peices = []
@@ -170,6 +179,4 @@ class Engine(object):
         rect = pygame.Rect(game_obj.rect.x + x, game_obj.rect.y + y, 0, 0)
         area = pygame.Rect(game_obj.current_frame.x + x, game_obj.current_frame.y + y, width, height)
         split_peices.append((rect, area))
-        print("split_peices")
-        print(split_peices[-1])
     return split_peices

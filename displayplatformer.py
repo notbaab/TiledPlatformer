@@ -35,7 +35,7 @@ class ClientPlatformer(NetworkGame):
       for game_obj in obj_list:
         constructor = getattr(wd, game_obj['constructor'])
         translate_pos = self.translate_to_local((game_obj['rect'][0], game_obj['rect'][1]))
-        # Send Spritesheet also
+        # TODO: Send Spritesheet also
         if translate_pos != 0:
           self.game_objects[game_obj['id']] = constructor(translate_pos[0], translate_pos[1],
                                                           game_obj['rect'][2], game_obj['rect'][3],
@@ -47,11 +47,12 @@ class ClientPlatformer(NetworkGame):
 
           self.game_objects[game_obj['id']].render = False
 
-    # print(self.game_objects)
     return data
 
   def update(self, data):
-    """override this method, only hook needed for the server"""
+    """override this method, only hook needed for the server
+    :param data: A python dict with data passed from the server
+    :type data: dict"""
     if data['state'] == 'play':
       return self.play_state(data)
     elif data['state'] == 'load':
@@ -69,13 +70,14 @@ class ClientPlatformer(NetworkGame):
     :param data: TODO: make this fire off a specific load animation
     :type data: dict"""
     obj_on_screen = [game_obj for game_obj in self.game_objects.values() if game_obj.render]
-    print(obj_on_screen)
     self.engine.load_animation(obj_on_screen, self.clear, self.window)
-    # FPS.tick(TICK)
     return {'state': 'play'}
 
   def play_state(self, data):
-    # TODO: why am I passing data in here?
+    """the main loop of the game. Takes the python dict and checks if the game 
+    object is in the nodes area. If so it sets it to render
+    :para data: python dict with various game object packets
+    :type data: dict"""
     self.clear(eng.Colors.WHITE)
     for packet in data['game_objects']:
       translated_pos = self.translate_to_local(packet['location'])
@@ -90,16 +92,16 @@ class ClientPlatformer(NetworkGame):
     for obj_id, game_obj in self.game_objects.items():
       if game_obj.render:
         game_obj.draw(self.window)
-    # obj_to_draw = [obj for obj in game_objects.items() if obj.render]
-    # self.engine.map_attribute_flat(game_objects, 'draw')
     pygame.display.flip()
 
     data_struct = {'state': 'play'}
     return data_struct
 
-  # TODO: actually do that.
   def translate_to_local(self, pos):
     """translates the given data to the local node. Wrapper for call to game
+    :param pos: a tuple of an x and y coordinate
+    :type pos: tuple
+    :rtype: int or tuple
     """
     if ((self.tile[0] + 1) * SCREEN_WIDTH > pos[0] >= self.tile[0] * SCREEN_WIDTH and
         (self.tile[1] + 1) * SCREEN_HEIGHT > pos[1] >= self.tile[1] * SCREEN_HEIGHT):

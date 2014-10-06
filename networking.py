@@ -91,8 +91,6 @@ class Server():
     data = ''.encode('utf-8')
     while True:
       data += self.open_sock.recv(self.amount_of_data)
-      # data += self.open_sock.recv(self.amount_of_data)
-      # print 'rdbuff is ' + rdbuf
       split = data.split(SOCKET_DEL)  # split at newline, as per our custom protocol
       if len(split) != 2:  # it should be 2 elements big if it got the whole message
         pass
@@ -102,7 +100,6 @@ class Server():
   def sync(self, send_struct):
     # send response back to connecting to say processing is complete
     x = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + SOCKET_DEL
-    # print "at syning"
     self.open_sock.sendall(x)
     # if send_struct['state'] == 'over':
     #   # clear screen and wait for handshake to proceed
