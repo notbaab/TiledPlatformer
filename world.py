@@ -3,12 +3,14 @@ import engine as eng
 # from graphics import *
 from itertools import cycle
 import graphics
+import ipdb
 
 
 GRAVITY_VELOCITY = 4  # lets cheat for now
 FLOOR_Y = 580
 PLAYER_SPEED = 10
 FOLLOWER_SPEED = PLAYER_SPEED - 6  # just slower than the players
+PATROL_SPEED = 1  # just slower than the players
 JUMP_VELOCITY = -20
 DATA_DEVICE_TIMER = .01
 TIMER_WIDTH = 100
@@ -396,10 +398,45 @@ class Follower(MovableGameObject):
 
 
 class Patroller(Follower):
-  """class that patrols it's give area"""
+  """class that patrols it's give x area"""
 
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, site_range=40):
-    super().__init__(startx, starty, width, height, obj_id=obj_id)
+  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, patrol_range=100, site_range=200):
+    super().__init__(startx, starty, width, height, obj_id=obj_id, site_range=site_range)
+    self.patrol_range = patrol_range
+    self.reset_patrol()
+    # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
+    self.sprite_sheet = 'yellow.png'
+    if self.sprite_sheet:
+      self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
+    else:
+      self.sprite = None
+    self.current_frame = self.frames[0]
+
+  def update(self):
+    if self.leader:
+      super().update()
+      if not self.leader:
+        # leader moved out of range, set new start and end patrol to start from the middle
+        self.reset_patrol()
+        self.do_patrol()
+    else:
+      self.do_patrol()
+
+  def do_patrol(self):
+    self.rect.centerx += self.velocity.x
+    if self.velocity.x > 0 and self.rect.centerx > self.end_patrol:
+      self.velocity.x = -PATROL_SPEED
+    if self.velocity.x < 0  and self.rect.centerx < self.start_patrol:
+      self.velocity.x = PATROL_SPEED
+
+  def reset_patrol(self):
+    """sets the partrol to be equidistance from the current center"""
+    self.start_patrol = self.rect.centerx - self.patrol_range/2
+    self.end_patrol = self.rect.centerx + self.patrol_range/2 
+    self.velocity.x = PATROL_SPEED
+
+
+
 
 
 

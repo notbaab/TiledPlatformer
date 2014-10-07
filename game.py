@@ -39,6 +39,7 @@ class MasterPlatformer(object):
     self.game_objects['data_object'] = []
     self.game_objects['data_device'] = []
     self.game_objects['followers'] = []
+    self.game_objects['patrollers'] = []
 
     map_json = self.engine.parse_json("map.json")
 
@@ -67,6 +68,13 @@ class MasterPlatformer(object):
                                                             color=eng.Colors.AQUA))
     for follower in map_json['followers']:
       self.game_objects['followers'].append(wd.Follower(int(follower["x"]),
+                                                        int(follower["y"]),
+                                                        int(follower["width"]),
+                                                        int(follower["height"]),
+                                                        color=eng.Colors.LRED))
+
+    for patroler in map_json['patrollers']:
+      self.game_objects['patrollers'].append(wd.Patroller(int(follower["x"]),
                                                         int(follower["y"]),
                                                         int(follower["width"]),
                                                         int(follower["height"]),
@@ -156,7 +164,9 @@ class MasterPlatformer(object):
 
     self.engine.loop_over_game_dict_att(self.game_objects, 'update')
     self.engine.loop_over_game_dict_att(self.game_objects, 'animate')
-    self.engine.map_attribute_flat(self.game_objects['followers'], 'check_for_leader', self.game_objects['players'])
+
+    # update the AI after the player have been updated
+    self.engine.map_attribute_flat(self.game_objects['followers'] + self.game_objects['patrollers'], 'check_for_leader', self.game_objects['players'])
 
     # construct packet
     send_struct = {'state': 'play'}
