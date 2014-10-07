@@ -9,8 +9,8 @@ import ipdb
 GRAVITY_VELOCITY = 4  # lets cheat for now
 FLOOR_Y = 580
 PLAYER_SPEED = 10
-FOLLOWER_SPEED = PLAYER_SPEED - 6  # just slower than the players
-PATROL_SPEED = 1  # just slower than the players
+FOLLOWER_SPEED = PLAYER_SPEED - 3  # just slower than the players
+PATROL_SPEED = 4  # just slower than the players
 JUMP_VELOCITY = -20
 DATA_DEVICE_TIMER = .01
 TIMER_WIDTH = 100
@@ -141,30 +141,40 @@ class Player(MovableGameObject):
     self.animation_timer = 0
     self.data = None
     self.direction = 'left'
+    self.moving = False
 
   def jump(self):
     self.velocity.y = JUMP_VELOCITY
 
+  def update(self):
+    """set velocity to be moved by the physics engine"""
+    if self.direction == 'left' and self.moving:
+      self.velocity.x = -PLAYER_SPEED
+    if self.direction == 'right' and self.moving:
+      self.velocity.x = PLAYER_SPEED
+
   def move_left(self):
     """sets velocity of player to move left"""
-    self.velocity.x = -PLAYER_SPEED
+    self.moving = True
     self.direction = 'left'
 
   def move_right(self):
     """sets velocity of player to move right"""
-    self.velocity.x = PLAYER_SPEED
+    self.moving = True
     self.direction = 'right'
 
   # TODO: why have two methods for stop
   def stop_left(self):
     """sets velocity to 0"""
-    if self.velocity.x < 0:
+    if self.direction == 'left':
       self.velocity.x = 0
+      self.moving = False
 
   def stop_right(self):
     """sets velocity to 0"""
-    if self.velocity.x > 0:
+    if self.direction == 'right':
       self.velocity.x = 0
+      self.moving = False
 
   def draw(self, surface):
     """Draws the player object onto surface
@@ -284,8 +294,8 @@ class DataDevice(SimpleScenery):
       if self.timer >= 1:
         self.data.rect.right = self.rect.left - self.data.rect.width
         self.data.rect.y = self.rect.y
-        self.data.velocity.y = -50
-        self.data.velocity.x = -20
+        self.data.velocity.y = -20
+        self.data.velocity.x = -10
         self.data = None
         self.timer = None
 
@@ -367,7 +377,7 @@ class Follower(MovableGameObject):
     elif self.leader:
       self.leader = None
       self.velocity.x = 0
-    self.rect.centerx += self.velocity.x
+    # self.rect.centerx += self.velocity.x
 
   def check_for_leader(self, leader_list):
     self.leader = None
@@ -404,6 +414,7 @@ class Patroller(Follower):
     super().__init__(startx, starty, width, height, obj_id=obj_id, site_range=site_range)
     self.patrol_range = patrol_range
     self.reset_patrol()
+    self.direction = 1 # scaler to multiple speed by to get direction
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = 'yellow.png'
     if self.sprite_sheet:
@@ -423,11 +434,14 @@ class Patroller(Follower):
       self.do_patrol()
 
   def do_patrol(self):
-    self.rect.centerx += self.velocity.x
+    # self.rect.centerx += self.velocity.x
     if self.velocity.x > 0 and self.rect.centerx > self.end_patrol:
-      self.velocity.x = -PATROL_SPEED
+      self.direction = -1
+      # self.velocity.x = -PATROL_SPEED
     if self.velocity.x < 0  and self.rect.centerx < self.start_patrol:
-      self.velocity.x = PATROL_SPEED
+      # self.velocity.x = PATROL_SPEED
+      self.direction = 1
+    self.velocity.x = PATROL_SPEED * self.direction
 
   def reset_patrol(self):
     """sets the partrol to be equidistance from the current center"""

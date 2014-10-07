@@ -7,6 +7,7 @@ import ipdb
 
 GRAVITY_VELOCITY = 2
 FPS = pygame.time.Clock()
+X_FRICTION_CONSTANT = .3
 
 
 class Colors(object):
@@ -102,6 +103,7 @@ class Engine(object):
     for game_object in objects:
       if game_object in static_objects:
         continue
+      self.simulate_friction(game_object)
       game_object.rect.x += game_object.velocity.x
 
       for other_object in objects:
@@ -118,6 +120,22 @@ class Engine(object):
           continue  # don't do things with itself
         if game_object.rect.colliderect(other_object.rect):
           game_object.respond_to_collision(other_object, 'y')
+
+  def simulate_friction(self, game_object):
+    if game_object.velocity.x != 0:
+      # simulate some drag
+      if game_object.velocity.x > 0:
+        # traveling right
+        game_object.velocity.x = game_object.velocity.x - X_FRICTION_CONSTANT
+        if game_object.velocity.x < 0:
+          # Can't friction backwards
+          game_object.velocity.x = 0
+      else: 
+        game_object.velocity.x = game_object.velocity.x + X_FRICTION_CONSTANT
+        if game_object.velocity.x > 0:
+          # Can't friction backwards
+          game_object.velocity.x = 0
+
 
   def load_animation(self, game_objects, clear_fun, window):
     """breaks the game objects into pieces and has them fly into their spots
