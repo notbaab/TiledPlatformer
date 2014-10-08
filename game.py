@@ -19,7 +19,8 @@ GRID_SPACE = [0, 0]
 DISPLAY_SIZE = {"x": 600, "y": 600}
 BEZZEL_SIZE = [30, 30]
 
-
+# TEST
+DEL_TIME = 120
 # TODO: have a platformer game class that has all the similar components of the render and 
 # master node, and inherit from that?
 class MasterPlatformer(object):
@@ -34,12 +35,7 @@ class MasterPlatformer(object):
     self.engine = eng.Engine()
 
     # load map
-    self.game_objects['terrain'] = []
-    self.game_objects['players'] = []
-    self.game_objects['data_object'] = []
-    self.game_objects['data_device'] = []
-    self.game_objects['followers'] = []
-    self.game_objects['patrollers'] = []
+    self.game_objects = {}
 
     map_json = self.engine.parse_json("map.json")
 
@@ -47,52 +43,45 @@ class MasterPlatformer(object):
     # attribute (reuse map)
     for tile in map_json['floors']:
       # noinspection PyPep8
-      self.game_objects['terrain'].append(
-        wd.SimpleScenery(int(tile["x"]), int(tile["y"]),
-                         int(tile["width"]), int(tile["height"]), (255, 255, 000)))
+      
+      tmp = wd.SimpleScenery(int(tile["x"]), int(tile["y"]),
+                             int(tile["width"]), int(tile["height"]), sprite_sheet='Floor.png')
+      self.game_objects[tmp.id] = tmp
     for player in map_json['players']:
-      self.game_objects['players'].append(wd.Player(int(player["x"]),
-                                                    int(player["y"]), 18, 34,
-                                                    sprite_sheet="PlayerRunning.png"))
+      tmp = wd.Player(int(player["x"]), int(player["y"]), 18, 34, sprite_sheet="PlayerRunning.png")
+      self.game_objects[tmp.id] = tmp
+
     for data in map_json['data_object']:
-      self.game_objects['data_object'].append(wd.Data(int(data["x"]),
-                                                      int(data["y"]),
-                                                      int(data["width"]),
-                                                      int(data["height"]),
-                                                      color=(255, 255, 0)))
+      tmp = wd.Data(int(data["x"]), int(data["y"]), int(data["width"]), int(data["height"]),
+                    sprite_sheet='light_blue.png')
+      self.game_objects[tmp.id] = tmp
+
     for data_device in map_json['data_device']:
-      self.game_objects['data_device'].append(wd.DataDevice(int(data_device["x"]),
-                                                            int(data_device["y"]),
-                                                            int(data_device["width"]),
-                                                            int(data_device["height"]),
-                                                            color=eng.Colors.AQUA))
+      tmp = wd.DataDevice(int(data_device["x"]), int(data_device["y"]), int(data_device["width"]),
+                          int(data_device["height"]), sprite_sheet='green.png')
+      self.game_objects[tmp.id] = tmp
+
+
     for follower in map_json['followers']:
-      self.game_objects['followers'].append(wd.Follower(int(follower["x"]),
-                                                        int(follower["y"]),
-                                                        int(follower["width"]),
-                                                        int(follower["height"]),
-                                                        color=eng.Colors.LRED))
+      tmp = wd.Follower(int(follower["x"]), int(follower["y"]), int(follower["width"]), 
+                        int(follower["height"]), sprite_sheet='Follower.png')
+      self.game_objects[tmp.id] = tmp
 
     for patroler in map_json['patrollers']:
-      self.game_objects['patrollers'].append(wd.Patroller(int(follower["x"]),
-                                                        int(follower["y"]),
-                                                        int(follower["width"]),
-                                                        int(follower["height"]),
-                                                        color=eng.Colors.LRED))
+      tmp = wd.Patroller(int(patroler["x"]), int(patroler["y"]), int(patroler["width"]), 
+                        int(patroler["height"]), sprite_sheet='yellow.png')
+      self.game_objects[tmp.id] = tmp
 
-    # Sometimes you need a list, sometimes you need a dict. We have both.
-    self.all_objects = [game_obj for k, v in self.game_objects.items() for game_obj in v]
-    self.static_objects = [game_obj for game_obj in self.all_objects if not isinstance(game_obj, wd.MovableGameObject)]
+    print(self.game_objects)
 
     send_struct = {}
+    send_struct['game_obj'] = []
     # build the initial data packet
-    for obj_type, obj_list in self.game_objects.items():
-      send_struct[obj_type] = []
-      for game_obj in obj_list:
-        send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
-                              game_obj.rect.height], "id": game_obj.id, "color": game_obj.color,
-                     "constructor": type(game_obj).__name__}
-        send_struct[obj_type].append(send_dict)
+    for game_obj in self.game_objects.values():
+      send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
+                            game_obj.rect.height], "id": game_obj.id, "sprite_sheet": game_obj.sprite_sheet,
+                   "constructor": type(game_obj).__name__}
+      send_struct['game_obj'].append(send_dict)
 
     data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
     # TODO: Stop being lazy and read from file.
@@ -113,6 +102,10 @@ class MasterPlatformer(object):
 
     self.state = 'load'
 
+    #TEST 
+    self.deltime = 0
+    self.DEL_TIME = 60
+
   def run(self):
     while True:
       if self.state == 'play':
@@ -130,8 +123,9 @@ class MasterPlatformer(object):
     return self.serialize_and_sync(send_struct)
 
   def play_frame(self):
-    player1 = self.game_objects['players'][0]
-    player2 = self.game_objects['players'][1]
+    game_dict = self.structured_list()  # Structure the game object list to manage easier. n time should be fast
+    player1 = game_dict['Player'][0]
+    player2 = game_dict['Player'][1]
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         sys.exit()
@@ -160,22 +154,42 @@ class MasterPlatformer(object):
         if event.key == K_d:
           player2.stop_right()
 
-    self.engine.physics_simulation(self.all_objects, self.static_objects)
+    self.engine.physics_simulation(self.game_objects.values(), game_dict['StaticObject'])
 
-    self.engine.loop_over_game_dict_att(self.game_objects, 'update')
-    self.engine.loop_over_game_dict_att(self.game_objects, 'animate')
+    self.engine.map_attribute_flat(self.game_objects.values(), 'update')
+    self.engine.map_attribute_flat(self.game_objects.values(), 'animate')
 
-    # update the AI after the player have been updated
-    self.engine.map_attribute_flat(self.game_objects['followers'] + self.game_objects['patrollers'], 'check_for_leader', self.game_objects['players'])
+    # update the AI after the players have been updated
+    self.engine.map_attribute_flat(game_dict['AI'], 'check_for_leader', game_dict['Player'])
 
     # construct packet
     send_struct = {'state': 'play'}
+
+    # check for objects to delete
+    send_struct['deleted_objs'] = []
+
     game_objects_packets = []  # accumulator for the build_packet function
-    self.engine.loop_over_game_dict_att(self.game_objects, 'build_packet', game_objects_packets)
+    self.engine.map_attribute_flat(self.game_objects.values(), 'build_packet', game_objects_packets)
+    
     send_struct['game_objects'] = game_objects_packets
 
     return self.serialize_and_sync(send_struct)
 
+  def structured_list(self):
+    """take the game object list and return a dict with the keys for static, AI, and player
+    objects. An object can be added to multiple lists if it is multiple things i.e.
+    a player is a movable game object"""
+    ret_dict = {'AI':[], 'StaticObject':[], 'Player':[], 'MovableGameObject':[]}
+    for game_obj in self.game_objects.values():
+      if isinstance(game_obj, wd.Player):
+        ret_dict['Player'].append(game_obj)
+      elif isinstance(game_obj, wd.SimpleScenery):
+        ret_dict['StaticObject'].append(game_obj)
+      elif isinstance(game_obj, wd.Follower):
+        ret_dict['AI'].append(game_obj)
+      if isinstance(game_obj, wd.MovableGameObject):
+        ret_dict['MovableGameObject'].append(game_obj)
+    return ret_dict
   def get_whole_packet(self, sock):
     """ensures that we receive the whole stream of data"""
     data = ''.encode('utf-8')

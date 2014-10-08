@@ -31,21 +31,20 @@ class ClientPlatformer(NetworkGame):
 
   def init_game(self, data):
     """Get the initial configuration of the game from the master node."""
-    for obj_type, obj_list in data.items():
-      for game_obj in obj_list:
-        constructor = getattr(wd, game_obj['constructor'])
-        translate_pos = self.translate_to_local((game_obj['rect'][0], game_obj['rect'][1]))
-        # TODO: Send Spritesheet also
-        if translate_pos != 0:
-          self.game_objects[game_obj['id']] = constructor(translate_pos[0], translate_pos[1],
-                                                          game_obj['rect'][2], game_obj['rect'][3],
-                                                          color=game_obj['color'], obj_id=game_obj['id'])
-        else:
-          self.game_objects[game_obj['id']] = constructor(game_obj['rect'][0], game_obj['rect'][1],
-                                                          game_obj['rect'][2], game_obj['rect'][3],
-                                                          color=game_obj['color'], obj_id=game_obj['id'])
+    for game_obj in data['game_obj']:
+      constructor = getattr(wd, game_obj['constructor'])
+      translate_pos = self.translate_to_local((game_obj['rect'][0], game_obj['rect'][1]))
+      # TODO: Send Spritesheet also
+      if translate_pos != 0:
+        self.game_objects[game_obj['id']] = constructor(translate_pos[0], translate_pos[1],
+                                                        game_obj['rect'][2], game_obj['rect'][3],
+                                                        sprite_sheet=game_obj['sprite_sheet'], obj_id=game_obj['id'])
+      else:
+        self.game_objects[game_obj['id']] = constructor(game_obj['rect'][0], game_obj['rect'][1],
+                                                        game_obj['rect'][2], game_obj['rect'][3],
+                                                        sprite_sheet=game_obj['sprite_sheet'], obj_id=game_obj['id'])
 
-          self.game_objects[game_obj['id']].render = False
+        self.game_objects[game_obj['id']].render = False
 
     return data
 
@@ -79,6 +78,8 @@ class ClientPlatformer(NetworkGame):
     :para data: python dict with various game object packets
     :type data: dict"""
     self.clear(eng.Colors.WHITE)
+    for id in data['deleted_objs']:
+      del self.game_objects[id]
     for packet in data['game_objects']:
       translated_pos = self.translate_to_local(packet['location'])
       if translated_pos != 0:

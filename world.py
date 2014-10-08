@@ -30,6 +30,7 @@ class GameObject(object):
     else:
       self.id = obj_id
     self.render = True
+    self.to_del = False
 
   def update(self):
     """anything that the object needs to do every frame"""
@@ -103,7 +104,7 @@ class SimpleScenery(GameObject):
     self.color = color
     self.rect = pygame.Rect((startx, starty, width, height))
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
-    self.sprite_sheet = 'Floor.png'
+    self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
       self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
     else:
@@ -128,8 +129,8 @@ class Player(MovableGameObject):
     super().__init__(startx, starty, width, height, obj_id=obj_id)
     self.color = color
     self.rect = pygame.Rect((startx, starty, width, height))
-    sprite_sheet = 'PlayerRunning.png'
-    if sprite_sheet:
+    self.sprite_sheet = sprite_sheet
+    if self.sprite_sheet:
       self.sprite, moving_frames = graphics.get_frames(sprite_sheet, 9, 8, des_width=width, des_height=height)
       image_rect = self.sprite.get_rect()
     else:
@@ -249,12 +250,13 @@ class DataDevice(SimpleScenery):
   """Devices that are scenery, but output data when interacted with"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
-    super().__init__(startx, starty, width, height, color, obj_id=obj_id)
+    super().__init__(startx, starty, width, height, color, obj_id=obj_id, sprite_sheet=sprite_sheet)
     self.timer = None
     self.color = color
     self.data = None
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
-    self.sprite_sheet = 'green.png'
+    self.sprite_sheet = sprite_sheet
+    print("HEHRHEREHR" + sprite_sheet)
     if self.sprite_sheet:
       self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
     else:
@@ -322,7 +324,7 @@ class Data(MovableGameObject):
     self.color = color
     self.sprite_sheet = sprite_sheet
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
-    self.sprite_sheet = 'light_blue.png'
+    self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
       self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
     else:
@@ -370,7 +372,7 @@ class Follower(MovableGameObject):
     self.velocity = eng.Vector(0, 0)
     self.site = site_range
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
-    self.sprite_sheet = 'Follower.png'
+    self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
       self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
     else:
@@ -423,12 +425,12 @@ class Patroller(Follower):
   """class that patrols it's give x area"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, patrol_range=100, site_range=200):
-    super().__init__(startx, starty, width, height, obj_id=obj_id, site_range=site_range)
+    super().__init__(startx, starty, width, height, obj_id=obj_id, sprite_sheet=sprite_sheet, site_range=site_range)
     self.patrol_range = patrol_range
     self.reset_patrol()
     self.direction = 1 # scaler to multiple speed by to get direction
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
-    self.sprite_sheet = 'yellow.png'
+    self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
       self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
     else:
@@ -460,9 +462,4 @@ class Patroller(Follower):
     self.start_patrol = self.rect.centerx - self.patrol_range/2
     self.end_patrol = self.rect.centerx + self.patrol_range/2 
     self.velocity.x = PATROL_SPEED
-
-
-
-
-
 
