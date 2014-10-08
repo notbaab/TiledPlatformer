@@ -9,6 +9,7 @@ import ipdb
 GRAVITY_VELOCITY = 4  # lets cheat for now
 FLOOR_Y = 580
 PLAYER_SPEED = 10
+PLAYER_THROW_SPEED = eng.Vector(10, -20)
 FOLLOWER_SPEED = PLAYER_SPEED - 3  # just slower than the players
 PATROL_SPEED = 4  # just slower than the players
 JUMP_VELOCITY = -20
@@ -140,7 +141,7 @@ class Player(MovableGameObject):
     self.animation_time = 10
     self.animation_timer = 0
     self.data = None
-    self.direction = 'left'
+    self.direction = 1
     self.moving = False
 
   def jump(self):
@@ -148,31 +149,29 @@ class Player(MovableGameObject):
 
   def update(self):
     """set velocity to be moved by the physics engine"""
-    if self.direction == 'left' and self.moving:
-      self.velocity.x = -PLAYER_SPEED
-    if self.direction == 'right' and self.moving:
-      self.velocity.x = PLAYER_SPEED
+    if self.moving:
+      self.velocity.x = self.direction * PLAYER_SPEED
 
   def move_left(self):
     """sets velocity of player to move left"""
     self.moving = True
-    self.direction = 'left'
+    self.direction = -1
 
   def move_right(self):
     """sets velocity of player to move right"""
     self.moving = True
-    self.direction = 'right'
+    self.direction = 1
 
   # TODO: why have two methods for stop
   def stop_left(self):
     """sets velocity to 0"""
-    if self.direction == 'left':
+    if self.direction == -1:
       self.velocity.x = 0
       self.moving = False
 
   def stop_right(self):
     """sets velocity to 0"""
-    if self.direction == 'right':
+    if self.direction == 1:
       self.velocity.x = 0
       self.moving = False
 
@@ -231,16 +230,17 @@ class Player(MovableGameObject):
   def throw_data(self):
     """Through the data that the player is holding"""
     if self.data:
-      if self.direction == 'left':
+      if self.direction == -1:
         self.data.rect.right = self.rect.left - 1
-        self.data.velocity.x = -10
+        self.data.velocity.x = -PLAYER_THROW_SPEED.x
       else:
         # x_throw = self.rect.right - self.data.rect.rect.width
         self.data.rect.left = self.rect.right + 1
-        self.data.velocity.x = 10
+        self.data.velocity.x = PLAYER_THROW_SPEED.x
+
       # self.data.rect.x = x_throw
       self.data.rect.y = self.rect.y
-      self.data.velocity.y = 10
+      self.data.velocity.y = PLAYER_THROW_SPEED.y
       self.data = None
       self.change_animation('moving')
 
