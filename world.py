@@ -296,6 +296,7 @@ class DataDevice(SimpleScenery):
         self.data.rect.y = self.rect.y
         self.data.velocity.y = -20
         self.data.velocity.x = -10
+        self.data.advance_data()
         self.data = None
         self.timer = None
 
@@ -327,25 +328,36 @@ class Data(MovableGameObject):
     else:
       self.sprite = None
     self.current_frame = self.frames[0]
+    self.sprite2, self.frames2 = graphics.get_frames('green.png', 1, 1, des_width=width, des_height=height)
+    self.frame_idx = 1
+
 
   def draw(self, surface):
     if self.sprite_sheet:
-      surface.blit(self.sprite, self.rect, area=self.current_frame)
+      if self.frame_idx == 1:
+        surface.blit(self.sprite, self.rect, area=self.current_frame)
+      elif self.frame_idx == 2:
+        surface.blit(self.sprite2, self.rect, area=self.current_frame)        
     else:
       pygame.draw.rect(surface, (155, 0, 0), self.rect)
 
   def build_packet(self, accumulator):
-    packet = {'type': 'data', 'location': [self.rect.x, self.rect.y], 'frame': '', 'id': self.id}
+    packet = {'type': 'data', 'location': [self.rect.x, self.rect.y], 'frame': self.frame_idx, 'id': self.id}
     accumulator.append(packet)
 
   def read_packet(self, packet):
     self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
+    self.frame_idx = packet['frame']
     self.render = True
 
   def respond_to_collision(self, obj, axis=None):
     super().respond_to_collision(obj, axis)
     if type(obj) == DataDevice:
       obj.get_data(self)
+
+  def advance_data(self):
+    # TODO: hacked for now with no sprite sheet
+    self.frame_idx = 2
 
 
 class Follower(MovableGameObject):
