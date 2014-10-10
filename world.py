@@ -410,7 +410,7 @@ class Data(MovableGameObject):
 
   def respond_to_collision(self, obj, axis=None):
     if isinstance(obj, Player):
-      obj.respond_to_collision
+      obj.respond_to_collision(self)
     else:
       # TODO: this makes the data go through players
       super().respond_to_collision(obj, axis)
@@ -478,7 +478,7 @@ class Follower(MovableGameObject):
     self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
     self.render = True
 
-  def respond_to_collision(self, obj, axis):
+  def respond_to_collision(self, obj, axis=None):
     if isinstance(obj, Player):
       obj.respond_to_collision(self, axis)
     super().respond_to_collision(obj, axis)
