@@ -100,6 +100,8 @@ class Engine(object):
         :type static_objects: list of objects with a pygame rect and velocity
         """
     # simulate
+    # TODO: a neat (and possibly needed) optimization would be to track which objects are players 
+    # and to create  a near objects list that the player will check when doing interactions 
     for game_object in objects:
       if game_object in static_objects:
         continue
@@ -126,12 +128,12 @@ class Engine(object):
       # simulate some drag
       if game_object.velocity.x > 0:
         # traveling right
-        game_object.velocity.x = game_object.velocity.x - X_FRICTION_CONSTANT
+        game_object.velocity.x -= X_FRICTION_CONSTANT
         if game_object.velocity.x < 0:
           # Can't friction backwards
           game_object.velocity.x = 0
       else: 
-        game_object.velocity.x = game_object.velocity.x + X_FRICTION_CONSTANT
+        game_object.velocity.x += X_FRICTION_CONSTANT
         if game_object.velocity.x > 0:
           # Can't friction backwards
           game_object.velocity.x = 0
@@ -152,8 +154,6 @@ class Engine(object):
       game_pieces[game_obj] = self.split_sprite(game_obj, 8, 8)
 
     # move every object on screen out
-    end_points = {}
-    distance_to_move = {}
     step_dict = {}
     steps_total = 45
 

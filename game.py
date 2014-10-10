@@ -33,6 +33,8 @@ class MasterPlatformer(object):
     self.game_objects = {}
     self.window = pygame.display.set_mode((60, 60))
     self.engine = eng.Engine()
+    self.added = []  # list keeping track of which objects are added
+    self.deleted = []  # list keeping track of the ids of objects that are deleted
 
     # load map
     self.game_objects = {}
@@ -43,10 +45,10 @@ class MasterPlatformer(object):
     # attribute (reuse map)
     for tile in map_json['floors']:
       # noinspection PyPep8
-      
       tmp = wd.SimpleScenery(int(tile["x"]), int(tile["y"]),
                              int(tile["width"]), int(tile["height"]), sprite_sheet='Floor.png')
       self.game_objects[tmp.id] = tmp
+
     for player in map_json['players']:
       tmp = wd.Player(int(player["x"]), int(player["y"]), 18, 34, sprite_sheet="PlayerRunning.png")
       self.game_objects[tmp.id] = tmp
@@ -58,7 +60,7 @@ class MasterPlatformer(object):
 
     for data_device in map_json['data_device']:
       tmp = wd.DataDevice(int(data_device["x"]), int(data_device["y"]), int(data_device["width"]),
-                          int(data_device["height"]), sprite_sheet='green.png')
+                          int(data_device["height"]), sprite_sheet='green.png', game=self)
       self.game_objects[tmp.id] = tmp
 
 
@@ -69,13 +71,12 @@ class MasterPlatformer(object):
 
     for patroler in map_json['patrollers']:
       tmp = wd.Patroller(int(patroler["x"]), int(patroler["y"]), int(patroler["width"]), 
-                        int(patroler["height"]), sprite_sheet='yellow.png')
+                         int(patroler["height"]), sprite_sheet='yellow.png')
       self.game_objects[tmp.id] = tmp
 
     print(self.game_objects)
 
-    send_struct = {}
-    send_struct['game_obj'] = []
+    send_struct = {'game_obj': []}
     # build the initial data packet
     for game_obj in self.game_objects.values():
       send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
@@ -100,11 +101,7 @@ class MasterPlatformer(object):
     for node in self.socket_list:
       self.get_whole_packet(node)
 
-    self.state = 'load'
-
-    #TEST 
-    self.deltime = 0
-    self.DEL_TIME = 60
+    self.state = 'play'
 
   def run(self):
     while True:
@@ -144,6 +141,8 @@ class MasterPlatformer(object):
           player2.move_right()
         if event.key == K_w:
           player2.jump()
+        if event.key == K_SPACE:
+          player1.interact(self.game_objects.values())  # TODO: We are passing in way to much data here, fix it.
       if event.type == KEYUP:
         if event.key == K_LEFT:
           player1.stop_left()
@@ -161,16 +160,27 @@ class MasterPlatformer(object):
 
     # update the AI after the players have been updated
     self.engine.map_attribute_flat(game_dict['AI'], 'check_for_leader', game_dict['Player'])
-
+    
     # construct packet
-    send_struct = {'state': 'play'}
+    send_struct = {'state': 'play', 'deleted_objs': [], 'added_objs': []}
 
-    # check for objects to delete
-    send_struct['deleted_objs'] = []
+    # check for objects that have been created and add them to the dict
+    for game_obj in self.added:
+      self.game_objects[game_obj.id] = game_obj
+      send_struct['added_objs'].append({"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
+                     game_obj.rect.height], "id": game_obj.id, "sprite_sheet": game_obj.sprite_sheet,
+                     "constructor": type(game_obj).__name__})
+
+    for game_obj_id in self.deleted:
+      send_struct['deleted_objs'].append(game_obj_id)
+      del game_objects[game_obj_id]
+
+    # clear lists
+    self.added = []
+    self.deleted = []
 
     game_objects_packets = []  # accumulator for the build_packet function
     self.engine.map_attribute_flat(self.game_objects.values(), 'build_packet', game_objects_packets)
-    
     send_struct['game_objects'] = game_objects_packets
 
     return self.serialize_and_sync(send_struct)
@@ -190,6 +200,10 @@ class MasterPlatformer(object):
       if isinstance(game_obj, wd.MovableGameObject):
         ret_dict['MovableGameObject'].append(game_obj)
     return ret_dict
+
+  def add_to_world(self, game_obj):
+    self.game_objects[game_obj.id] = game_obj
+
   def get_whole_packet(self, sock):
     """ensures that we receive the whole stream of data"""
     data = ''.encode('utf-8')

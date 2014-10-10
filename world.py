@@ -4,17 +4,20 @@ import engine as eng
 from itertools import cycle
 import graphics
 import ipdb
+import random
 
 
 GRAVITY_VELOCITY = 4  # lets cheat for now
 FLOOR_Y = 580
 PLAYER_SPEED = 10
-PLAYER_THROW_SPEED = eng.Vector(10, -20)
+PLAYER_THROW_SPEED = eng.Vector(20, -5)
 FOLLOWER_SPEED = PLAYER_SPEED - 3  # just slower than the players
 PATROL_SPEED = 4  # just slower than the players
 JUMP_VELOCITY = -20
 DATA_DEVICE_TIMER = .01
 TIMER_WIDTH = 100
+PLAYER_INTERACT_DIST = 50
+EJECT_SPEED = eng.Vector(20, -20)
 
 
 # TODO: add more things to do
@@ -55,6 +58,20 @@ class SpriteGameObject(GameObject):
   pass
 
 
+class Constructor(object):
+  """A special object that contains a reference to the entire game. Inherited
+  by classes that need to construct objects in the game world"""
+  def __init__(self, game):
+    super().__init__()
+    self.game = game
+
+  def add_to_world(self, obj):
+    if self.game:
+      self.game.added.append(obj)
+    else:
+      ipdb.set_trace()
+
+
 class MovableGameObject(GameObject):
   """any game object that moves"""
 
@@ -77,7 +94,7 @@ class MovableGameObject(GameObject):
     :type obj: GameObject
     :param axis: which axis was the player moving along.
     :type axis: String """
-    if type(obj) == SimpleScenery:
+    if isinstance(obj, SimpleScenery):
       if axis == 'x':
         if self.velocity.x > 0:
           self.rect.right = obj.rect.left
@@ -111,7 +128,6 @@ class SimpleScenery(GameObject):
       self.sprite = None
     self.current_frame = self.frames[0]
 
-
   def draw(self, surface):
     """Draw the simple scenery object"""
     if self.sprite:
@@ -132,7 +148,6 @@ class Player(MovableGameObject):
     self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
       self.sprite, moving_frames = graphics.get_frames(sprite_sheet, 9, 8, des_width=width, des_height=height)
-      image_rect = self.sprite.get_rect()
     else:
       self.sprite = None
     self.animation_frames = {'moving': moving_frames, 'hasdata': [pygame.Rect(0, 0, self.rect.width, self.rect.height)]}
@@ -144,6 +159,7 @@ class Player(MovableGameObject):
     self.data = None
     self.direction = 1
     self.moving = False
+    self.interact_dist = PLAYER_INTERACT_DIST  # The max distance needed for the player to interact with something
 
   def jump(self):
     self.velocity.y = JUMP_VELOCITY
@@ -153,15 +169,21 @@ class Player(MovableGameObject):
     if self.moving:
       self.velocity.x = self.direction * PLAYER_SPEED
 
+  def move_right(self):
+    """sets velocity of player to move right"""
+    self.moving = True
+    self.direction = 1
+
   def move_left(self):
     """sets velocity of player to move left"""
     self.moving = True
     self.direction = -1
 
-  def move_right(self):
-    """sets velocity of player to move right"""
-    self.moving = True
-    self.direction = 1
+  def stop_right(self):
+    """sets velocity to 0"""
+    if self.direction == 1:
+      self.velocity.x = 0
+      self.moving = False
 
   # TODO: why have two methods for stop
   def stop_left(self):
@@ -170,11 +192,20 @@ class Player(MovableGameObject):
       self.velocity.x = 0
       self.moving = False
 
-  def stop_right(self):
-    """sets velocity to 0"""
-    if self.direction == 1:
-      self.velocity.x = 0
-      self.moving = False
+  def interact(self, game_objs):
+    """a catch all function that called when hitting the interact button. It will
+    look through the game_objs and if it's with a minumum threshold(self.interact_dist), call specific functions
+    based on what the objects are.
+    :param game_objs: A list of game objects that the player can potentially interact
+    with
+    :type game_objs: list of GameObject"""
+    for game_obj in game_objs:
+      if isinstance(game_obj, DataDevice):
+        if eng.distance(self.rect, game_obj.rect) < self.interact_dist:
+          game_obj.start_data_spawn()
+
+
+
 
   def draw(self, surface):
     """Draws the player object onto surface
@@ -198,7 +229,7 @@ class Player(MovableGameObject):
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
 
   def animate(self):
-    """Updates the animation timer goes to next frame in current animation cycle 
+    """Updates the animation timer goes to next frame in current animation cycle
     after the alloted animation time has passed."""
     self.animation_timer += 1
     if self.animation_timer == self.animation_time:
@@ -235,28 +266,26 @@ class Player(MovableGameObject):
         self.data.rect.right = self.rect.left - 1
         self.data.velocity.x = -PLAYER_THROW_SPEED.x
       else:
-        # x_throw = self.rect.right - self.data.rect.rect.width
         self.data.rect.left = self.rect.right + 1
         self.data.velocity.x = PLAYER_THROW_SPEED.x
 
-      # self.data.rect.x = x_throw
       self.data.rect.y = self.rect.y
       self.data.velocity.y = PLAYER_THROW_SPEED.y
       self.data = None
       self.change_animation('moving')
 
 
-class DataDevice(SimpleScenery):
+class DataDevice(SimpleScenery, Constructor):
   """Devices that are scenery, but output data when interacted with"""
 
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
+  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, game=None):
     super().__init__(startx, starty, width, height, color, obj_id=obj_id, sprite_sheet=sprite_sheet)
+    Constructor.__init__(self, game)
     self.timer = None
     self.color = color
     self.data = None
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
-    print("HEHRHEREHR" + sprite_sheet)
     if self.sprite_sheet:
       self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
     else:
@@ -276,6 +305,20 @@ class DataDevice(SimpleScenery):
       self.timer = None
     self.render = True
 
+  def generate_data(self):
+    game_obj = Data(20, 20, 10, 10)
+    print(game_obj)
+    game_obj.rect.centerx = self.rect.centerx
+    game_obj.rect.bottom = self.rect.top
+    game_obj.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y/2 )
+    game_obj.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
+    self.add_to_world(game_obj)
+
+  def start_data_spawn(self):
+    if not self.timer:  # only allow one timer at a time
+      self.timer = DATA_DEVICE_TIMER
+
+
   def draw(self, surface):
     if self.sprite:
       surface.blit(self.sprite, self.rect, area=self.current_frame)
@@ -291,23 +334,14 @@ class DataDevice(SimpleScenery):
       pygame.draw.rect(surface, (128, 0, 128), outline_rect, 1)
 
   def update(self):
-    if self.data:
+    if self.timer:
       self.timer += DATA_DEVICE_TIMER
       if self.timer >= 1:
-        self.data.rect.right = self.rect.left - self.data.rect.width
-        self.data.rect.y = self.rect.y
-        self.data.velocity.y = -20
-        self.data.velocity.x = -10
-        self.data.advance_data()
-        self.data = None
+        self.generate_data()
         self.timer = None
 
   def respond_to_collision(self, obj, axis=None):
-    if type(obj) == Data:
-      self.timer = DATA_DEVICE_TIMER  # start timer
-      self.data = obj
-      # TODO: Make a better hide/delete function
-      obj.rect.move_ip(-100, -100)
+    return
 
   def get_data(self, data):
     self.timer = DATA_DEVICE_TIMER  # start timer
@@ -319,7 +353,7 @@ class DataDevice(SimpleScenery):
 
 
 class Data(MovableGameObject):
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
+  def __init__(self, startx, starty, width, height, color=None, sprite_sheet='light_blue.png', obj_id=None):
     super().__init__(startx, starty, width, height, obj_id=obj_id)
     self.color = color
     self.sprite_sheet = sprite_sheet
@@ -339,7 +373,7 @@ class Data(MovableGameObject):
       if self.frame_idx == 1:
         surface.blit(self.sprite, self.rect, area=self.current_frame)
       elif self.frame_idx == 2:
-        surface.blit(self.sprite2, self.rect, area=self.current_frame)        
+        surface.blit(self.sprite2, self.rect, area=self.current_frame)
     else:
       pygame.draw.rect(surface, (155, 0, 0), self.rect)
 
@@ -354,8 +388,6 @@ class Data(MovableGameObject):
 
   def respond_to_collision(self, obj, axis=None):
     super().respond_to_collision(obj, axis)
-    if type(obj) == DataDevice:
-      obj.get_data(self)
 
   def advance_data(self):
     # TODO: hacked for now with no sprite sheet
@@ -424,7 +456,7 @@ class Follower(MovableGameObject):
 class Patroller(Follower):
   """class that patrols it's give x area"""
 
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, patrol_range=100, site_range=200):
+  def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, patrol_range=100, site_range=200):
     super().__init__(startx, starty, width, height, obj_id=obj_id, sprite_sheet=sprite_sheet, site_range=site_range)
     self.patrol_range = patrol_range
     self.reset_patrol()
@@ -460,6 +492,6 @@ class Patroller(Follower):
   def reset_patrol(self):
     """sets the partrol to be equidistance from the current center"""
     self.start_patrol = self.rect.centerx - self.patrol_range/2
-    self.end_patrol = self.rect.centerx + self.patrol_range/2 
+    self.end_patrol = self.rect.centerx + self.patrol_range/2
     self.velocity.x = PATROL_SPEED
 
