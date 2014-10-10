@@ -4,6 +4,7 @@ import world as wd
 import random
 import pygame
 import ipdb
+import pprint
 
 GRAVITY_VELOCITY = 2
 FPS = pygame.time.Clock()
@@ -75,14 +76,14 @@ class Engine(object):
         func(game_obj, *args)
 
   def map_attribute_flat(self, game_objects, func_string, *args):
-    """Maps the attribute (calls the attribute on each value) to list of GameObjects, with the 
+    """Maps the attribute (calls the attribute on each value) to list of GameObjects, with the
     given arguments"""
     for game_obj in game_objects:
       func = getattr(game_obj, func_string)
       func(*args)
 
   def loop_over_game_dict_att(self, game_objects, func_string, *args):
-    """Loops over a game dictionary and calls the passed in function on the game object. 
+    """Loops over a game dictionary and calls the passed in function on the game object.
     The function must be an attribute of the game objects"""
     for obj_type, obj_list in game_objects.items():
       self.map_attribute_flat(obj_list, func_string, *args)
@@ -100,8 +101,8 @@ class Engine(object):
         :type static_objects: list of objects with a pygame rect and velocity
         """
     # simulate
-    # TODO: a neat (and possibly needed) optimization would be to track which objects are players 
-    # and to create  a near objects list that the player will check when doing interactions 
+    # TODO: a neat (and possibly needed) optimization would be to track which objects are players
+    # and to create  a near objects list that the player will check when doing interactions3
     for game_object in objects:
       if game_object in static_objects:
         continue
@@ -132,7 +133,7 @@ class Engine(object):
         if game_object.velocity.x < 0:
           # Can't friction backwards
           game_object.velocity.x = 0
-      else: 
+      else:
         game_object.velocity.x += X_FRICTION_CONSTANT
         if game_object.velocity.x > 0:
           # Can't friction backwards
@@ -151,16 +152,22 @@ class Engine(object):
     # TODO: Add some randomness
     game_pieces = {}
     for game_obj in game_objects:
-      game_pieces[game_obj] = self.split_sprite(game_obj, 8, 8)
+      game_pieces[game_obj] = self.split_sprite(game_obj, 20, 20)
 
     # move every object on screen out
     step_dict = {}
     steps_total = 45
+    step_overlap = 5
+    stage_dict = {}
+    stages = 4
+    for i in range(0, stages):
+      stage_dict[i] = {}
 
+    random.seed()
     for obj, list_pieces in game_pieces.items():
       step_dict[obj] = {}
       for i, (rect, area) in enumerate(list_pieces):
-        start_pointx, start_pointy = random.randint(-500, 1200), random.randint(-2000, 0)
+        start_pointx, start_pointy = random.randint(-500, 1200), random.randint(0, 500)
         dx, dy = (rect.x - start_pointx, rect.y - start_pointy)
         step_sizex, step_sizey = (dx / float(steps_total), dy / float(steps_total))
         step_dict[obj][i] = []
@@ -168,22 +175,64 @@ class Engine(object):
           step_dict[obj][i].append((start_pointx + step_sizex * x, start_pointy + step_sizey * x))
         rect.x, rect.y = (start_pointx, start_pointy)
 
+    #     stage = random.randrange(0, stages)
+    #     if obj in stage_dict[stage]:
+    #       stage_dict[stage][obj].append((i, (rect, area)))
+    #     else:
+    #       stage_dict[stage][obj] = []
+    #       stage_dict[stage][obj].append((i, (rect, area)))
+
+    # pprint.pprint(stage_dict)
+
+
+    # # test load stages
+    # done = False
+    # curr_stage = 0
+    # while not done:
+    #   # draw objects
+    #   for stage, inner_stage_dict in stage_dict.items():
+    #     # print(stage)
+    #     # print(inner_stage_dict)
+
+    #     for i in range(steps_total):
+    #       clear_fun()
+    #       for game_obj, tup_list in inner_stage_dict.items():
+    #         # print(game_obj)
+    #         # print(tup_list)
+    #         for idx, (rec, area) in tup_list:
+    #           window.blit(game_obj.sprite, rect, area=area)
+    #           try:
+    #             rect.x, rect.y = step_dict[game_obj][idx].pop(0)  # grab the new place
+    #           except Exception:
+    #             ipdb.set_trace()
+    #           # ipdb.set_trace()
+    #           # print("bliting")
+    #       pygame.display.flip()
+    #       FPS.tick(10)
+    #     # break
+      # done = True
+      # for game_obj, inner_step_dict in step_dict.items():
+      #   for idx, (rect, area) in enumerate(game_pieces[game_obj]):
+      #     window.blit(game_obj.sprite, rect, area=area)
+      #     rect.x, rect.y = inner_step_dict[idx].pop(0)  # grab the new place
+
     for i in range(steps_total):
       # draw objects
       clear_fun()
       for game_obj, inner_step_dict in step_dict.items():
         for idx, (rect, area) in enumerate(game_pieces[game_obj]):
           window.blit(game_obj.sprite, rect, area=area)
-          rect.x, rect.y = inner_step_dict[idx].pop(0)  # grap the new place
+          rect.x, rect.y = inner_step_dict[idx].pop(0)  # grab the new place
 
       pygame.display.flip()
       FPS.tick(60)
+
 
   def split_sprite(self, game_obj, des_width_peices, des_height_peices):
     """split the sprite into various pieces
     :param game_obj: the game object that is going to be split
     :type game_obj: GameObject
-    :param des_width_peices: the number of horizontal pieces 
+    :param des_width_peices: the number of horizontal pieces
     :type des_width_peices: int
     :param des_height_peices: the number of vertical pieces
     :type des_height_peices: int
