@@ -18,6 +18,7 @@ DATA_DEVICE_TIMER = .01
 TIMER_WIDTH = 100
 PLAYER_INTERACT_DIST = 50
 EJECT_SPEED = eng.Vector(20, -20)
+PLAYER_MASH_NUMBER = 10  # the number of times the player has to mash a button to escape
 
 
 # TODO: add more things to do
@@ -94,19 +95,19 @@ class MovableGameObject(GameObject):
     :type obj: GameObject
     :param axis: which axis was the player moving along.
     :type axis: String """
-    if isinstance(obj, SimpleScenery):
-      if axis == 'x':
-        if self.velocity.x > 0:
-          self.rect.right = obj.rect.left
-        if self.velocity.x < 0:
-          self.rect.left = obj.rect.right
-        self.velocity.x = 0
-      if axis == 'y':
-        if self.velocity.y > 0:
-          self.rect.bottom = obj.rect.top
-        if self.velocity.y < 0:
-          self.rect.top = obj.rect.bottom
-        self.velocity.y = 0
+    # if isinstance(obj, SimpleScenery):
+    if axis == 'x':
+      if self.velocity.x > 0:
+        self.rect.right = obj.rect.left
+      if self.velocity.x < 0:
+        self.rect.left = obj.rect.right
+      self.velocity.x = 0
+    if axis == 'y':
+      if self.velocity.y > 0:
+        self.rect.bottom = obj.rect.top
+      if self.velocity.y < 0:
+        self.rect.top = obj.rect.bottom
+      self.velocity.y = 0
 
 
 class SimpleScenery(GameObject):
@@ -160,14 +161,31 @@ class Player(MovableGameObject):
     self.direction = 1
     self.moving = False
     self.interact_dist = PLAYER_INTERACT_DIST  # The max distance needed for the player to interact with something
+    self.trapped = False
 
   def jump(self):
     self.velocity.y = JUMP_VELOCITY
 
   def update(self):
     """set velocity to be moved by the physics engine"""
-    if self.moving:
+    if self.moving and not self.trapped:
       self.velocity.x = self.direction * PLAYER_SPEED
+
+  def escape(self):
+    """mash a button to escape students"""
+    if self.trapped:
+      print("trying to escape")
+      self.escape_hit += 1
+      if self.escape_hit > PLAYER_MASH_NUMBER:
+        if self.trapper.rect.x < self.rect.x:
+          # on the left, push back to the left
+          self.trapper.velocity.x = -50
+          self.trapper.velocity.y = -20
+        else:
+          self.trapper.velocity.x = 50
+          self.trapper.velocity.y = -20
+        self.trapped = False
+        self.trapper = None
 
   def move_right(self):
     """sets velocity of player to move right"""
@@ -203,9 +221,6 @@ class Player(MovableGameObject):
       if isinstance(game_obj, DataDevice):
         if eng.distance(self.rect, game_obj.rect) < self.interact_dist:
           game_obj.start_data_spawn()
-
-
-
 
   def draw(self, surface):
     """Draws the player object onto surface
@@ -252,12 +267,19 @@ class Player(MovableGameObject):
     :type obj: GameObject
     :param axis: which axis was the player moving along.
     :type axis: String """
-    super().respond_to_collision(obj, axis)
     if type(obj) == Data:
       if self.data is None:
         self.data = obj
         obj.rect.x, obj.rect.y = -100, -100  # TODO: have better way than move off screen
         self.change_animation('hasdata')
+    else:
+      super().respond_to_collision(obj, axis)
+      if isinstance(obj, Follower) and not self.trapped:
+        self.trapped = True
+        self.trapper = obj
+        self.escape_hit = 0
+        print('hit')
+
 
   def throw_data(self):
     """Through the data that the player is holding"""
@@ -387,7 +409,11 @@ class Data(MovableGameObject):
     self.render = True
 
   def respond_to_collision(self, obj, axis=None):
-    super().respond_to_collision(obj, axis)
+    if isinstance(obj, Player):
+      obj.respond_to_collision
+    else:
+      # TODO: this makes the data go through players
+      super().respond_to_collision(obj, axis)
 
   def advance_data(self):
     # TODO: hacked for now with no sprite sheet
@@ -451,6 +477,11 @@ class Follower(MovableGameObject):
   def read_packet(self, packet):
     self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
     self.render = True
+
+  def respond_to_collision(self, obj, axis):
+    if isinstance(obj, Player):
+      obj.respond_to_collision(self, axis)
+    super().respond_to_collision(obj, axis)
 
 
 class Patroller(Follower):

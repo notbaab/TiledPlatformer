@@ -101,7 +101,7 @@ class MasterPlatformer(object):
     for node in self.socket_list:
       self.get_whole_packet(node)
 
-    self.state = 'play'
+    self.state = 'load'
 
   def run(self):
     while True:
@@ -143,6 +143,8 @@ class MasterPlatformer(object):
           player2.jump()
         if event.key == K_SPACE:
           player1.interact(self.game_objects.values())  # TODO: We are passing in way to much data here, fix it.
+        if event.key == K_e:
+          player1.escape()
       if event.type == KEYUP:
         if event.key == K_LEFT:
           player1.stop_left()
@@ -160,7 +162,7 @@ class MasterPlatformer(object):
 
     # update the AI after the players have been updated
     self.engine.map_attribute_flat(game_dict['AI'], 'check_for_leader', game_dict['Player'])
-    
+
     # construct packet
     send_struct = {'state': 'play', 'deleted_objs': [], 'added_objs': []}
 
