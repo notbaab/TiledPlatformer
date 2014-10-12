@@ -300,7 +300,7 @@ class Player(MovableGameObject):
 class DataDevice(SimpleScenery, Constructor):
   """Devices that are scenery, but output data when interacted with"""
 
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, game=None):
+  def __init__(self, startx, starty, width, height, color=None, sprite_sheet='Green.png', obj_id=None, game=None):
     super().__init__(startx, starty, width, height, color, obj_id=obj_id, sprite_sheet=sprite_sheet)
     Constructor.__init__(self, game)
     self.timer = None
@@ -335,10 +335,11 @@ class DataDevice(SimpleScenery, Constructor):
     game_obj.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y/2 )
     game_obj.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
     self.add_to_world(game_obj)
+    return game_obj
 
-  def start_data_spawn(self):
+  def start_data_spawn(self, timer=DATA_DEVICE_TIMER):
     if not self.timer:  # only allow one timer at a time
-      self.timer = DATA_DEVICE_TIMER
+      self.timer = timer
 
 
   def draw(self, surface):
@@ -373,6 +374,43 @@ class DataDevice(SimpleScenery, Constructor):
     data.velocity.x = 0
     data.velocity.y = 0
 
+class DataCruncher(DataDevice):
+  """Second stage of collecting data"""
+  def __init__(self, startx, starty, width, height, sprite_sheet, obj_id=None, game=None):    
+    super().__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
+    Constructor.__init__(self, game)
+
+  def respond_to_collision(self, obj, axis=None):
+    ipdb.set_trace()
+    if isinstance(obj, Data) and obj.stage == 2:
+      obj.advance_data()
+      obj.velocity.y += -20
+
+  def handle_data(self, game_obj):
+    if game_obj.stage == 1:      
+      self.timer = DATA_DEVICE_TIMER  # start timer
+      self.data = game_obj
+      self.data.advance_data()
+      # TODO: Make a better hide/delete function
+      self.data.rect.x, self.data.rect.y = (-100, -100)
+      self.data.velocity.x = 0
+      self.data.velocity.y = 0
+
+  def update(self):
+    if self.timer:
+      self.timer += DATA_DEVICE_TIMER
+      if self.timer >= 1:
+        self.generate_data()
+        self.timer = None
+
+  def generate_data(self):
+    ipdb.set_trace()
+    self.data.rect.centerx = self.rect.centerx
+    self.data.rect.bottom = self.rect.top
+    self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y/2 )
+    self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
+    # self.add_to_world(self.data)
+
 
 class Data(MovableGameObject):
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet='light_blue.png', obj_id=None):
@@ -388,7 +426,7 @@ class Data(MovableGameObject):
     self.current_frame = self.frames[0]
     self.sprite2, self.frames2 = graphics.get_frames(ASSET_FOLDER + 'green.png', 1, 1, des_width=width, des_height=height)
     self.frame_idx = 1
-
+    self.stage = 1  # 1 = raw data. 2 = crunched data, 3 i = paper
 
   def draw(self, surface):
     if self.sprite_sheet:
@@ -411,13 +449,16 @@ class Data(MovableGameObject):
   def respond_to_collision(self, obj, axis=None):
     if isinstance(obj, Player):
       obj.respond_to_collision(self)
+    elif isinstance(obj, DataCruncher):
+      obj.handle_data(self)
     else:
       # TODO: this makes the data go through players
       super().respond_to_collision(obj, axis)
 
   def advance_data(self):
     # TODO: hacked for now with no sprite sheet
-    self.frame_idx = 2
+    self.frame_idx += 1
+    self.stage += 1
 
 
 class Follower(MovableGameObject):

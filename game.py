@@ -74,6 +74,11 @@ class MasterPlatformer(object):
                          int(patroler["height"]), sprite_sheet='yellow.png')
       self.game_objects[tmp.id] = tmp
 
+    for comet in map_json['comet']:
+      tmp = wd.DataCruncher(int(comet["x"]), int(comet["y"]), int(comet["width"]),
+                         int(comet["height"]), sprite_sheet='light_blue.png')
+      self.game_objects[tmp.id] = tmp
+
     print(self.game_objects)
 
     send_struct = {'game_obj': []}
