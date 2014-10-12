@@ -6,7 +6,7 @@ import graphics
 import ipdb
 import random
 
-
+ASSET_FOLDER = "assets/"
 GRAVITY_VELOCITY = 4  # lets cheat for now
 FLOOR_Y = 580
 PLAYER_SPEED = 10
@@ -124,7 +124,7 @@ class SimpleScenery(GameObject):
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
-      self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
+      self.sprite, self.frames = graphics.get_frames(ASSET_FOLDER + self.sprite_sheet, 1, 1, des_width=width, des_height=height)
     else:
       self.sprite = None
     self.current_frame = self.frames[0]
@@ -148,7 +148,7 @@ class Player(MovableGameObject):
     self.rect = pygame.Rect((startx, starty, width, height))
     self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
-      self.sprite, moving_frames = graphics.get_frames(sprite_sheet, 9, 8, des_width=width, des_height=height)
+      self.sprite, moving_frames = graphics.get_frames(ASSET_FOLDER + sprite_sheet, 9, 8, des_width=width, des_height=height)
     else:
       self.sprite = None
     self.animation_frames = {'moving': moving_frames, 'hasdata': [pygame.Rect(0, 0, self.rect.width, self.rect.height)]}
@@ -309,7 +309,7 @@ class DataDevice(SimpleScenery, Constructor):
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
-      self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
+      self.sprite, self.frames = graphics.get_frames(ASSET_FOLDER + self.sprite_sheet, 1, 1, des_width=width, des_height=height)
     else:
       self.sprite = None
     self.current_frame = self.frames[0]
@@ -382,11 +382,11 @@ class Data(MovableGameObject):
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
-      self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
+      self.sprite, self.frames = graphics.get_frames(ASSET_FOLDER + self.sprite_sheet, 1, 1, des_width=width, des_height=height)
     else:
       self.sprite = None
     self.current_frame = self.frames[0]
-    self.sprite2, self.frames2 = graphics.get_frames('green.png', 1, 1, des_width=width, des_height=height)
+    self.sprite2, self.frames2 = graphics.get_frames(ASSET_FOLDER + 'green.png', 1, 1, des_width=width, des_height=height)
     self.frame_idx = 1
 
 
@@ -432,7 +432,7 @@ class Follower(MovableGameObject):
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
-      self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
+      self.sprite, self.frames = graphics.get_frames(ASSET_FOLDER + self.sprite_sheet, 1, 1, des_width=width, des_height=height)
     else:
       self.sprite = None
     self.current_frame = self.frames[0]
@@ -495,7 +495,7 @@ class Patroller(Follower):
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
-      self.sprite, self.frames = graphics.get_frames(self.sprite_sheet, 1, 1, des_width=width, des_height=height)
+      self.sprite, self.frames = graphics.get_frames(ASSET_FOLDER + self.sprite_sheet, 1, 1, des_width=width, des_height=height)
     else:
       self.sprite = None
     self.current_frame = self.frames[0]

@@ -26,7 +26,7 @@ class ClientPlatformer(NetworkGame):
     self.engine = eng.Engine()
     self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     self.game_objects = {}
-    self.background = pygame.image.load("background" + str(self.tile[0]) + str(self.tile[1]) + ".png")
+    self.background = pygame.image.load("assets/background" + str(self.tile[0]) + str(self.tile[1]) + ".png")
     self.background_rect = self.background.get_rect()
 
   def init_game(self, data):
