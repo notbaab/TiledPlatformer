@@ -160,7 +160,7 @@ class MasterPlatformer(object):
         if event.key == K_d:
           player2.stop_right()
 
-    self.engine.physics_simulation(self.game_objects.values(), game_dict['StaticObject'])
+    self.engine.physics_simulation(self.game_objects.values(), [wd.SimpleScenery])
 
     self.engine.map_attribute_flat(self.game_objects.values(), 'update')
     self.engine.map_attribute_flat(self.game_objects.values(), 'animate')

@@ -35,6 +35,7 @@ class GameObject(object):
       self.id = obj_id
     self.render = True
     self.to_del = False
+    self.physics = False  # Does this class need physics?
 
   def update(self):
     """anything that the object needs to do every frame"""
@@ -53,7 +54,6 @@ class GameObject(object):
 
   def animate(self):
     return
-
 
 class SpriteGameObject(GameObject):
   pass
@@ -80,12 +80,24 @@ class MovableGameObject(GameObject):
     super().__init__(obj_id=obj_id)
     self.velocity = eng.Vector(0, 0)
     self.rect = pygame.Rect((startx, starty, width, height))
+    self.physics = True  # most movable game objects need physics
 
   def move(self, velocity):
     self.velocity = velocity
 
   def stop(self):
     self.velocity = [0, 0]
+
+  def hide_object(self):
+    """moves turns of physics and rendering for the object"""
+    self.render = False
+    self.physics = False
+    self.rect.x, self.rect.y = -1000, -1000  # move somewhere far off screen to
+
+  def unhide_object(self):
+    """moves turns of physics and rendering for the object"""
+    self.render = True
+    self.physics = True
 
   def respond_to_collision(self, obj, axis=None):
     """Contains the callback for the collision between a move able object and the
@@ -188,14 +200,17 @@ class Player(MovableGameObject):
         self.trapper = None
 
   def move_right(self):
-    """sets velocity of player to move right"""
-    self.moving = True
-    self.direction = 1
+    """DEPRICATED: use move(1): sets velocity of player to move right"""
+    self.move(1)
 
   def move_left(self):
-    """sets velocity of player to move left"""
+    """DEPRICATED use move(-1): sets velocity of player to move left"""
+    self.move(-1)
+
+  def move(self, direction):
+    """sets move to the direction passed in"""
+    self.direction = direction
     self.moving = True
-    self.direction = -1
 
   def stop_right(self):
     """sets velocity to 0"""
@@ -270,7 +285,8 @@ class Player(MovableGameObject):
     if type(obj) == Data:
       if self.data is None:
         self.data = obj
-        obj.rect.x, obj.rect.y = -100, -100  # TODO: have better way than move off screen
+        self.data.hide_object()
+        # obj.rect.x, obj.rect.y = -100, -100  # TODO: have better way than move off screen
         self.change_animation('hasdata')
     else:
       super().respond_to_collision(obj, axis)
@@ -284,15 +300,19 @@ class Player(MovableGameObject):
   def throw_data(self):
     """Through the data that the player is holding"""
     if self.data:
-      if self.direction == -1:
-        self.data.rect.right = self.rect.left - 1
-        self.data.velocity.x = -PLAYER_THROW_SPEED.x
+      if self.moving:
+        exit_buff = PLAYER_SPEED  # if the player is moving, have to throw the data ahead a frame
       else:
-        self.data.rect.left = self.rect.right + 1
-        self.data.velocity.x = PLAYER_THROW_SPEED.x
+        exit_buff = 0
+      if self.direction == -1:
+        self.data.rect.right = self.rect.left + (exit_buff * self.direction)
+      else:
+        self.data.rect.left = self.rect.right + (exit_buff * self.direction)
 
+      self.data.velocity.x = (self.velocity.x + PLAYER_THROW_SPEED.x) * self.direction
       self.data.rect.y = self.rect.y
       self.data.velocity.y = PLAYER_THROW_SPEED.y
+      self.data.unhide_object()
       self.data = None
       self.change_animation('moving')
 
@@ -376,25 +396,17 @@ class DataDevice(SimpleScenery, Constructor):
 
 class DataCruncher(DataDevice):
   """Second stage of collecting data"""
-  def __init__(self, startx, starty, width, height, sprite_sheet, obj_id=None, game=None):    
+  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, obj_id=None, game=None):    
     super().__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
     Constructor.__init__(self, game)
+    self.accept_stage = accept_stage
 
-  def respond_to_collision(self, obj, axis=None):
-    ipdb.set_trace()
-    if isinstance(obj, Data) and obj.stage == 2:
-      obj.advance_data()
-      obj.velocity.y += -20
-
-  def handle_data(self, game_obj):
-    if game_obj.stage == 1:      
-      self.timer = DATA_DEVICE_TIMER  # start timer
-      self.data = game_obj
-      self.data.advance_data()
-      # TODO: Make a better hide/delete function
-      self.data.rect.x, self.data.rect.y = (-100, -100)
-      self.data.velocity.x = 0
-      self.data.velocity.y = 0
+  def handle_data(self, game_obj):    
+    self.timer = DATA_DEVICE_TIMER  # start timer
+    self.data = game_obj
+    self.data.advance_data()
+    # TODO: Make a better hide/delete function
+    self.data.hide_object()
 
   def update(self):
     if self.timer:
@@ -404,11 +416,12 @@ class DataCruncher(DataDevice):
         self.timer = None
 
   def generate_data(self):
-    ipdb.set_trace()
+    # ipdb.set_trace()
     self.data.rect.centerx = self.rect.centerx
     self.data.rect.bottom = self.rect.top
     self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y/2 )
     self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
+    self.data.unhide_object()
     # self.add_to_world(self.data)
 
 
@@ -449,7 +462,7 @@ class Data(MovableGameObject):
   def respond_to_collision(self, obj, axis=None):
     if isinstance(obj, Player):
       obj.respond_to_collision(self)
-    elif isinstance(obj, DataCruncher):
+    elif isinstance(obj, DataCruncher) and self.stage == obj.accept_stage:
       obj.handle_data(self)
     else:
       # TODO: this makes the data go through players

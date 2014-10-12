@@ -104,7 +104,13 @@ class Engine(object):
     # TODO: a neat (and possibly needed) optimization would be to track which objects are players
     # and to create  a near objects list that the player will check when doing interactions3
     for game_object in objects:
-      if game_object in static_objects:
+      skip = False
+      if not game_object.physics:
+        continue
+      for static_object in static_objects:
+        if isinstance(game_object, static_object):
+          skip = True
+      if skip:
         continue
       self.simulate_friction(game_object)
       game_object.rect.x += game_object.velocity.x
@@ -157,7 +163,7 @@ class Engine(object):
     # move every object on screen out
     step_dict = {}
     steps_total = 45
-    step_overlap = 5
+    # step_overlap = 5
     stage_dict = {}
     stages = 4
     for i in range(0, stages):
