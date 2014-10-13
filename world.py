@@ -69,7 +69,6 @@ class GameObject(object):
 class SpriteGameObject(GameObject):
   pass
 
-
 class Constructor(object):
   """A special object that contains a reference to the entire game. Inherited
   by classes that need to construct objects in the game world"""
@@ -88,9 +87,9 @@ class MovableGameObject(GameObject):
   """any game object that moves"""
 
   def __init__(self, startx, starty, width, height, obj_id=None):
-    super().__init__(obj_id=obj_id)
+    super().__init__(startx, starty, width, height, obj_id=obj_id)
     self.velocity = eng.Vector(0, 0)
-    self.rect = pygame.Rect((startx, starty, width, height))
+    # self.rect = pygame.Rect((startx, starty, width, height))
     self.physics = True  # most movable game objects need physics
 
   def move(self, velocity):
@@ -370,6 +369,7 @@ class DataDevice(SimpleScenery, Constructor):
 
 
   def draw(self, surface):
+    super().draw(surface)
     if self.sprite:
       surface.blit(self.sprite, self.rect, area=self.current_frame)
     else:
@@ -403,13 +403,21 @@ class DataDevice(SimpleScenery, Constructor):
 
 class DataCruncher(DataDevice):
   """Second stage of collecting data"""
-  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, obj_id=None, game=None):    
+  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=3, obj_id=None, game=None):    
     super().__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
     Constructor.__init__(self, game)
     self.accept_stage = accept_stage
+    self.amount_data_needed = amount_data_needed
+    self.data_collected = 0
 
   def handle_data(self, game_obj):    
-    self.timer = DATA_DEVICE_TIMER  # start timer
+    self.data_collected += 1
+    if self.data_collected == self.amount_data_needed:
+      self.timer = DATA_DEVICE_TIMER  # start timer
+      self.message_str = None
+    else:
+      self.message_str = str(self.data_collected) + "/" + str(self.amount_data_needed)
+    # TODO: THis is wrong, need a destructor 
     self.data = game_obj
     self.data.advance_data()
     # TODO: Make a better hide/delete function
