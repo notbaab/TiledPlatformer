@@ -9,6 +9,8 @@ import pprint
 GRAVITY_VELOCITY = 2
 FPS = pygame.time.Clock()
 X_FRICTION_CONSTANT = .3
+pygame.font.init()
+FONT = pygame.font.SysFont('Arial',15,15)
 
 
 class Colors(object):

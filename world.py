@@ -23,17 +23,18 @@ PLAYER_MASH_NUMBER = 10  # the number of times the player has to mash a button t
 
 # TODO: add more things to do
 class GameObject(object):
-  """the top level game object. All game objects inherit from this class"""
+  """the top level game object. All game objects inherit from this class."""
   id = 0
 
-  def __init__(self, obj_id=None):
-    self.rect = None
+  def __init__(self, startx, starty, width, height, obj_id=None):
+    self.rect = pygame.Rect((startx, starty, width, height))
     if not obj_id:
       self.id = GameObject.id  # assign
       GameObject.id += 1
     else:
       self.id = obj_id
     self.render = True
+    self.message_str = None  # info that is displayed above the object
     self.to_del = False
     self.physics = False  # Does this class need physics?
 
@@ -54,6 +55,16 @@ class GameObject(object):
 
   def animate(self):
     return
+
+  def draw(self, window):
+    if self.message_str:
+      eng.FONT.set_bold(True)
+      font_to_render = eng.FONT.render(str(self.message_str), True, (0, 0, 0))
+      font_rect = font_to_render.get_rect()
+      font_rect.centerx = self.rect.centerx
+      font_rect.bottom = self.rect.top - 10
+      window.blit(font_to_render, font_rect)
+
 
 class SpriteGameObject(GameObject):
   pass
@@ -126,13 +137,8 @@ class SimpleScenery(GameObject):
   """Simple SimpleScenery object. Game objects that are just simple shapes"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
-    super().__init__(obj_id=obj_id)
-    self.startx = startx
-    self.starty = starty
-    self.width = width
-    self.height = height
+    super().__init__(startx, starty, width, height, obj_id=obj_id)
     self.color = color
-    self.rect = pygame.Rect((startx, starty, width, height))
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
@@ -143,6 +149,7 @@ class SimpleScenery(GameObject):
 
   def draw(self, surface):
     """Draw the simple scenery object"""
+    super().draw(surface)
     if self.sprite:
       surface.blit(self.sprite, self.rect, area=self.current_frame)
     else:
@@ -174,6 +181,7 @@ class Player(MovableGameObject):
     self.moving = False
     self.interact_dist = PLAYER_INTERACT_DIST  # The max distance needed for the player to interact with something
     self.trapped = False
+    self.message_str = "hello"
 
   def jump(self):
     self.velocity.y = JUMP_VELOCITY
@@ -241,6 +249,7 @@ class Player(MovableGameObject):
     """Draws the player object onto surface
     :param surface: the surface to draw the object, typically the window
     :type surface: pygame.Surface"""
+    super().draw(surface)
     if self.sprite:
       surface.blit(self.sprite, self.rect, area=self.current_frame)
     else:
@@ -336,15 +345,13 @@ class DataDevice(SimpleScenery, Constructor):
 
   def build_packet(self, accumulator):
     packet = {'type': 'data_device', 'location': [self.rect.x, self.rect.y], 'frame': '', 'id': self.id,
-              'timer': self.timer}
+              'timer': self.timer, 'message': self.message_str}
     accumulator.append(packet)
 
   def read_packet(self, packet):
     self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
-    if packet['timer']:
-      self.timer = packet['timer']
-    else:
-      self.timer = None
+    self.timer = packet['timer']
+    self.message_str = packet['message']
     self.render = True
 
   def generate_data(self):
@@ -442,6 +449,7 @@ class Data(MovableGameObject):
     self.stage = 1  # 1 = raw data. 2 = crunched data, 3 i = paper
 
   def draw(self, surface):
+    super().draw(surface)
     if self.sprite_sheet:
       if self.frame_idx == 1:
         surface.blit(self.sprite, self.rect, area=self.current_frame)
@@ -518,6 +526,7 @@ class Follower(MovableGameObject):
       self.leader = closest_leader
 
   def draw(self, surface):
+    super().draw(surface)
     if self.sprite:
       surface.blit(self.sprite, self.rect, area=self.current_frame)
     else:
