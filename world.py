@@ -178,24 +178,36 @@ class Player(MovableGameObject):
     self.data = None
     self.direction = 1
     self.moving = False
+    self.mash_left = 0
+    self.mash_right = 0
     self.interact_dist = PLAYER_INTERACT_DIST  # The max distance needed for the player to interact with something
     self.trapped = False
+    self.mash_left = False
+    self.mash_right = False
+    self.escape_hit = 0
     self.message_str = "hello"
 
   def jump(self):
     if not self.trapped:
-        self.velocity.y = JUMP_VELOCITY
+      self.velocity.y = JUMP_VELOCITY
 
   def update(self):
     """set velocity to be moved by the physics engine"""
     if self.moving and not self.trapped:
       self.velocity.x = self.direction * PLAYER_SPEED
 
-  def escape(self):
+  def escape(self, direction):
     """mash a button to escape students"""
     if self.trapped:
       print("trying to escape")
-      self.escape_hit += 1
+      if direction == 1:
+        self.mash_left = True
+      elif direction == 2:
+        self.mash_right = True
+      if self.mash_left and self.mash_right:
+        self.mash_left = False
+        self.mash_right = False
+        self.escape_hit += 1
       if self.escape_hit > PLAYER_MASH_NUMBER:
         if self.trapper.rect.x < self.rect.x:
           # on the left, push back to the left
@@ -206,6 +218,9 @@ class Player(MovableGameObject):
           self.trapper.velocity.y = -20
         self.trapped = False
         self.trapper = None
+        self.mash_left = False
+        self.mash_right = False
+        self.escape_hit = 0
 
   def move_right(self):
     """DEPRICATED: use move(1): sets velocity of player to move right"""
@@ -302,7 +317,6 @@ class Player(MovableGameObject):
       if isinstance(obj, Follower) and not self.trapped:
         self.trapped = True
         self.trapper = obj
-        self.escape_hit = 0
         print('hit')
 
 

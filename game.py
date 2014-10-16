@@ -131,33 +131,35 @@ class MasterPlatformer(object):
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         sys.exit()
-      if event.type == KEYDOWN:
+      elif event.type == KEYDOWN:
         if event.key == K_LEFT:
           player1.move_left()
-        if event.key == K_RIGHT:
+          player1.escape(1)
+        elif event.key == K_RIGHT:
           player1.move_right()
-        if event.key == K_UP:
+          player1.escape(2)
+        elif event.key == K_UP:
           player1.jump()
-        if event.key == K_t:
+        elif event.key == K_t:
           player1.throw_data()
-        if event.key == K_a:
+        elif event.key == K_a:
           player2.move_left()
-        if event.key == K_d:
+          player2.escape(1)
+        elif event.key == K_d:
           player2.move_right()
-        if event.key == K_w:
+          player2.escape(2)
+        elif event.key == K_w:
           player2.jump()
-        if event.key == K_SPACE:
+        elif event.key == K_SPACE:
           player1.interact(self.game_objects.values())  # TODO: We are passing in way to much data here, fix it.
-        if event.key == K_e:
-          player1.escape()
-      if event.type == KEYUP:
+      elif event.type == KEYUP:
         if event.key == K_LEFT:
           player1.stop_left()
-        if event.key == K_RIGHT:
+        elif event.key == K_RIGHT:
           player1.stop_right()
-        if event.key == K_a:
+        elif event.key == K_a:
           player2.stop_left()
-        if event.key == K_d:
+        elif event.key == K_d:
           player2.stop_right()
 
     self.engine.physics_simulation(self.game_objects.values(), [wd.SimpleScenery])
