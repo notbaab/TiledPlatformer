@@ -183,7 +183,8 @@ class Player(MovableGameObject):
     self.message_str = "hello"
 
   def jump(self):
-    self.velocity.y = JUMP_VELOCITY
+    if not self.trapped:
+        self.velocity.y = JUMP_VELOCITY
 
   def update(self):
     """set velocity to be moved by the physics engine"""
