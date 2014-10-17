@@ -83,7 +83,7 @@ class AnimateSpriteObject(object):
     """
     super(AnimateSpriteObject, self).__init__()
     frame_dict = {}
-    for animation_name, ((filename, (width, height)) in animation_dict.items():
+    for animation_name, (filename, (width, height)) in animation_dict.items():
       self.sprite, moving_frames = graphics.get_frames(ASSET_FOLDER + filename, 8, 1, des_width=width, des_height=height)
       self.animation_frames = {'moving': moving_frames, 'standing': moving_frames[0], 'hasdata': [pygame.Rect(0, 0, self.rect.width, self.rect.height)]}
       self.current_animation = 'moving'
@@ -202,23 +202,36 @@ class Player(MovableGameObject):
     self.data = None
     self.direction = 1
     self.moving = False
+    self.mash_left = 0
+    self.mash_right = 0
     self.interact_dist = PLAYER_INTERACT_DIST  # The max distance needed for the player to interact with something
     self.trapped = False
-    # self.message_str = "hello"
+    self.mash_left = False
+    self.mash_right = False
+    self.escape_hit = 0
+    self.message_str = "hello"
 
   def jump(self):
-    self.velocity.y = JUMP_VELOCITY
+    if not self.trapped:
+      self.velocity.y = JUMP_VELOCITY
 
   def update(self):
     """set velocity to be moved by the physics engine"""
     if self.moving and not self.trapped:
       self.velocity.x = self.direction * PLAYER_SPEED
 
-  def escape(self):
+  def escape(self, direction):
     """mash a button to escape students"""
     if self.trapped:
       print("trying to escape")
-      self.escape_hit += 1
+      if direction == 1:
+        self.mash_left = True
+      elif direction == 2:
+        self.mash_right = True
+      if self.mash_left and self.mash_right:
+        self.mash_left = False
+        self.mash_right = False
+        self.escape_hit += 1
       if self.escape_hit > PLAYER_MASH_NUMBER:
         if self.trapper.rect.x < self.rect.x:
           # on the left, push back to the left
@@ -227,9 +240,12 @@ class Player(MovableGameObject):
         else:
           self.trapper.velocity.x = 10
           self.trapper.velocity.y = -20
-        self.trapper.stunned_timer = AI_STUN_TIME
-        self.trapped = False
+        self.trapper.stun()
         self.trapper = None
+        self.trapped = False
+        self.mash_left = False
+        self.mash_right = False
+        self.escape_hit = 0
 
   def move_right(self):
     """DEPRICATED: use move(1): sets velocity of player to move right"""
@@ -327,7 +343,6 @@ class Player(MovableGameObject):
       if isinstance(obj, Follower) and not self.trapped:
         self.trapped = True
         self.trapper = obj
-        self.escape_hit = 0
         print('hit')
 
 
@@ -523,6 +538,7 @@ class Follower(MovableGameObject):
     self.leader = None
     self.velocity = eng.Vector(0, 0)
     self.site = site_range
+    self.stunned = False
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
@@ -532,7 +548,7 @@ class Follower(MovableGameObject):
     self.current_frame = self.frames[0]
 
   def update(self):
-    if self.leader and eng.distance(self.rect, self.leader.rect) < self.site:
+    if self.leader and eng.distance(self.rect, self.leader.rect) < self.site and not self.stunned:
       # figure out which direction to move
       if self.leader.rect.centerx - self.rect.centerx > 0:
         self.velocity.x = FOLLOWER_SPEED  # move right
@@ -573,9 +589,13 @@ class Follower(MovableGameObject):
     self.render = True
 
   def respond_to_collision(self, obj, axis=None):
+    self.stunned = False
     if isinstance(obj, Player):
       obj.respond_to_collision(self, axis)
     super().respond_to_collision(obj, axis)
+
+  def stun(self):
+    self.stunned = True
 
 
 class Patroller(Follower):
