@@ -217,6 +217,7 @@ class Player(MovableGameObject):
           self.trapper.velocity.x = 50
           self.trapper.velocity.y = -20
         self.trapped = False
+        self.trapper.stun()
         self.trapper = None
         self.mash_left = False
         self.mash_right = False
@@ -514,6 +515,7 @@ class Follower(MovableGameObject):
     self.leader = None
     self.velocity = eng.Vector(0, 0)
     self.site = site_range
+    self.stunned = False
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
@@ -523,7 +525,7 @@ class Follower(MovableGameObject):
     self.current_frame = self.frames[0]
 
   def update(self):
-    if self.leader and eng.distance(self.rect, self.leader.rect) < self.site:
+    if self.leader and eng.distance(self.rect, self.leader.rect) < self.site and not self.stunned:
       # figure out which direction to move
       if self.leader.rect.centerx - self.rect.centerx > 0:
         self.velocity.x = FOLLOWER_SPEED  # move right
@@ -565,9 +567,13 @@ class Follower(MovableGameObject):
     self.render = True
 
   def respond_to_collision(self, obj, axis=None):
+    self.stunned = False
     if isinstance(obj, Player):
       obj.respond_to_collision(self, axis)
     super().respond_to_collision(obj, axis)
+
+  def stun(self):
+    self.stunned = True
 
 
 class Patroller(Follower):
