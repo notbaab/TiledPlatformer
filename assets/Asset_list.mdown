@@ -1,0 +1,29 @@
+Assets needed 
+===
+
+Animation Sprites
+---
+**Player**
+- [ ] Running
+- [ ] Standing/idle
+- [ ] Jumping
+- [ ] Attacking
+- [ ] Throwing data or putting data
+- [ ] Getting sucked into something
+- [ ] Struggling to move // for when you are trapped
+
+**Students**
+- [ ] Running
+- [ ] Walking // may be just running slowed down
+- [ ] Talking
+- [ ] Getting knocked back
+
+**Other**
+- [ ] 
+
+Static Sprites
+---
+- [ ] Data
+- [ ] All data sources
+- [ ] Background
+- [ ] Meeting

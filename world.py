@@ -66,8 +66,32 @@ class GameObject(object):
       window.blit(font_to_render, font_rect)
 
 
-class SpriteGameObject(GameObject):
-  pass
+class AnimateSpriteObject(object):
+  """a stand alone object that allows the inhertied game object to have animation 
+  sprites"""
+  def __init__(self, animation_dict, des_width, des_height):
+    """Initilize all the frames of the animated sprite object
+    :param animation_dict: a dictionary that is keyed on the name of the animation. The dictionary 
+    contains a tuple pair, with the name of the file at [0] and the number of frames of the sprite sheet
+    at [1][0] for the x and [1][1] for the y. So 
+    animation_dict[animation_name] -> (sprite_sheet_filename, (sprite_sheet_x, sprite_sheet_y) 
+    :type animation_dict: dict
+    :param des_width: the desired width of each frame 
+    :type des_width: int
+    :param des_height: the desired height of each frame
+    :type des_height: int
+    """
+    super(AnimateSpriteObject, self).__init__()
+    frame_dict = {}
+    for animation_name, ((filename, (width, height)) in animation_dict.items():
+      self.sprite, moving_frames = graphics.get_frames(ASSET_FOLDER + filename, 8, 1, des_width=width, des_height=height)
+      self.animation_frames = {'moving': moving_frames, 'standing': moving_frames[0], 'hasdata': [pygame.Rect(0, 0, self.rect.width, self.rect.height)]}
+      self.current_animation = 'moving'
+      self.current_cycle = cycle(self.animation_frames[self.current_animation])
+      self.current_frame = next(self.current_cycle)
+      self.animation_time = 3
+      self.animation_timer = 0
+    
 
 class Constructor(object):
   """A special object that contains a reference to the entire game. Inherited
@@ -166,21 +190,21 @@ class Player(MovableGameObject):
     self.rect = pygame.Rect((startx, starty, width, height))
     self.sprite_sheet = sprite_sheet
     if self.sprite_sheet:
-      self.sprite, moving_frames = graphics.get_frames(ASSET_FOLDER + sprite_sheet, 9, 8, des_width=width, des_height=height)
+      self.sprite, moving_frames = graphics.get_frames(ASSET_FOLDER + sprite_sheet, 8, 1, des_width=width, des_height=height)
     else:
       self.sprite = None
-    self.animation_frames = {'moving': moving_frames, 'hasdata': [pygame.Rect(0, 0, self.rect.width, self.rect.height)]}
+    self.animation_frames = {'moving': moving_frames, 'standing': moving_frames[0], 'hasdata': [pygame.Rect(0, 0, self.rect.width, self.rect.height)]}
     self.current_animation = 'moving'
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
     self.current_frame = next(self.current_cycle)
-    self.animation_time = 10
+    self.animation_time = 3
     self.animation_timer = 0
     self.data = None
     self.direction = 1
     self.moving = False
     self.interact_dist = PLAYER_INTERACT_DIST  # The max distance needed for the player to interact with something
     self.trapped = False
-    self.message_str = "hello"
+    # self.message_str = "hello"
 
   def jump(self):
     self.velocity.y = JUMP_VELOCITY
@@ -198,11 +222,12 @@ class Player(MovableGameObject):
       if self.escape_hit > PLAYER_MASH_NUMBER:
         if self.trapper.rect.x < self.rect.x:
           # on the left, push back to the left
-          self.trapper.velocity.x = -50
+          self.trapper.velocity.x = -10
           self.trapper.velocity.y = -20
         else:
-          self.trapper.velocity.x = 50
+          self.trapper.velocity.x = 10
           self.trapper.velocity.y = -20
+        self.trapper.stunned_timer = AI_STUN_TIME
         self.trapped = False
         self.trapper = None
 
@@ -254,6 +279,7 @@ class Player(MovableGameObject):
     else:
       # Player is a black rectangle if there is no sprite sheet.
       pygame.draw.rect(surface, (0, 0, 0), self.rect)
+    pygame.draw.rect(surface, (128, 0, 128), self.rect, 1)
 
   def change_animation(self, frame):
     """change the frames that player object is currently cycling through.
@@ -431,13 +457,11 @@ class DataCruncher(DataDevice):
         self.timer = None
 
   def generate_data(self):
-    # ipdb.set_trace()
     self.data.rect.centerx = self.rect.centerx
     self.data.rect.bottom = self.rect.top
     self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y/2 )
     self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
     self.data.unhide_object()
-    # self.add_to_world(self.data)
 
 
 class Data(MovableGameObject):
@@ -519,7 +543,6 @@ class Follower(MovableGameObject):
     elif self.leader:
       self.leader = None
       self.velocity.x = 0
-    # self.rect.centerx += self.velocity.x
 
   def check_for_leader(self, leader_list):
     self.leader = None

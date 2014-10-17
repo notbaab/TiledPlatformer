@@ -50,7 +50,7 @@ class MasterPlatformer(object):
       self.game_objects[tmp.id] = tmp
 
     for player in map_json['players']:
-      tmp = wd.Player(int(player["x"]), int(player["y"]), 18, 34, sprite_sheet="PlayerRunning.png")
+      tmp = wd.Player(int(player["x"]), int(player["y"]), 30, 30, sprite_sheet="Runwshadow.png")
       self.game_objects[tmp.id] = tmp
 
     for data in map_json['data_object']:
