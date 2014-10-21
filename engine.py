@@ -10,7 +10,7 @@ GRAVITY_VELOCITY = 2
 FPS = pygame.time.Clock()
 X_FRICTION_CONSTANT = .3
 pygame.font.init()
-FONT = pygame.font.SysFont('Arial',15,15)
+FONT = pygame.font.SysFont('Arial', 15, 15)
 
 
 class Colors(object):
@@ -183,53 +183,53 @@ class Engine(object):
           step_dict[obj][i].append((start_pointx + step_sizex * x, start_pointy + step_sizey * x))
         rect.x, rect.y = (start_pointx, start_pointy)
 
-    #     stage = random.randrange(0, stages)
-    #     if obj in stage_dict[stage]:
-    #       stage_dict[stage][obj].append((i, (rect, area)))
-    #     else:
-    #       stage_dict[stage][obj] = []
-    #       stage_dict[stage][obj].append((i, (rect, area)))
+        # stage = random.randrange(0, stages)
+        # if obj in stage_dict[stage]:
+        # stage_dict[stage][obj].append((i, (rect, area)))
+        # else:
+        # stage_dict[stage][obj] = []
+        # stage_dict[stage][obj].append((i, (rect, area)))
 
-    # pprint.pprint(stage_dict)
+        # pprint.pprint(stage_dict)
 
 
-    # # test load stages
-    # done = False
-    # curr_stage = 0
-    # while not done:
-    #   # draw objects
-    #   for stage, inner_stage_dict in stage_dict.items():
-    #     # print(stage)
-    #     # print(inner_stage_dict)
+        # # test load stages
+        # done = False
+        # curr_stage = 0
+        # while not done:
+        # # draw objects
+        #   for stage, inner_stage_dict in stage_dict.items():
+        #     # print(stage)
+        #     # print(inner_stage_dict)
 
-    #     for i in range(steps_total):
-    #       clear_fun()
-    #       for game_obj, tup_list in inner_stage_dict.items():
-    #         # print(game_obj)
-    #         # print(tup_list)
-    #         for idx, (rec, area) in tup_list:
-    #           window.blit(game_obj.sprite, rect, area=area)
-    #           try:
-    #             rect.x, rect.y = step_dict[game_obj][idx].pop(0)  # grab the new place
-    #           except Exception:
-    #             ipdb.set_trace()
-    #           # ipdb.set_trace()
-    #           # print("bliting")
-    #       pygame.display.flip()
-    #       FPS.tick(10)
-    #     # break
-      # done = True
-      # for game_obj, inner_step_dict in step_dict.items():
-      #   for idx, (rect, area) in enumerate(game_pieces[game_obj]):
-      #     window.blit(game_obj.sprite, rect, area=area)
-      #     rect.x, rect.y = inner_step_dict[idx].pop(0)  # grab the new place
+        #     for i in range(steps_total):
+        #       clear_fun()
+        #       for game_obj, tup_list in inner_stage_dict.items():
+        #         # print(game_obj)
+        #         # print(tup_list)
+        #         for idx, (rec, area) in tup_list:
+        #           window.blit(game_obj.sprite, rect, area=area)
+        #           try:
+        #             rect.x, rect.y = step_dict[game_obj][idx].pop(0)  # grab the new place
+        #           except Exception:
+        #             ipdb.set_trace()
+        #           # ipdb.set_trace()
+        #           # print("bliting")
+        #       pygame.display.flip()
+        #       FPS.tick(10)
+        #     # break
+        # done = True
+        # for game_obj, inner_step_dict in step_dict.items():
+        #   for idx, (rect, area) in enumerate(game_pieces[game_obj]):
+        #     window.blit(game_obj.sprite, rect, area=area)
+        #     rect.x, rect.y = inner_step_dict[idx].pop(0)  # grab the new place
 
     for i in range(steps_total):
       # draw objects
       clear_fun()
       for game_obj, inner_step_dict in step_dict.items():
         for idx, (rect, area) in enumerate(game_pieces[game_obj]):
-          window.blit(game_obj.sprite, rect, area=area)
+          window.blit(game_obj.sprite_sheets[game_obj.current_animation], rect, area=area)
           rect.x, rect.y = inner_step_dict[idx].pop(0)  # grab the new place
 
       pygame.display.flip()
@@ -246,8 +246,8 @@ class Engine(object):
     :type des_height_peices: int
     :return split_peices: a list of rect area tuples
     :rtype: list of (pygame.Rect, pygame.Rect)"""
-    width = int(math.ceil(game_obj.rect.width/des_width_peices))
-    height = int(math.ceil(game_obj.rect.height/des_height_peices))
+    width = int(math.ceil(game_obj.rect.width / des_width_peices))
+    height = int(math.ceil(game_obj.rect.height / des_height_peices))
     split_peices = []
     for x in range(0, game_obj.rect.width, width):
       for y in range(0, game_obj.rect.height, height):

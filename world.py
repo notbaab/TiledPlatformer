@@ -66,9 +66,30 @@ class GameObject(object):
       window.blit(font_to_render, font_rect)
 
 
+class NetworkedObject(object):
+  def __init__(self, attribute_list):
+    self.attribute_list = attribute_list
+
+  def build_packet(self, accumulator):
+    packet = {}
+    for attribute in self.attribute_list:
+      packet[attribute] = self.__getattribute__(attribute)
+    accumulator.append(packet)
+    # packet = {'type': 'player', 'location': [self.rect.x, self.rect.y], 'frame': self.current_frame, 'id': self.id}
+    # accumulator.append(packet)
+
+  def read_packet(self, packet):
+    for attribute in self.attribute_list:
+      self.__setattr__('attribute', packet[attribute])
+      # self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
+      # self.current_frame = packet['frame']
+      # self.render = True
+
+
 class AnimateSpriteObject(object):
   """a stand alone object that allows the inhertied game object to have animation 
   sprites"""
+
   def __init__(self, animation_dict, des_width, des_height):
     """Initilize all the frames of the animated sprite object
     :param animation_dict: a dictionary that is keyed on the name of the animation. The dictionary 
@@ -81,21 +102,77 @@ class AnimateSpriteObject(object):
     :param des_height: the desired height of each frame
     :type des_height: int
     """
-    super(AnimateSpriteObject, self).__init__()
+    # super().__init__()
     frame_dict = {}
+    self.animation_frames = {}
+    self.sprite_sheets = {}
     for animation_name, (filename, (width, height)) in animation_dict.items():
-      self.sprite, moving_frames = graphics.get_frames(ASSET_FOLDER + filename, 8, 1, des_width=width, des_height=height)
-      self.animation_frames = {'moving': moving_frames, 'standing': moving_frames[0], 'hasdata': [pygame.Rect(0, 0, self.rect.width, self.rect.height)]}
-      self.current_animation = 'moving'
-      self.current_cycle = cycle(self.animation_frames[self.current_animation])
+      self.sprite_sheets[animation_name], self.animation_frames[animation_name] = self._get_frames(
+                                                                                  ASSET_FOLDER + filename, int(width),
+                                                                                  int(height), des_width=des_width,
+                                                                                  des_height=des_height)
+
+    self.current_animation = 'idle'
+    self.current_cycle = cycle(self.animation_frames[self.current_animation])
+    self.current_frame = next(self.current_cycle)
+    self.animation_time = 3
+    self.animation_timer = 0
+
+  def change_animation(self, frame):
+    """change the frames that player object is currently cycling through.
+    :param frame: a key that maps to a list of animation frames in self.animation_frames
+    :type frame: str"""
+    if not frame in self.animation_frames:
+      frame = 'idle'
+
+    self.current_animation = frame  # TODO: evaluate if we need this member
+    self.current_cycle = cycle(self.animation_frames[self.current_animation])
+
+  def animate(self):
+    """Updates the animation timer goes to next frame in current animation cycle
+    after the alloted animation time has passed."""
+    self.animation_timer += 1
+    if self.animation_timer == self.animation_time:
       self.current_frame = next(self.current_cycle)
-      self.animation_time = 3
       self.animation_timer = 0
-    
+
+  def draw(self, surface):
+    """Draws the player object onto surface
+    :param surface: the surface to draw the object, typically the window
+    :type surface: pygame.Surface"""
+    surface.blit(self.sprite_sheets[self.current_animation], self.rect, area=self.current_frame)
+
+  def _get_frames(self, filename, columns, rows, des_width=30, des_height=30):
+    """returns a new sprite sheet and a list of rectangular coordinates in the
+    file that correspond to frames in the file name. It also manipulates the spritesheet 
+    so each frame will have the des_width and des_height
+    :param filename: sprite sheet file
+    :type filename: str
+    :param columns: the number of columns in the sprite sheet
+    :type columns: int
+    :param rows: the number of rows in the sprite sheet
+    :type rows: int
+    :param des_width: the desired width of a single frame
+    :type des_width: int
+    :param des_height: the desired height of a single frame
+    :type des_height: int"""
+    sheet = pygame.image.load(filename)
+    sheet_width = columns * des_width
+    sheet_height = rows * des_height
+
+    sheet = pygame.transform.smoothscale(sheet, (sheet_width, sheet_height))
+    sheet_rect = sheet.get_rect()
+    frames = []
+    for x in range(0, sheet_rect.width, des_width):
+      for y in range(0, sheet_rect.height, des_height):
+        frames.append(pygame.Rect(x, y, des_width, des_height))
+    return sheet, frames
+
 
 class Constructor(object):
   """A special object that contains a reference to the entire game. Inherited
   by classes that need to construct objects in the game world"""
+
   def __init__(self, game):
     super().__init__()
     self.game = game
@@ -141,7 +218,6 @@ class MovableGameObject(GameObject):
     :type obj: GameObject
     :param axis: which axis was the player moving along.
     :type axis: String """
-    # if isinstance(obj, SimpleScenery):
     if axis == 'x':
       if self.velocity.x > 0:
         self.rect.right = obj.rect.left
@@ -156,49 +232,33 @@ class MovableGameObject(GameObject):
       self.velocity.y = 0
 
 
-class SimpleScenery(GameObject):
+class SimpleScenery(GameObject, AnimateSpriteObject):
   """Simple SimpleScenery object. Game objects that are just simple shapes"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
     super().__init__(startx, starty, width, height, obj_id=obj_id)
+    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     self.color = color
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
-    if self.sprite_sheet:
-      self.sprite, self.frames = graphics.get_frames(ASSET_FOLDER + self.sprite_sheet, 1, 1, des_width=width, des_height=height)
-    else:
-      self.sprite = None
-    self.current_frame = self.frames[0]
 
   def draw(self, surface):
     """Draw the simple scenery object"""
-    super().draw(surface)
-    if self.sprite:
-      surface.blit(self.sprite, self.rect, area=self.current_frame)
-    else:
-      pygame.draw.rect(surface, self.color, self.rect)
+    AnimateSpriteObject.draw(self, surface)
+    GameObject.draw(self, surface)
 
   def build_packet(self, accumulator):
     """Not needed for static objects"""
     return
 
 
-class Player(MovableGameObject):
+class Player(AnimateSpriteObject, MovableGameObject):
   def __init__(self, startx, starty, width, height, sprite_sheet=None, color=None, obj_id=None):
-    super().__init__(startx, starty, width, height, obj_id=obj_id)
+    MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     self.color = color
     self.rect = pygame.Rect((startx, starty, width, height))
+    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     self.sprite_sheet = sprite_sheet
-    if self.sprite_sheet:
-      self.sprite, moving_frames = graphics.get_frames(ASSET_FOLDER + sprite_sheet, 8, 1, des_width=width, des_height=height)
-    else:
-      self.sprite = None
-    self.animation_frames = {'moving': moving_frames, 'standing': moving_frames[0], 'hasdata': [pygame.Rect(0, 0, self.rect.width, self.rect.height)]}
-    self.current_animation = 'moving'
-    self.current_cycle = cycle(self.animation_frames[self.current_animation])
-    self.current_frame = next(self.current_cycle)
-    self.animation_time = 3
-    self.animation_timer = 0
     self.data = None
     self.direction = 1
     self.moving = False
@@ -289,32 +349,7 @@ class Player(MovableGameObject):
     """Draws the player object onto surface
     :param surface: the surface to draw the object, typically the window
     :type surface: pygame.Surface"""
-    super().draw(surface)
-    if self.sprite:
-      surface.blit(self.sprite, self.rect, area=self.current_frame)
-    else:
-      # Player is a black rectangle if there is no sprite sheet.
-      pygame.draw.rect(surface, (0, 0, 0), self.rect)
-    pygame.draw.rect(surface, (128, 0, 128), self.rect, 1)
-
-  def change_animation(self, frame):
-    """change the frames that player object is currently cycling through.
-    :param frame: a key that maps to a list of animation frames in self.animation_frames
-    :type frame: str"""
-    if not frame in self.animation_frames:
-      import ipdb
-
-      ipdb.set_trace()
-    self.current_animation = frame  # TODO: evaluate if we need this member
-    self.current_cycle = cycle(self.animation_frames[self.current_animation])
-
-  def animate(self):
-    """Updates the animation timer goes to next frame in current animation cycle
-    after the alloted animation time has passed."""
-    self.animation_timer += 1
-    if self.animation_timer == self.animation_time:
-      self.current_frame = next(self.current_cycle)
-      self.animation_timer = 0
+    AnimateSpriteObject.draw(self, surface)
 
   def build_packet(self, accumulator):
     packet = {'type': 'player', 'location': [self.rect.x, self.rect.y], 'frame': self.current_frame, 'id': self.id}
@@ -323,6 +358,7 @@ class Player(MovableGameObject):
   def read_packet(self, packet):
     self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
     self.current_frame = packet['frame']
+    # print(self.current_frame)
     self.render = True
 
   def respond_to_collision(self, obj, axis=None):
@@ -344,7 +380,6 @@ class Player(MovableGameObject):
         self.trapped = True
         self.trapper = obj
         print('hit')
-
 
   def throw_data(self):
     """Through the data that the player is holding"""
@@ -369,19 +404,13 @@ class Player(MovableGameObject):
 class DataDevice(SimpleScenery, Constructor):
   """Devices that are scenery, but output data when interacted with"""
 
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet='Green.png', obj_id=None, game=None):
+  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, game=None):
     super().__init__(startx, starty, width, height, color, obj_id=obj_id, sprite_sheet=sprite_sheet)
     Constructor.__init__(self, game)
+    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     self.timer = None
     self.color = color
     self.data = None
-    # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
-    self.sprite_sheet = sprite_sheet
-    if self.sprite_sheet:
-      self.sprite, self.frames = graphics.get_frames(ASSET_FOLDER + self.sprite_sheet, 1, 1, des_width=width, des_height=height)
-    else:
-      self.sprite = None
-    self.current_frame = self.frames[0]
 
   def build_packet(self, accumulator):
     packet = {'type': 'data_device', 'location': [self.rect.x, self.rect.y], 'frame': '', 'id': self.id,
@@ -399,7 +428,7 @@ class DataDevice(SimpleScenery, Constructor):
     print(game_obj)
     game_obj.rect.centerx = self.rect.centerx
     game_obj.rect.bottom = self.rect.top
-    game_obj.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y/2 )
+    game_obj.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
     game_obj.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
     self.add_to_world(game_obj)
     return game_obj
@@ -410,11 +439,7 @@ class DataDevice(SimpleScenery, Constructor):
 
 
   def draw(self, surface):
-    super().draw(surface)
-    if self.sprite:
-      surface.blit(self.sprite, self.rect, area=self.current_frame)
-    else:
-      pygame.draw.rect(surface, self.color, self.rect)
+    super().draw(surface)  # SimpleScenery.draw
     if self.timer:
       outline_rect = pygame.Rect(0, 0, TIMER_WIDTH, 20)
       outline_rect.centerx = self.rect.centerx
@@ -442,16 +467,19 @@ class DataDevice(SimpleScenery, Constructor):
     data.velocity.x = 0
     data.velocity.y = 0
 
+
 class DataCruncher(DataDevice):
   """Second stage of collecting data"""
-  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=3, obj_id=None, game=None):    
+
+  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=3, obj_id=None,
+               game=None):
     super().__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
     Constructor.__init__(self, game)
     self.accept_stage = accept_stage
     self.amount_data_needed = amount_data_needed
     self.data_collected = 0
 
-  def handle_data(self, game_obj):    
+  def handle_data(self, game_obj):
     self.data_collected += 1
     if self.data_collected == self.amount_data_needed:
       self.timer = DATA_DEVICE_TIMER  # start timer
@@ -474,39 +502,28 @@ class DataCruncher(DataDevice):
   def generate_data(self):
     self.data.rect.centerx = self.rect.centerx
     self.data.rect.bottom = self.rect.top
-    self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y/2 )
+    self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
     self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
     self.data.unhide_object()
 
 
-class Data(MovableGameObject):
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet='light_blue.png', obj_id=None):
-    super().__init__(startx, starty, width, height, obj_id=obj_id)
+class Data(AnimateSpriteObject, MovableGameObject):
+  def __init__(self, startx, starty, width, height, color=None, sprite_sheet={"idle": ["light_blue.png", ["1", "1"]]},
+               obj_id=None):
+    MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     self.color = color
     self.sprite_sheet = sprite_sheet
+    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
-    if self.sprite_sheet:
-      self.sprite, self.frames = graphics.get_frames(ASSET_FOLDER + self.sprite_sheet, 1, 1, des_width=width, des_height=height)
-    else:
-      self.sprite = None
-    self.current_frame = self.frames[0]
-    self.sprite2, self.frames2 = graphics.get_frames(ASSET_FOLDER + 'green.png', 1, 1, des_width=width, des_height=height)
-    self.frame_idx = 1
-    self.stage = 1  # 1 = raw data. 2 = crunched data, 3 i = paper
+    self.stage = 1
+    self.frame = 'idle'
 
   def draw(self, surface):
-    super().draw(surface)
-    if self.sprite_sheet:
-      if self.frame_idx == 1:
-        surface.blit(self.sprite, self.rect, area=self.current_frame)
-      elif self.frame_idx == 2:
-        surface.blit(self.sprite2, self.rect, area=self.current_frame)
-    else:
-      pygame.draw.rect(surface, (155, 0, 0), self.rect)
+    super().draw(surface)  # animatedSpriteObject.draw
 
   def build_packet(self, accumulator):
-    packet = {'type': 'data', 'location': [self.rect.x, self.rect.y], 'frame': self.frame_idx, 'id': self.id}
+    packet = {'type': 'data', 'location': [self.rect.x, self.rect.y], 'frame': self.current_frame, 'id': self.id}
     accumulator.append(packet)
 
   def read_packet(self, packet):
@@ -525,15 +542,16 @@ class Data(MovableGameObject):
 
   def advance_data(self):
     # TODO: hacked for now with no sprite sheet
-    self.frame_idx += 1
+    # self.frame_idx += 1
     self.stage += 1
 
 
-class Follower(MovableGameObject):
+class Follower(AnimateSpriteObject, MovableGameObject):
   """a class that follows it's leader"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, site_range=200):
-    super().__init__(startx, starty, width, height, obj_id=obj_id)
+    MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
+    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     self.color = color
     self.leader = None
     self.velocity = eng.Vector(0, 0)
@@ -541,11 +559,6 @@ class Follower(MovableGameObject):
     self.stunned = False
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
-    if self.sprite_sheet:
-      self.sprite, self.frames = graphics.get_frames(ASSET_FOLDER + self.sprite_sheet, 1, 1, des_width=width, des_height=height)
-    else:
-      self.sprite = None
-    self.current_frame = self.frames[0]
 
   def update(self):
     if self.leader and eng.distance(self.rect, self.leader.rect) < self.site and not self.stunned:
@@ -571,13 +584,6 @@ class Follower(MovableGameObject):
         closest_distance = distance
     if closest_distance < self.site:
       self.leader = closest_leader
-
-  def draw(self, surface):
-    super().draw(surface)
-    if self.sprite:
-      surface.blit(self.sprite, self.rect, area=self.current_frame)
-    else:
-      pygame.draw.rect(surface, self.color, self.rect)
 
   # TODO: move this to MoveableGameObject
   def build_packet(self, accumulator):
@@ -605,14 +611,9 @@ class Patroller(Follower):
     super().__init__(startx, starty, width, height, obj_id=obj_id, sprite_sheet=sprite_sheet, site_range=site_range)
     self.patrol_range = patrol_range
     self.reset_patrol()
-    self.direction = 1 # scaler to multiple speed by to get direction
+    self.direction = 1  # scaler to multiple speed by to get direction
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
-    if self.sprite_sheet:
-      self.sprite, self.frames = graphics.get_frames(ASSET_FOLDER + self.sprite_sheet, 1, 1, des_width=width, des_height=height)
-    else:
-      self.sprite = None
-    self.current_frame = self.frames[0]
 
   def update(self):
     if self.leader:
@@ -629,14 +630,14 @@ class Patroller(Follower):
     if self.velocity.x > 0 and self.rect.centerx > self.end_patrol:
       self.direction = -1
       # self.velocity.x = -PATROL_SPEED
-    if self.velocity.x < 0  and self.rect.centerx < self.start_patrol:
+    if self.velocity.x < 0 and self.rect.centerx < self.start_patrol:
       # self.velocity.x = PATROL_SPEED
       self.direction = 1
     self.velocity.x = PATROL_SPEED * self.direction
 
   def reset_patrol(self):
     """sets the partrol to be equidistance from the current center"""
-    self.start_patrol = self.rect.centerx - self.patrol_range/2
-    self.end_patrol = self.rect.centerx + self.patrol_range/2
+    self.start_patrol = self.rect.centerx - self.patrol_range / 2
+    self.end_patrol = self.rect.centerx + self.patrol_range / 2
     self.velocity.x = PATROL_SPEED
 

@@ -23,6 +23,8 @@ BEZZEL_SIZE = [30, 30]
 DEL_TIME = 120
 # TODO: have a platformer game class that has all the similar components of the render and 
 # master node, and inherit from that?
+
+
 class MasterPlatformer(object):
   """Class for the platformer head node"""
 
@@ -40,43 +42,42 @@ class MasterPlatformer(object):
     self.game_objects = {}
 
     map_json = self.engine.parse_json("map.json")
+    asset_json = self.engine.parse_json("asset_config.json")
 
     # TODO: abstract this parsing to dynamically call the constructor based on the 
     # attribute (reuse map)
     for tile in map_json['floors']:
-      # noinspection PyPep8
       tmp = wd.SimpleScenery(int(tile["x"]), int(tile["y"]),
-                             int(tile["width"]), int(tile["height"]), sprite_sheet='Floor.png')
+                             int(tile["width"]), int(tile["height"]), sprite_sheet=asset_json["SimpleScenery"])
       self.game_objects[tmp.id] = tmp
 
     for player in map_json['players']:
-      tmp = wd.Player(int(player["x"]), int(player["y"]), 30, 30, sprite_sheet="Runwshadow.png")
+      tmp = wd.Player(int(player["x"]), int(player["y"]), 30, 30, sprite_sheet=asset_json["Player"])
       self.game_objects[tmp.id] = tmp
 
     for data in map_json['data_object']:
       tmp = wd.Data(int(data["x"]), int(data["y"]), int(data["width"]), int(data["height"]),
-                    sprite_sheet='light_blue.png')
+                    sprite_sheet=asset_json["Data"])
       self.game_objects[tmp.id] = tmp
 
     for data_device in map_json['data_device']:
       tmp = wd.DataDevice(int(data_device["x"]), int(data_device["y"]), int(data_device["width"]),
-                          int(data_device["height"]), sprite_sheet='green.png', game=self)
+                          int(data_device["height"]), sprite_sheet=asset_json["DataDevice"], game=self)
       self.game_objects[tmp.id] = tmp
 
-
     for follower in map_json['followers']:
-      tmp = wd.Follower(int(follower["x"]), int(follower["y"]), int(follower["width"]), 
-                        int(follower["height"]), sprite_sheet='Follower.png')
+      tmp = wd.Follower(int(follower["x"]), int(follower["y"]), int(follower["width"]),
+                        int(follower["height"]), sprite_sheet=asset_json["Follower"])
       self.game_objects[tmp.id] = tmp
 
     for patroler in map_json['patrollers']:
-      tmp = wd.Patroller(int(patroler["x"]), int(patroler["y"]), int(patroler["width"]), 
-                         int(patroler["height"]), sprite_sheet='yellow.png')
+      tmp = wd.Patroller(int(patroler["x"]), int(patroler["y"]), int(patroler["width"]),
+                         int(patroler["height"]), sprite_sheet=asset_json["Patroller"])
       self.game_objects[tmp.id] = tmp
 
     for comet in map_json['comet']:
       tmp = wd.DataCruncher(int(comet["x"]), int(comet["y"]), int(comet["width"]),
-                         int(comet["height"]), sprite_sheet='light_blue.png')
+                            int(comet["height"]), sprite_sheet=asset_json["DataCruncher"])
       self.game_objects[tmp.id] = tmp
 
     print(self.game_objects)
@@ -93,6 +94,7 @@ class MasterPlatformer(object):
     # TODO: Stop being lazy and read from file.
     # ip_list
     self.ip_list = []
+
     for x in range(0, localhosts):
       self.ip_list.append(('localhost', 2000 + x))
 
@@ -177,12 +179,13 @@ class MasterPlatformer(object):
     for game_obj in self.added:
       self.game_objects[game_obj.id] = game_obj
       send_struct['added_objs'].append({"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
-                     game_obj.rect.height], "id": game_obj.id, "sprite_sheet": game_obj.sprite_sheet,
-                     "constructor": type(game_obj).__name__})
+                                                 game_obj.rect.height], "id": game_obj.id,
+                                        "sprite_sheet": game_obj.sprite_sheet,
+                                        "constructor": type(game_obj).__name__})
 
     for game_obj_id in self.deleted:
       send_struct['deleted_objs'].append(game_obj_id)
-      del game_objects[game_obj_id]
+      del self.game_objects[game_obj_id]
 
     # clear lists
     self.added = []
@@ -198,7 +201,7 @@ class MasterPlatformer(object):
     """take the game object list and return a dict with the keys for static, AI, and player
     objects. An object can be added to multiple lists if it is multiple things i.e.
     a player is a movable game object"""
-    ret_dict = {'AI':[], 'StaticObject':[], 'Player':[], 'MovableGameObject':[]}
+    ret_dict = {'AI': [], 'StaticObject': [], 'Player': [], 'MovableGameObject': []}
     for game_obj in self.game_objects.values():
       if isinstance(game_obj, wd.Player):
         ret_dict['Player'].append(game_obj)

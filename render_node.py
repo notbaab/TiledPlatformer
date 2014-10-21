@@ -4,7 +4,7 @@ import time
 
 # TODO: Figure out tile location based on hostname
 if __name__ == '__main__':
-  game = displayplatformer.ClientPlatformer([0, 0], [200,0])
+  game = displayplatformer.ClientPlatformer([0, 0], [200, 0])
   connected = False
   while not connected:
     try:

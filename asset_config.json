@@ -1,0 +1,31 @@
+{
+  "Player":
+    {
+      "moving":["Runwshadow.png",["8", "1"]], 
+      "idle":["Runwshadow.png",["8", "1"]]
+    },
+  "SimpleScenery":
+    {
+      "idle": ["Floor.png", ["1", "1"]]    
+    },
+  "Data":
+    {
+      "idle": ["light_blue.png", ["1", "1"]]    
+    },
+  "Follower":
+    {
+      "idle": ["Follower.png", ["1", "1"]]    
+    },
+  "DataCruncher":
+    {
+      "idle": ["light_blue.png", ["1", "1"]]    
+    },
+  "Patroller":
+    {
+      "idle": ["yellow.png", ["1", "1"]]    
+    },
+  "DataDevice":
+    {
+      "idle": ["green.png", ["1", "1"]]    
+    }
+}
