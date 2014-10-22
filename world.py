@@ -2,7 +2,6 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-import graphics
 import ipdb
 import random
 
@@ -42,17 +41,6 @@ class GameObject(object):
     """anything that the object needs to do every frame"""
     return
 
-  def build_packet(self, packet):
-    """accumulator function that will build the packet for each game object"""
-    import ipdb
-
-    ipdb.set_trace()
-
-  def read_packet(self, packet):
-    import ipdb
-
-    ipdb.set_trace()
-
   def animate(self):
     return
 
@@ -75,15 +63,10 @@ class NetworkedObject(object):
     for attribute in self.attribute_list:
       packet[attribute] = self.__getattribute__(attribute)
     accumulator.append(packet)
-    # packet = {'type': 'player', 'location': [self.rect.x, self.rect.y], 'frame': self.current_frame, 'id': self.id}
-    # accumulator.append(packet)
 
   def read_packet(self, packet):
     for attribute in self.attribute_list:
-      self.__setattr__('attribute', packet[attribute])
-      # self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
-      # self.current_frame = packet['frame']
-      # self.render = True
+      self.__setattr__(attribute, packet[attribute])
 
 
 class AnimateSpriteObject(object):
@@ -102,15 +85,15 @@ class AnimateSpriteObject(object):
     :param des_height: the desired height of each frame
     :type des_height: int
     """
-    # super().__init__()
+    object.__init__(self)
     frame_dict = {}
     self.animation_frames = {}
     self.sprite_sheets = {}
     for animation_name, (filename, (width, height)) in animation_dict.items():
       self.sprite_sheets[animation_name], self.animation_frames[animation_name] = self._get_frames(
-                                                                                  ASSET_FOLDER + filename, int(width),
-                                                                                  int(height), des_width=des_width,
-                                                                                  des_height=des_height)
+        ASSET_FOLDER + filename, int(width),
+        int(height), des_width=des_width,
+        des_height=des_height)
 
     self.current_animation = 'idle'
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
@@ -174,7 +157,7 @@ class Constructor(object):
   by classes that need to construct objects in the game world"""
 
   def __init__(self, game):
-    super().__init__()
+    object.__init__(self)
     self.game = game
 
   def add_to_world(self, obj):
@@ -207,6 +190,7 @@ class MovableGameObject(GameObject):
 
   def unhide_object(self):
     """moves turns of physics and rendering for the object"""
+    print("here", ...)
     self.render = True
     self.physics = True
 
@@ -247,17 +231,15 @@ class SimpleScenery(GameObject, AnimateSpriteObject):
     AnimateSpriteObject.draw(self, surface)
     GameObject.draw(self, surface)
 
-  def build_packet(self, accumulator):
-    """Not needed for static objects"""
-    return
 
-
-class Player(AnimateSpriteObject, MovableGameObject):
+class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def __init__(self, startx, starty, width, height, sprite_sheet=None, color=None, obj_id=None):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
+    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
+    NetworkedObject.__init__(self, ['rect', 'current_frame', 'id',
+                                    'render'])  # packet = {'type': 'player', 'location': [self.rect.x, self.rect.y], 'frame': self.current_frame, 'id': self.id}
     self.color = color
     self.rect = pygame.Rect((startx, starty, width, height))
-    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     self.sprite_sheet = sprite_sheet
     self.data = None
     self.direction = 1
@@ -351,16 +333,6 @@ class Player(AnimateSpriteObject, MovableGameObject):
     :type surface: pygame.Surface"""
     AnimateSpriteObject.draw(self, surface)
 
-  def build_packet(self, accumulator):
-    packet = {'type': 'player', 'location': [self.rect.x, self.rect.y], 'frame': self.current_frame, 'id': self.id}
-    accumulator.append(packet)
-
-  def read_packet(self, packet):
-    self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
-    self.current_frame = packet['frame']
-    # print(self.current_frame)
-    self.render = True
-
   def respond_to_collision(self, obj, axis=None):
     """Contains the callback for the collision between a player object and a game object passed in. Axis is needed
     for collisions that halt movement
@@ -401,27 +373,17 @@ class Player(AnimateSpriteObject, MovableGameObject):
       self.change_animation('moving')
 
 
-class DataDevice(SimpleScenery, Constructor):
+class DataDevice(SimpleScenery, Constructor, AnimateSpriteObject, NetworkedObject):
   """Devices that are scenery, but output data when interacted with"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, game=None):
     super().__init__(startx, starty, width, height, color, obj_id=obj_id, sprite_sheet=sprite_sheet)
     Constructor.__init__(self, game)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
+    NetworkedObject.__init__(self, ['rect', 'id', 'timer', 'message_str'])
     self.timer = None
     self.color = color
     self.data = None
-
-  def build_packet(self, accumulator):
-    packet = {'type': 'data_device', 'location': [self.rect.x, self.rect.y], 'frame': '', 'id': self.id,
-              'timer': self.timer, 'message': self.message_str}
-    accumulator.append(packet)
-
-  def read_packet(self, packet):
-    self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
-    self.timer = packet['timer']
-    self.message_str = packet['message']
-    self.render = True
 
   def generate_data(self):
     game_obj = Data(20, 20, 10, 10)
@@ -439,7 +401,8 @@ class DataDevice(SimpleScenery, Constructor):
 
 
   def draw(self, surface):
-    super().draw(surface)  # SimpleScenery.draw
+    # print('draing', ...)
+    SimpleScenery.draw(self, surface)  # SimpleScenery.draw
     if self.timer:
       outline_rect = pygame.Rect(0, 0, TIMER_WIDTH, 20)
       outline_rect.centerx = self.rect.centerx
@@ -507,13 +470,14 @@ class DataCruncher(DataDevice):
     self.data.unhide_object()
 
 
-class Data(AnimateSpriteObject, MovableGameObject):
+class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet={"idle": ["light_blue.png", ["1", "1"]]},
                obj_id=None):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
+    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
+    NetworkedObject.__init__(self, ['rect', 'current_frame', 'id', 'render'])
     self.color = color
     self.sprite_sheet = sprite_sheet
-    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
     self.stage = 1
@@ -521,15 +485,6 @@ class Data(AnimateSpriteObject, MovableGameObject):
 
   def draw(self, surface):
     super().draw(surface)  # animatedSpriteObject.draw
-
-  def build_packet(self, accumulator):
-    packet = {'type': 'data', 'location': [self.rect.x, self.rect.y], 'frame': self.current_frame, 'id': self.id}
-    accumulator.append(packet)
-
-  def read_packet(self, packet):
-    self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
-    self.frame_idx = packet['frame']
-    self.render = True
 
   def respond_to_collision(self, obj, axis=None):
     if isinstance(obj, Player):
@@ -546,12 +501,13 @@ class Data(AnimateSpriteObject, MovableGameObject):
     self.stage += 1
 
 
-class Follower(AnimateSpriteObject, MovableGameObject):
+class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   """a class that follows it's leader"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, site_range=200):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
+    NetworkedObject.__init__(self, ['rect', 'current_frame', 'id', 'render'])
     self.color = color
     self.leader = None
     self.velocity = eng.Vector(0, 0)
@@ -585,15 +541,6 @@ class Follower(AnimateSpriteObject, MovableGameObject):
     if closest_distance < self.site:
       self.leader = closest_leader
 
-  # TODO: move this to MoveableGameObject
-  def build_packet(self, accumulator):
-    packet = {'type': 'data', 'location': [self.rect.x, self.rect.y], 'frame': '', 'id': self.id}
-    accumulator.append(packet)
-
-  def read_packet(self, packet):
-    self.rect.x, self.rect.y = packet['location'][0], packet['location'][1]
-    self.render = True
-
   def respond_to_collision(self, obj, axis=None):
     self.stunned = False
     if isinstance(obj, Player):
@@ -626,12 +573,9 @@ class Patroller(Follower):
       self.do_patrol()
 
   def do_patrol(self):
-    # self.rect.centerx += self.velocity.x
     if self.velocity.x > 0 and self.rect.centerx > self.end_patrol:
       self.direction = -1
-      # self.velocity.x = -PATROL_SPEED
     if self.velocity.x < 0 and self.rect.centerx < self.start_patrol:
-      # self.velocity.x = PATROL_SPEED
       self.direction = 1
     self.velocity.x = PATROL_SPEED * self.direction
 

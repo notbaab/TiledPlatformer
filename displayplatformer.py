@@ -89,10 +89,13 @@ class ClientPlatformer(NetworkGame):
       self.game_objects[game_obj['id']].render = False
 
     for packet in data['game_objects']:
-      translated_pos = self.translate_to_local(packet['location'])
+      translated_pos = self.translate_to_local((packet['rect'].x, packet['rect'].y))       
       if translated_pos != 0:
+        print("here")
+        print(packet)
+        print(self.game_objects[packet['id']])
         # TODO: don't translate here, do it in a better place
-        packet['location'] = translated_pos
+        packet['rect'].x, packet['rect'].y = translated_pos
         self.game_objects[packet['id']].read_packet(packet)
       else:
         self.game_objects[packet['id']].render = False
@@ -100,6 +103,8 @@ class ClientPlatformer(NetworkGame):
     # TODO: this is what loop over game dict is for
     for obj_id, game_obj in self.game_objects.items():
       if game_obj.render:
+        print('drawing')
+        print(game_obj)
         game_obj.draw(self.window)
     pygame.display.flip()
 

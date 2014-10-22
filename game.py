@@ -7,7 +7,6 @@ import engine as eng
 import socket
 import pickle
 import os
-import graphics
 
 # TODO: Maybe it's time to move away from the socket del? That will also require moving off pickling
 SOCKET_DEL = '*ET*'.encode('utf-8')
@@ -19,8 +18,6 @@ GRID_SPACE = [0, 0]
 DISPLAY_SIZE = {"x": 600, "y": 600}
 BEZZEL_SIZE = [30, 30]
 
-# TEST
-DEL_TIME = 120
 # TODO: have a platformer game class that has all the similar components of the render and 
 # master node, and inherit from that?
 
@@ -192,7 +189,7 @@ class MasterPlatformer(object):
     self.deleted = []
 
     game_objects_packets = []  # accumulator for the build_packet function
-    self.engine.map_attribute_flat(self.game_objects.values(), 'build_packet', game_objects_packets)
+    self.engine.map_attribute_flat(game_dict['NetworkedObject'], 'build_packet', game_objects_packets)
     send_struct['game_objects'] = game_objects_packets
 
     return self.serialize_and_sync(send_struct)
@@ -201,7 +198,8 @@ class MasterPlatformer(object):
     """take the game object list and return a dict with the keys for static, AI, and player
     objects. An object can be added to multiple lists if it is multiple things i.e.
     a player is a movable game object"""
-    ret_dict = {'AI': [], 'StaticObject': [], 'Player': [], 'MovableGameObject': []}
+    ret_dict = {'AI': [], 'StaticObject': [], 'Player': [], 'MovableGameObject': [], 
+                'NetworkedObject':[]}
     for game_obj in self.game_objects.values():
       if isinstance(game_obj, wd.Player):
         ret_dict['Player'].append(game_obj)
@@ -211,6 +209,8 @@ class MasterPlatformer(object):
         ret_dict['AI'].append(game_obj)
       if isinstance(game_obj, wd.MovableGameObject):
         ret_dict['MovableGameObject'].append(game_obj)
+      if isinstance(game_obj, wd.NetworkedObject):
+        ret_dict['NetworkedObject'].append(game_obj)
     return ret_dict
 
   def add_to_world(self, game_obj):
