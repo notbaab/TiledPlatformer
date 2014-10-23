@@ -61,15 +61,22 @@ class ClientPlatformer(NetworkGame):
 
   def clear(self, color=(0, 0, 0)):
     """override this method, only hook needed for the server"""
-    self.window.blit(self.background, self.background_rect)
+    for game_obj in self.game_objects.values():
+      if game_obj.render == True and isinstance(game_obj, wd.MovableGameObject):
+        self.window.blit(self.background, (game_obj.rect.x, game_obj.rect.y), game_obj.rect)
+    # self.window.blit(self.background, self.background_rect)
     # self.window.fill(color)
+  
+  def clear_entire_screen(self):
+    self.window.blit(self.background, self.background_rect)
 
   def load_state(self, data):
     """Fires off a load animation for every game object that is on this nodes screen
     :param data: TODO: make this fire off a specific load animation
     :type data: dict"""
+    self.clear_entire_screen()
     obj_on_screen = [game_obj for game_obj in self.game_objects.values() if game_obj.render]
-    self.engine.load_animation(obj_on_screen, self.clear, self.window)
+    self.engine.load_animation(obj_on_screen, self.background, self.window)
     return {'state': 'play'}
 
   def play_state(self, data):
@@ -91,9 +98,6 @@ class ClientPlatformer(NetworkGame):
     for packet in data['game_objects']:
       translated_pos = self.translate_to_local((packet['rect'].x, packet['rect'].y))       
       if translated_pos != 0:
-        print("here")
-        print(packet)
-        print(self.game_objects[packet['id']])
         # TODO: don't translate here, do it in a better place
         packet['rect'].x, packet['rect'].y = translated_pos
         self.game_objects[packet['id']].read_packet(packet)
@@ -103,8 +107,6 @@ class ClientPlatformer(NetworkGame):
     # TODO: this is what loop over game dict is for
     for obj_id, game_obj in self.game_objects.items():
       if game_obj.render:
-        print('drawing')
-        print(game_obj)
         game_obj.draw(self.window)
     pygame.display.flip()
 
@@ -128,3 +130,4 @@ class ClientPlatformer(NetworkGame):
   def tanslate_to_global(self):
     """tanstlates the data to the global data """
     pass
+
