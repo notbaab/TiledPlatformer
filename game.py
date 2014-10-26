@@ -77,6 +77,11 @@ class MasterPlatformer(object):
                             int(comet["height"]), sprite_sheet=asset_json["DataCruncher"])
       self.game_objects[tmp.id] = tmp
 
+    for desk in map_json['Desk']:
+      tmp = wd.Desk(int(desk["x"]), int(desk["y"]), int(desk["width"]),
+                            int(desk["height"]), sprite_sheet=asset_json["DataCruncher"])
+      self.game_objects[tmp.id] = tmp
+
     print(self.game_objects)
 
     send_struct = {'game_obj': []}

@@ -70,7 +70,7 @@ class NetworkedObject(object):
 
 
 class AnimateSpriteObject(object):
-  """a stand alone object that allows the inhertied game object to have animation 
+  """a stand alone object that allows the inherited game object to have animation 
   sprites"""
 
   def __init__(self, animation_dict, des_width, des_height):
@@ -237,7 +237,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'id',
-                                    'render'])  # packet = {'type': 'player', 'location': [self.rect.x, self.rect.y], 'frame': self.current_frame, 'id': self.id}
+                                    'render'])  
     self.color = color
     self.rect = pygame.Rect((startx, starty, width, height))
     self.sprite_sheet = sprite_sheet
@@ -289,6 +289,9 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
         self.mash_right = False
         self.escape_hit = 0
 
+  def write_paper(self):
+    return
+
   def move_right(self):
     """DEPRICATED: use move(1): sets velocity of player to move right"""
     self.move(1)
@@ -317,7 +320,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
   def interact(self, game_objs):
     """a catch all function that called when hitting the interact button. It will
-    look through the game_objs and if it's with a minumum threshold(self.interact_dist), call specific functions
+    look through the game_objs and if it's with a minimum threshold(self.interact_dist), call specific functions
     based on what the objects are.
     :param game_objs: A list of game objects that the player can potentially interact
     with
@@ -325,7 +328,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     for game_obj in game_objs:
       if isinstance(game_obj, DataDevice):
         if eng.distance(self.rect, game_obj.rect) < self.interact_dist:
-          game_obj.start_data_spawn()
+          game_obj.interact(self)
 
   def draw(self, surface):
     """Draws the player object onto surface
@@ -365,7 +368,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       else:
         self.data.rect.left = self.rect.right + (exit_buff * self.direction)
 
-      self.data.velocity.x = (self.velocity.x + PLAYER_THROW_SPEED.x) * self.direction
+      self.data.velocity.x = self.velocity.x + PLAYER_THROW_SPEED.x * self.direction
       self.data.rect.y = self.rect.y
       self.data.velocity.y = PLAYER_THROW_SPEED.y
       self.data.unhide_object()
@@ -395,13 +398,12 @@ class DataDevice(SimpleScenery, Constructor, AnimateSpriteObject, NetworkedObjec
     self.add_to_world(game_obj)
     return game_obj
 
-  def start_data_spawn(self, timer=DATA_DEVICE_TIMER):
+  def interact(self, player, timer=DATA_DEVICE_TIMER):
     if not self.timer:  # only allow one timer at a time
       self.timer = timer
 
 
   def draw(self, surface):
-    # print('draing', ...)
     SimpleScenery.draw(self, surface)  # SimpleScenery.draw
     if self.timer:
       outline_rect = pygame.Rect(0, 0, TIMER_WIDTH, 20)
@@ -411,6 +413,9 @@ class DataDevice(SimpleScenery, Constructor, AnimateSpriteObject, NetworkedObjec
       timer_rect.width = TIMER_WIDTH * self.timer
       pygame.draw.rect(surface, (255, 0, 255), timer_rect)
       pygame.draw.rect(surface, (128, 0, 128), outline_rect, 1)
+      if timer_rect.width == TIMER_WIDTH:
+        # TODO: clear timer. Do this by returning the area that needs to be cleared
+        return timer_rect
 
   def update(self):
     if self.timer:
@@ -437,7 +442,7 @@ class DataCruncher(DataDevice):
   def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=3, obj_id=None,
                game=None):
     super().__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
-    Constructor.__init__(self, game)
+    # Constructor.__init__(self, game)
     self.accept_stage = accept_stage
     self.amount_data_needed = amount_data_needed
     self.data_collected = 0
@@ -468,6 +473,43 @@ class DataCruncher(DataDevice):
     self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
     self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
     self.data.unhide_object()
+
+class Desk(DataDevice):
+  """Where the player will sit and write the paper after collecting data"""
+  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, obj_id=None,
+               game=None):
+    super().__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
+    self.player = None
+
+  def update(self):
+    if self.player:
+      self.player.escape_hit = 0  # Don't allow player to escape
+      # player siting at desk, update timer
+      if self.timer:
+        self.timer += DATA_DEVICE_TIMER
+        if self.timer >= 1:
+          self.generate_data()
+          self.timer = None
+          self.player.trapped = False
+          self.player = None
+
+  def generate_data(self):
+    self.data.rect.centerx = self.rect.centerx
+    self.data.rect.bottom = self.rect.top
+    self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
+    self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
+    self.data.stage += 1
+    self.data.unhide_object() 
+
+  def interact(self, player, timer=DATA_DEVICE_TIMER):
+    if not self.player and player.data:
+      # player hasn't interacted yet and has data
+      self.player = player
+      self.player.trapped = True 
+      self.player.escape_hit = 0
+      self.timer = timer
+      self.data = self.player.data
+      self.player.data = None
 
 
 class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
