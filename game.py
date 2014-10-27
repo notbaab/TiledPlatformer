@@ -79,13 +79,13 @@ class MasterPlatformer(object):
 
     for desk in map_json['Desk']:
       tmp = wd.Desk(int(desk["x"]), int(desk["y"]), int(desk["width"]),
-                            int(desk["height"]), sprite_sheet=asset_json["DataCruncher"])
+                    int(desk["height"]), sprite_sheet=asset_json["DataCruncher"])
       self.game_objects[tmp.id] = tmp
 
     for publish_house in map_json['PublishingHouse']:
       tmp = wd.PublishingHouse(int(publish_house["x"]), int(publish_house["y"]), int(publish_house["width"]),
-                            int(publish_house["height"]), sprite_sheet=asset_json["PublishingHouse"],
-                            accept_stage=wd.DATA_STAGES["paper"])
+                               int(publish_house["height"]), sprite_sheet=asset_json["PublishingHouse"],
+                               accept_stage=wd.DATA_STAGES["paper"])
 
       self.game_objects[tmp.id] = tmp
 
@@ -210,8 +210,8 @@ class MasterPlatformer(object):
     """take the game object list and return a dict with the keys for static, AI, and player
     objects. An object can be added to multiple lists if it is multiple things i.e.
     a player is a movable game object"""
-    ret_dict = {'AI': [], 'StaticObject': [], 'Player': [], 'MovableGameObject': [], 
-                'NetworkedObject':[]}
+    ret_dict = {'AI': [], 'StaticObject': [], 'Player': [], 'MovableGameObject': [],
+                'NetworkedObject': []}
     for game_obj in self.game_objects.values():
       if isinstance(game_obj, wd.Player):
         ret_dict['Player'].append(game_obj)

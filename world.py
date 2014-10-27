@@ -5,7 +5,7 @@ from itertools import cycle
 import ipdb
 import random
 
-DATA_STAGES = {"raw":1, "crunched":2, "paper":3}
+DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
 ASSET_FOLDER = "assets/"
 GRAVITY_VELOCITY = 4  # lets cheat for now
 FLOOR_Y = 580
@@ -34,8 +34,6 @@ def draw_message(x, bottom, message, window):
   return font_rect
 
 
-
-
 # TODO: add more things to do
 class GameObject(object):
   """the top level game object. All game objects inherit from this class."""
@@ -60,14 +58,14 @@ class GameObject(object):
   def animate(self):
     return
 
-  # def draw(self, window):
-  #   if self.message_str:
-  #     eng.FONT.set_bold(True)
-  #     font_to_render = eng.FONT.render(str(self.message_str), True, (0, 0, 0))
-  #     font_rect = font_to_render.get_rect()
-  #     font_rect.centerx = self.rect.centerx
-  #     font_rect.bottom = self.rect.top - 10
-  #     window.blit(font_to_render, font_rect)
+    # def draw(self, window):
+    # if self.message_str:
+    # eng.FONT.set_bold(True)
+    # font_to_render = eng.FONT.render(str(self.message_str), True, (0, 0, 0))
+    # font_rect = font_to_render.get_rect()
+    # font_rect.centerx = self.rect.centerx
+    # font_rect.bottom = self.rect.top - 10
+    # window.blit(font_to_render, font_rect)
 
 
 class NetworkedObject(object):
@@ -252,13 +250,12 @@ class SimpleScenery(GameObject, AnimateSpriteObject):
       self.old_rect = draw_message(x, bottom, self.message_str, surface)
 
 
-
 class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def __init__(self, startx, starty, width, height, sprite_sheet=None, color=None, obj_id=None):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'id',
-                                    'render'])  
+                                    'render'])
     self.color = color
     self.rect = pygame.Rect((startx, starty, width, height))
     self.sprite_sheet = sprite_sheet
@@ -462,7 +459,8 @@ class DataDevice(SimpleScenery, Constructor, AnimateSpriteObject, NetworkedObjec
 class DataCruncher(DataDevice):
   """Second stage of collecting data"""
 
-  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=1, concurrent_data=1, obj_id=None,
+  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=1,
+               concurrent_data=1, obj_id=None,
                game=None):
     super().__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
     # Constructor.__init__(self, game)
@@ -500,8 +498,10 @@ class DataCruncher(DataDevice):
     self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
     self.data.unhide_object()
 
+
 class Desk(DataDevice):
   """Where the player will sit and write the paper after collecting data"""
+
   def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, obj_id=None,
                game=None):
     super().__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
@@ -525,43 +525,44 @@ class Desk(DataDevice):
     self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
     self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
     self.data.advance_data()
-    self.data.unhide_object() 
+    self.data.unhide_object()
 
   def interact(self, player, timer=DATA_DEVICE_TIMER):
     if not self.player and player.data:
       # player hasn't interacted yet and has data
       self.player = player
-      self.player.trapped = True 
+      self.player.trapped = True
       self.player.escape_hit = 0
       self.timer = timer
       self.data = self.player.data
       self.player.data = None
 
+
 class PublishingHouse(DataCruncher):
   """Where the player brings the final paper"""
-  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=1, 
+
+  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=1,
                concurrent_data=1, obj_id=None, game=None):
     print(accept_stage)
-    super().__init__(startx, starty, width, height, sprite_sheet, accept_stage=accept_stage, 
-                     amount_data_needed=amount_data_needed, concurrent_data=concurrent_data, 
+    super().__init__(startx, starty, width, height, sprite_sheet, accept_stage=accept_stage,
+                     amount_data_needed=amount_data_needed, concurrent_data=concurrent_data,
                      obj_id=obj_id, game=game)
 
   # def update(self):
-  #   if self.player:
-  #     self.player.escape_hit = 0  # Don't allow player to escape
-  #     # player siting at desk, update timer
-  #     if self.timer:
-  #       self.timer += DATA_DEVICE_TIMER
-  #       if self.timer >= 1:
-  #         self.generate_data()
-  #         self.timer = None
-  #         self.player.trapped = False
-  #         self.player = None
+  # if self.player:
+  # self.player.escape_hit = 0  # Don't allow player to escape
+  # # player siting at desk, update timer
+  # if self.timer:
+  # self.timer += DATA_DEVICE_TIMER
+  # if self.timer >= 1:
+  # self.generate_data()
+  # self.timer = None
+  # self.player.trapped = False
+  # self.player = None
 
   def generate_data(self):
     # TODO: make a scoring mechanic
     print("score")
-
 
 
 class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
@@ -597,8 +598,6 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     # TODO: hacked for now with no sprite sheet
     # self.frame_idx += 1
     self.stage += 1
-
-
 
 
 class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):

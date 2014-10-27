@@ -198,9 +198,9 @@ class Engine(object):
         # curr_stage = 0
         # while not done:
         # # draw objects
-        #   for stage, inner_stage_dict in stage_dict.items():
-        #     # print(stage)
-        #     # print(inner_stage_dict)
+        # for stage, inner_stage_dict in stage_dict.items():
+        # # print(stage)
+        # # print(inner_stage_dict)
 
         #     for i in range(steps_total):
         #       background()

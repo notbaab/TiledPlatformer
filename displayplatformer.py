@@ -64,9 +64,9 @@ class ClientPlatformer(NetworkGame):
     for game_obj in self.game_objects.values():
       if game_obj.render == True and isinstance(game_obj, wd.MovableGameObject):
         self.window.blit(self.background, (game_obj.rect.x, game_obj.rect.y), game_obj.rect)
-    # self.window.blit(self.background, self.background_rect)
-    # self.window.fill(color)
-  
+        # self.window.blit(self.background, self.background_rect)
+        # self.window.fill(color)
+
   def clear_entire_screen(self):
     self.window.blit(self.background, self.background_rect)
 
@@ -96,7 +96,7 @@ class ClientPlatformer(NetworkGame):
       self.game_objects[game_obj['id']].render = False
 
     for packet in data['game_objects']:
-      translated_pos = self.translate_to_local((packet['rect'].x, packet['rect'].y))       
+      translated_pos = self.translate_to_local((packet['rect'].x, packet['rect'].y))
       if translated_pos != 0:
         # TODO: don't translate here, do it in a better place
         packet['rect'].x, packet['rect'].y = translated_pos
@@ -120,7 +120,7 @@ class ClientPlatformer(NetworkGame):
     :rtype: int or tuple
     """
     if ((self.tile[0] + 1) * SCREEN_WIDTH > pos[0] >= self.tile[0] * SCREEN_WIDTH and
-        (self.tile[1] + 1) * SCREEN_HEIGHT > pos[1] >= self.tile[1] * SCREEN_HEIGHT):
+                (self.tile[1] + 1) * SCREEN_HEIGHT > pos[1] >= self.tile[1] * SCREEN_HEIGHT):
       translated_pos = [pos[0] - self.tile[0] * SCREEN_WIDTH,
                         (self.tile[1]) * SCREEN_HEIGHT + pos[1]]
     else:
