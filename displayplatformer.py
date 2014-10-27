@@ -7,7 +7,7 @@ import ipdb
 import os
 import random
 # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
-SCREEN_WIDTH = 600
+SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 600
 
 FPS = pygame.time.Clock()
@@ -24,9 +24,10 @@ class ClientPlatformer(NetworkGame):
     self.load_time = .01
 
     self.engine = eng.Engine()
-    self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT) )
     self.game_objects = {}
-    self.background = pygame.image.load("assets/background" + str(self.tile[0]) + str(self.tile[1]) + ".png")
+    # self.background = pygame.image.load("assets/background" + str(self.tile[0]) + str(self.tile[1]) + ".png")
+    self.background = pygame.image.load("assets/backgroun.png")
     self.background_rect = self.background.get_rect()
 
   def init_game(self, data):
@@ -46,6 +47,7 @@ class ClientPlatformer(NetworkGame):
 
         self.game_objects[game_obj['id']].render = False
 
+    self.clear_rects = []
     return data
 
   def update(self, data):
@@ -59,11 +61,14 @@ class ClientPlatformer(NetworkGame):
     else:
       ipdb.set_trace()
 
-  def clear(self, color=(0, 0, 0)):
-    """override this method, only hook needed for the server"""
+  def clear(self, rects=[]):
+    """clear where the previous game objects were + whatever rects are specified
+    in the passed in rect(good for timers and debug messages"""
     for game_obj in self.game_objects.values():
       if game_obj.render == True and isinstance(game_obj, wd.MovableGameObject):
         self.window.blit(self.background, (game_obj.rect.x, game_obj.rect.y), game_obj.rect)
+    for rect in rects:
+      self.window.blit(self.background, (rect.x, rect.y), rect)
         # self.window.blit(self.background, self.background_rect)
         # self.window.fill(color)
 
@@ -77,6 +82,13 @@ class ClientPlatformer(NetworkGame):
     self.clear_entire_screen()
     obj_on_screen = [game_obj for game_obj in self.game_objects.values() if game_obj.render]
     self.engine.load_animation(obj_on_screen, self.background, self.window)
+    update_rects = []
+    for obj_id, game_obj in self.game_objects.items():
+      if isinstance(game_obj, wd.SimpleScenery):
+        game_obj.draw(self.window)
+        game_obj.dirt_sprite = False  # DOn't draw again unless it moves
+        update_rects.append(game_obj.rect)
+    pygame.display.update(update_rects)
     return {'state': 'play'}
 
   def play_state(self, data):
@@ -84,7 +96,8 @@ class ClientPlatformer(NetworkGame):
     object is in the nodes area. If so it sets it to render
     :para data: python dict with various game object packets
     :type data: dict"""
-    self.clear(eng.Colors.WHITE)
+    self.clear(self.clear_rects)
+    self.clear_rects = []
     for obj_id in data['deleted_objs']:
       del self.game_objects[obj_id]
     for game_obj in data['added_objs']:
@@ -105,10 +118,18 @@ class ClientPlatformer(NetworkGame):
         self.game_objects[packet['id']].render = False
 
     # TODO: this is what loop over game dict is for
+    update_rects = []
     for obj_id, game_obj in self.game_objects.items():
       if game_obj.render:
-        game_obj.draw(self.window)
-    pygame.display.flip()
+        clear_rect = game_obj.draw(self.window)
+        if game_obj.dirt_sprite:
+          update_rects.append(game_obj.rect)
+        if clear_rect:
+          self.clear_rects.append(clear_rect)
+    print(len(update_rects))
+    print(update_rects)
+    pygame.display.update(update_rects)
+    #pygame.display.flip()
 
     data_struct = {'state': 'play'}
     return data_struct

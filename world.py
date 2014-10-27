@@ -25,6 +25,7 @@ DEBUG = True
 
 def draw_message(x, bottom, message, window):
   """draw text somewhere on the screen"""
+  return
   eng.FONT.set_bold(True)
   font_to_render = eng.FONT.render(str(message), True, (0, 0, 0))
   font_rect = font_to_render.get_rect()
@@ -50,6 +51,7 @@ class GameObject(object):
     self.message_str = None  # info that is displayed above the object
     self.to_del = False
     self.physics = False  # Does this class need physics?
+    self.dirt_sprite = True  # only draw sprite if dirty
 
   def update(self):
     """anything that the object needs to do every frame"""
@@ -57,15 +59,6 @@ class GameObject(object):
 
   def animate(self):
     return
-
-    # def draw(self, window):
-    # if self.message_str:
-    # eng.FONT.set_bold(True)
-    # font_to_render = eng.FONT.render(str(self.message_str), True, (0, 0, 0))
-    # font_rect = font_to_render.get_rect()
-    # font_rect.centerx = self.rect.centerx
-    # font_rect.bottom = self.rect.top - 10
-    # window.blit(font_to_render, font_rect)
 
 
 class NetworkedObject(object):
@@ -241,13 +234,14 @@ class SimpleScenery(GameObject, AnimateSpriteObject):
 
   def draw(self, surface):
     """Draw the simple scenery object"""
-    AnimateSpriteObject.draw(self, surface)
+    if self.dirt_sprite:
+      AnimateSpriteObject.draw(self, surface)
     if self.message_str:
       # message_rect = pygame.Rect(0,0,0,0)
       x = self.rect.centerx
       bottom = self.rect.top - 10
       # message_rect.bottom = self.rect.top - 10
-      self.old_rect = draw_message(x, bottom, self.message_str, surface)
+      return draw_message(x, bottom, self.message_str, surface)
 
 
 class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
@@ -433,9 +427,10 @@ class DataDevice(SimpleScenery, Constructor, AnimateSpriteObject, NetworkedObjec
       timer_rect.width = TIMER_WIDTH * self.timer
       pygame.draw.rect(surface, (255, 0, 255), timer_rect)
       pygame.draw.rect(surface, (128, 0, 128), outline_rect, 1)
-      if timer_rect.width == TIMER_WIDTH:
+      if timer_rect.width == TIMER_WIDTH - 1:
         # TODO: clear timer. Do this by returning the area that needs to be cleared
-        return timer_rect
+        # ipdb.set_trace()
+        return outline_rect
 
   def update(self):
     if self.timer:
@@ -548,18 +543,6 @@ class PublishingHouse(DataCruncher):
                      amount_data_needed=amount_data_needed, concurrent_data=concurrent_data,
                      obj_id=obj_id, game=game)
 
-  # def update(self):
-  # if self.player:
-  # self.player.escape_hit = 0  # Don't allow player to escape
-  # # player siting at desk, update timer
-  # if self.timer:
-  # self.timer += DATA_DEVICE_TIMER
-  # if self.timer >= 1:
-  # self.generate_data()
-  # self.timer = None
-  # self.player.trapped = False
-  # self.player = None
-
   def generate_data(self):
     # TODO: make a scoring mechanic
     print("score")
@@ -583,7 +566,7 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     if DEBUG:
       x = self.rect.centerx
       bottom = self.rect.top - 10
-      self.clear_rect = draw_message(x, bottom, self.stage, surface)
+      return draw_message(x, bottom, self.stage, surface)
 
   def respond_to_collision(self, obj, axis=None):
     if isinstance(obj, Player):

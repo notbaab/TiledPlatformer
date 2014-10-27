@@ -15,7 +15,7 @@ FPS = pygame.time.Clock()
 TICK = 60
 GRID_SPACE = [0, 0]
 # DISPLAY_SIZE = [600, 600]
-DISPLAY_SIZE = {"x": 600, "y": 600}
+DISPLAY_SIZE = {"x": 1000, "y": 600}
 BEZZEL_SIZE = [30, 30]
 
 # TODO: have a platformer game class that has all the similar components of the render and 
