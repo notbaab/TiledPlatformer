@@ -109,5 +109,14 @@
       "width" : "40",
       "height": "40"
     }
+  ],
+  "PublishingHouse":
+  [
+    {
+      "x": "450",
+      "y": "250",
+      "width" : "40",
+      "height": "40"
+    }
   ]
 }

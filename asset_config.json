@@ -31,5 +31,9 @@
   "Desk":
     {
       "idle": ["Follower.png", ["1", "1"]]    
+    },
+  "PublishingHouse":
+    {
+      "idle": ["light_blue.png", ["1", "1"]]    
     }
 }

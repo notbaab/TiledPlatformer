@@ -82,6 +82,13 @@ class MasterPlatformer(object):
                             int(desk["height"]), sprite_sheet=asset_json["DataCruncher"])
       self.game_objects[tmp.id] = tmp
 
+    for publish_house in map_json['PublishingHouse']:
+      tmp = wd.PublishingHouse(int(publish_house["x"]), int(publish_house["y"]), int(publish_house["width"]),
+                            int(publish_house["height"]), sprite_sheet=asset_json["PublishingHouse"],
+                            accept_stage=wd.DATA_STAGES["paper"])
+
+      self.game_objects[tmp.id] = tmp
+
     print(self.game_objects)
 
     send_struct = {'game_obj': []}

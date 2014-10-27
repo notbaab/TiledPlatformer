@@ -5,6 +5,7 @@ from itertools import cycle
 import ipdb
 import random
 
+DATA_STAGES = {"raw":1, "crunched":2, "paper":3}
 ASSET_FOLDER = "assets/"
 GRAVITY_VELOCITY = 4  # lets cheat for now
 FLOOR_Y = 580
@@ -18,6 +19,21 @@ TIMER_WIDTH = 100
 PLAYER_INTERACT_DIST = 50
 EJECT_SPEED = eng.Vector(20, -20)
 PLAYER_MASH_NUMBER = 10  # the number of times the player has to mash a button to escape
+
+DEBUG = True
+
+
+def draw_message(x, bottom, message, window):
+  """draw text somewhere on the screen"""
+  eng.FONT.set_bold(True)
+  font_to_render = eng.FONT.render(str(message), True, (0, 0, 0))
+  font_rect = font_to_render.get_rect()
+  font_rect.x = x
+  font_rect.bottom = bottom
+  window.blit(font_to_render, font_rect)
+  return font_rect
+
+
 
 
 # TODO: add more things to do
@@ -44,14 +60,14 @@ class GameObject(object):
   def animate(self):
     return
 
-  def draw(self, window):
-    if self.message_str:
-      eng.FONT.set_bold(True)
-      font_to_render = eng.FONT.render(str(self.message_str), True, (0, 0, 0))
-      font_rect = font_to_render.get_rect()
-      font_rect.centerx = self.rect.centerx
-      font_rect.bottom = self.rect.top - 10
-      window.blit(font_to_render, font_rect)
+  # def draw(self, window):
+  #   if self.message_str:
+  #     eng.FONT.set_bold(True)
+  #     font_to_render = eng.FONT.render(str(self.message_str), True, (0, 0, 0))
+  #     font_rect = font_to_render.get_rect()
+  #     font_rect.centerx = self.rect.centerx
+  #     font_rect.bottom = self.rect.top - 10
+  #     window.blit(font_to_render, font_rect)
 
 
 class NetworkedObject(object):
@@ -190,7 +206,6 @@ class MovableGameObject(GameObject):
 
   def unhide_object(self):
     """moves turns of physics and rendering for the object"""
-    print("here", ...)
     self.render = True
     self.physics = True
 
@@ -229,7 +244,13 @@ class SimpleScenery(GameObject, AnimateSpriteObject):
   def draw(self, surface):
     """Draw the simple scenery object"""
     AnimateSpriteObject.draw(self, surface)
-    GameObject.draw(self, surface)
+    if self.message_str:
+      # message_rect = pygame.Rect(0,0,0,0)
+      x = self.rect.centerx
+      bottom = self.rect.top - 10
+      # message_rect.bottom = self.rect.top - 10
+      self.old_rect = draw_message(x, bottom, self.message_str, surface)
+
 
 
 class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
@@ -251,7 +272,9 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.mash_left = False
     self.mash_right = False
     self.escape_hit = 0
+    self.score = 0
     self.message_str = "hello"
+
 
   def jump(self):
     if not self.trapped:
@@ -439,7 +462,7 @@ class DataDevice(SimpleScenery, Constructor, AnimateSpriteObject, NetworkedObjec
 class DataCruncher(DataDevice):
   """Second stage of collecting data"""
 
-  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=3, obj_id=None,
+  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=1, concurrent_data=1, obj_id=None,
                game=None):
     super().__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
     # Constructor.__init__(self, game)
@@ -448,17 +471,20 @@ class DataCruncher(DataDevice):
     self.data_collected = 0
 
   def handle_data(self, game_obj):
-    self.data_collected += 1
-    if self.data_collected == self.amount_data_needed:
-      self.timer = DATA_DEVICE_TIMER  # start timer
-      self.message_str = None
-    else:
-      self.message_str = str(self.data_collected) + "/" + str(self.amount_data_needed)
-    # TODO: THis is wrong, need a destructor 
-    self.data = game_obj
-    self.data.advance_data()
-    # TODO: Make a better hide/delete function
-    self.data.hide_object()
+    if game_obj.stage == self.accept_stage:
+      self.data_collected += 1
+      if self.data_collected == self.amount_data_needed:
+        self.timer = DATA_DEVICE_TIMER  # start timer
+        self.message_str = None
+        self.data_collected = 0
+      else:
+        # if there can be more data 
+        self.message_str = str(self.data_collected) + "/" + str(self.amount_data_needed)
+      # TODO: THis is wrong, need a destructor 
+      self.data = game_obj
+      self.data.advance_data()
+      # TODO: Make a better hide/delete function
+      self.data.hide_object()
 
   def update(self):
     if self.timer:
@@ -498,7 +524,7 @@ class Desk(DataDevice):
     self.data.rect.bottom = self.rect.top
     self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
     self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
-    self.data.stage += 1
+    self.data.advance_data()
     self.data.unhide_object() 
 
   def interact(self, player, timer=DATA_DEVICE_TIMER):
@@ -511,13 +537,39 @@ class Desk(DataDevice):
       self.data = self.player.data
       self.player.data = None
 
+class PublishingHouse(DataCruncher):
+  """Where the player brings the final paper"""
+  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=1, 
+               concurrent_data=1, obj_id=None, game=None):
+    print(accept_stage)
+    super().__init__(startx, starty, width, height, sprite_sheet, accept_stage=accept_stage, 
+                     amount_data_needed=amount_data_needed, concurrent_data=concurrent_data, 
+                     obj_id=obj_id, game=game)
+
+  # def update(self):
+  #   if self.player:
+  #     self.player.escape_hit = 0  # Don't allow player to escape
+  #     # player siting at desk, update timer
+  #     if self.timer:
+  #       self.timer += DATA_DEVICE_TIMER
+  #       if self.timer >= 1:
+  #         self.generate_data()
+  #         self.timer = None
+  #         self.player.trapped = False
+  #         self.player = None
+
+  def generate_data(self):
+    # TODO: make a scoring mechanic
+    print("score")
+
+
 
 class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet={"idle": ["light_blue.png", ["1", "1"]]},
                obj_id=None):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
-    NetworkedObject.__init__(self, ['rect', 'current_frame', 'id', 'render'])
+    NetworkedObject.__init__(self, ['rect', 'current_frame', 'id', 'render', 'stage'])
     self.color = color
     self.sprite_sheet = sprite_sheet
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
@@ -527,6 +579,10 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
   def draw(self, surface):
     super().draw(surface)  # animatedSpriteObject.draw
+    if DEBUG:
+      x = self.rect.centerx
+      bottom = self.rect.top - 10
+      self.clear_rect = draw_message(x, bottom, self.stage, surface)
 
   def respond_to_collision(self, obj, axis=None):
     if isinstance(obj, Player):
@@ -541,6 +597,8 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     # TODO: hacked for now with no sprite sheet
     # self.frame_idx += 1
     self.stage += 1
+
+
 
 
 class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):
