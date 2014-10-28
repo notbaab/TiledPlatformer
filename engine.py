@@ -9,6 +9,7 @@ import pprint
 GRAVITY_VELOCITY = 2
 FPS = pygame.time.Clock()
 X_FRICTION_CONSTANT = .3
+EDGES = (1000, 600)
 pygame.font.init()
 FONT = pygame.font.SysFont('Arial', 15, 15)
 
@@ -125,6 +126,17 @@ class Engine(object):
 
       game_object.rect.y += game_object.velocity.y
       game_object.velocity.y += GRAVITY_VELOCITY
+
+      # Check to make sure the object didn't move off the screen
+      if game_object.rect.left < 0:
+        game_object.rect.left = 0
+      elif game_object.rect.right > EDGES[0]:
+        game_object.rect.right = EDGES[0]
+
+      if game_object.rect.top < 0:
+        game_object.rect.top = 0
+      elif game_object.rect.bottom > EDGES[1]:
+        game_object.rect.bottom = EDGES[1]
 
       for other_object in objects:
         if game_object == other_object:
