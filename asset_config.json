@@ -35,5 +35,9 @@
   "PublishingHouse":
     {
       "idle": ["light_blue.png", ["1", "1"]]    
+    },
+  "Meeting":
+    {
+      "idle": ["yellow.png", ["1", "1"]]    
     }
 }

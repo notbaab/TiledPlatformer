@@ -89,6 +89,12 @@ class MasterPlatformer(object):
 
       self.game_objects[tmp.id] = tmp
 
+    for config in map_json['Meeting']:
+      tmp = wd.Meeting(int(config["x"]), int(config["y"]), int(config["width"]),
+                               int(config["height"]), sprite_sheet=asset_json["Meeting"])
+
+      self.game_objects[tmp.id] = tmp
+
     print(self.game_objects)
 
     send_struct = {'game_obj': []}
@@ -180,6 +186,9 @@ class MasterPlatformer(object):
 
     # update the AI after the players have been updated
     self.engine.map_attribute_flat(game_dict['AI'], 'check_for_leader', game_dict['Player'])
+    
+    # update meetings/traps
+    self.engine.map_attribute_flat(game_dict['Meeting'], 'check_player', game_dict['Player'])
 
     # construct packet
     send_struct = {'state': 'play', 'deleted_objs': [], 'added_objs': []}
@@ -211,7 +220,7 @@ class MasterPlatformer(object):
     objects. An object can be added to multiple lists if it is multiple things i.e.
     a player is a movable game object"""
     ret_dict = {'AI': [], 'StaticObject': [], 'Player': [], 'MovableGameObject': [],
-                'NetworkedObject': []}
+                'NetworkedObject': [], 'Meeting':[]}
     for game_obj in self.game_objects.values():
       if isinstance(game_obj, wd.Player):
         ret_dict['Player'].append(game_obj)
@@ -223,6 +232,8 @@ class MasterPlatformer(object):
         ret_dict['MovableGameObject'].append(game_obj)
       if isinstance(game_obj, wd.NetworkedObject):
         ret_dict['NetworkedObject'].append(game_obj)
+      if isinstance(game_obj, wd.Meeting):
+        ret_dict['Meeting'].append(game_obj)
     return ret_dict
 
   def add_to_world(self, game_obj):
