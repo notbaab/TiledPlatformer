@@ -7,11 +7,12 @@ import ipdb
 import os
 import random
 # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 600
 
-FPS = pygame.time.Clock()
+json_data = open('master_settings.json')
+config = json.load(json_data)
 
+SCREEN_WIDTH = int(config['display_size'][0])
+SCREEN_HEIGHT = int(config['display_size'][1])
 
 class ClientPlatformer(NetworkGame):
   def __init__(self, tile, window_coordinates=None):
@@ -126,9 +127,10 @@ class ClientPlatformer(NetworkGame):
           update_rects.append(game_obj.rect)
         if clear_rect:
           self.clear_rects.append(clear_rect)
-    print(len(update_rects))
-    print(update_rects)
+    # print(len(update_rects))
+    # print(update_rects)
     pygame.display.update(update_rects)
+    # pygame.display.update(pygame.Rect(0,0,20,20))
     #pygame.display.flip()
 
     data_struct = {'state': 'play'}

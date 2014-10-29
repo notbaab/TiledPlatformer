@@ -19,8 +19,8 @@ TIMER_WIDTH = 100
 PLAYER_INTERACT_DIST = 50
 EJECT_SPEED = eng.Vector(20, -20)
 PLAYER_MASH_NUMBER = 10  # the number of times the player has to mash a button to escape
-MEETING_EVENT_HORIZON = 100  # the distance where the player will need to escape
-MEETING_GRAVITAIONAL_SPHERE = 200  # the distance where the player begins to be pulled in
+MEETING_EVENT_HORIZON = 50  # the distance where the player will need to escape
+MEETING_GRAVITAIONAL_SPHERE = 100  # the distance where the player begins to be pulled in
 MEETING_PULL = 5
 MEETING_TIMER = .01
 DEBUG = True
@@ -369,6 +369,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     :param surface: the surface to draw the object, typically the window
     :type surface: pygame.Surface"""
     AnimateSpriteObject.draw(self, surface)
+    pygame.draw.rect(surface, (128, 0, 128), self.rect, 1)
 
   def respond_to_collision(self, obj, axis=None):
     """Contains the callback for the collision between a player object and a game object passed in. Axis is needed

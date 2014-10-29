@@ -6,10 +6,16 @@ import pygame
 import ipdb
 import pprint
 
+
+# I should really just store the config and pass it around
+json_data = open('master_settings.json')
+config = json.load(json_data)
+
 GRAVITY_VELOCITY = 2
 FPS = pygame.time.Clock()
 X_FRICTION_CONSTANT = .3
-EDGES = (1000, 600)
+EDGES = (int(config['display_size'][0]) * (int(config['grid_space'][0])+1), 
+         int(config['display_size'][1]) * (int(config['grid_space'][1])+1))
 pygame.font.init()
 FONT = pygame.font.SysFont('Arial', 15, 15)
 
@@ -245,7 +251,7 @@ class Engine(object):
           window.blit(game_obj.sprite_sheets[game_obj.current_animation], rect, area=area)
 
       pygame.display.flip()
-      FPS.tick(60)
+      FPS.tick(30)
 
     # A final clear before starting
     for game_obj, inner_step_dict in step_dict.items():

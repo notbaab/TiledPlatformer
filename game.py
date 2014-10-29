@@ -7,25 +7,27 @@ import engine as eng
 import socket
 import pickle
 import os
+import json
 
+json_data = open('master_settings.json')
+config = json.load(json_data)
 # TODO: Maybe it's time to move away from the socket del? That will also require moving off pickling
-SOCKET_DEL = '*ET*'.encode('utf-8')
+SOCKET_DEL = config['package_delimeter'].encode('utf-8')
 loc = []
 FPS = pygame.time.Clock()
-TICK = 60
-GRID_SPACE = [0, 0]
+TICK = int(config['FPS_TICK'])
+GRID_SPACE = [int(config['grid_space'][0]),int(config['grid_space'][1])]
 # DISPLAY_SIZE = [600, 600]
-DISPLAY_SIZE = {"x": 1000, "y": 600}
+DISPLAY_SIZE = {"x": int(config['display_size'][0]), "y": int(config['display_size'][1])}
 BEZZEL_SIZE = [30, 30]
 
 # TODO: have a platformer game class that has all the similar components of the render and 
 # master node, and inherit from that?
-
-
 class MasterPlatformer(object):
   """Class for the platformer head node"""
 
   def __init__(self, localhosts=1):
+    global config
     super().__init__()
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0, 0)  # move window to upper left corner
     pygame.init()
@@ -38,8 +40,8 @@ class MasterPlatformer(object):
     # load map
     self.game_objects = {}
 
-    map_json = self.engine.parse_json("map.json")
-    asset_json = self.engine.parse_json("asset_config.json")
+    map_json = self.engine.parse_json(config['global_map_file'])
+    asset_json = self.engine.parse_json(config['asset_file'])
 
     # TODO: abstract this parsing to dynamically call the constructor based on the 
     # attribute (reuse map)
@@ -49,7 +51,7 @@ class MasterPlatformer(object):
       self.game_objects[tmp.id] = tmp
 
     for player in map_json['players']:
-      tmp = wd.Player(int(player["x"]), int(player["y"]), 30, 30, sprite_sheet=asset_json["Player"])
+      tmp = wd.Player(int(player["x"]), int(player["y"]), 25, 40, sprite_sheet=asset_json["Player"])
       self.game_objects[tmp.id] = tmp
 
     for data in map_json['data_object']:
@@ -133,8 +135,8 @@ class MasterPlatformer(object):
         data, self.state = self.load()
       else:
         ipdb.set_trace()
-
       FPS.tick(TICK)
+      print(FPS.get_fps())
 
   def load(self):
     send_struct = {'state': 'load'}
