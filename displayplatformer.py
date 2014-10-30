@@ -154,3 +154,19 @@ class ClientPlatformer(NetworkGame):
     """tanstlates the data to the global data """
     pass
 
+  def draw_grid(self, surface):
+    """Dev function to draw the grid space of the display wall"""
+    SCREEN_WIDTH = int(config['display_size'][0])
+    SCREEN_HEIGHT = int(config['display_size'][1])
+    pygame.draw.line(surface, color, start_pos, end_pos, width=1)
+    grid = [5,3]
+    display_size_x = 200
+    display_size_y = 200
+    bezel_x = 30
+    bezel_y = 30
+    for x in range(grid[0]):
+      for y in range(grid[1]):
+         pygame.draw.line(surface, (255,255,255), start_pos, end_pos, width=1)
+
+
+

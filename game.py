@@ -21,6 +21,9 @@ GRID_SPACE = [int(config['grid_space'][0]),int(config['grid_space'][1])]
 DISPLAY_SIZE = {"x": int(config['display_size'][0]), "y": int(config['display_size'][1])}
 BEZZEL_SIZE = [30, 30]
 
+DEBUG_CLASSES = [wd.SimpleScenery, wd.Player]
+
+
 # TODO: have a platformer game class that has all the similar components of the render and 
 # master node, and inherit from that?
 class MasterPlatformer(object):
@@ -49,41 +52,41 @@ class MasterPlatformer(object):
       tmp = wd.SimpleScenery(int(tile["x"]), int(tile["y"]),
                              int(tile["width"]), int(tile["height"]), sprite_sheet=asset_json["SimpleScenery"])
       self.game_objects[tmp.id] = tmp
-
+    
     for player in map_json['players']:
       tmp = wd.Player(int(player["x"]), int(player["y"]), 25, 40, sprite_sheet=asset_json["Player"])
       self.game_objects[tmp.id] = tmp
-
+    
     for data in map_json['data_object']:
       tmp = wd.Data(int(data["x"]), int(data["y"]), int(data["width"]), int(data["height"]),
                     sprite_sheet=asset_json["Data"])
       self.game_objects[tmp.id] = tmp
-
+    
     for data_device in map_json['data_device']:
       tmp = wd.DataDevice(int(data_device["x"]), int(data_device["y"]), int(data_device["width"]),
                           int(data_device["height"]), sprite_sheet=asset_json["DataDevice"], game=self)
       self.game_objects[tmp.id] = tmp
-
+    
     for follower in map_json['followers']:
       tmp = wd.Follower(int(follower["x"]), int(follower["y"]), int(follower["width"]),
                         int(follower["height"]), sprite_sheet=asset_json["Follower"])
       self.game_objects[tmp.id] = tmp
-
+    
     for patroler in map_json['patrollers']:
       tmp = wd.Patroller(int(patroler["x"]), int(patroler["y"]), int(patroler["width"]),
                          int(patroler["height"]), sprite_sheet=asset_json["Patroller"])
       self.game_objects[tmp.id] = tmp
-
+    
     for comet in map_json['comet']:
       tmp = wd.DataCruncher(int(comet["x"]), int(comet["y"]), int(comet["width"]),
                             int(comet["height"]), sprite_sheet=asset_json["DataCruncher"])
       self.game_objects[tmp.id] = tmp
-
+    
     for desk in map_json['Desk']:
       tmp = wd.Desk(int(desk["x"]), int(desk["y"]), int(desk["width"]),
                     int(desk["height"]), sprite_sheet=asset_json["DataCruncher"])
       self.game_objects[tmp.id] = tmp
-
+    
     for publish_house in map_json['PublishingHouse']:
       tmp = wd.PublishingHouse(int(publish_house["x"]), int(publish_house["y"]), int(publish_house["width"]),
                                int(publish_house["height"]), sprite_sheet=asset_json["PublishingHouse"],
@@ -99,6 +102,13 @@ class MasterPlatformer(object):
 
     print(self.game_objects)
 
+    if DEBUG_CLASSES:
+      new_game_obj = self.game_objects.copy()
+      for obj in self.game_objects.values():
+        if type(obj) not in DEBUG_CLASSES:
+          print(str(type(obj)), ...)
+          del new_game_obj[obj.id]
+      self.game_objects = new_game_obj.copy()
     send_struct = {'game_obj': []}
     # build the initial data packet
     for game_obj in self.game_objects.values():
@@ -136,7 +146,7 @@ class MasterPlatformer(object):
       else:
         ipdb.set_trace()
       FPS.tick(TICK)
-      print(FPS.get_fps())
+      # print(FPS.get_fps())
 
   def load(self):
     send_struct = {'state': 'load'}
