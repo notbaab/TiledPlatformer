@@ -776,22 +776,28 @@ class Meeting(SimpleScenery, NetworkedObject):
       if eng.distance(self.rect, player.rect) < MEETING_GRAVITAIONAL_SPHERE:
         player.movement_event = True  # inform the player that the meeting is in control now!!
         # ipdb.set_trace()
-        if self.rect.x >= player.rect.x:
-          # on the right side of it, pull to the right
-          if not player.moving or distance < MEETING_EVENT_HORIZON:
-            pull_velocity = MEETING_PULL
-            # player.pull_velocity.x = MEETING_PULL
-          else:
-            pull_velocity = player.direction * PLAYER_SPEED + MEETING_PULL
-        elif self.rect.x < player.rect.x:
-          # on the left side of it, pull to the left
-          if not player.moving or distance < MEETING_EVENT_HORIZON:
-            pull_velocity = -MEETING_PULL
-          else:
-            pull_velocity = player.direction * PLAYER_SPEED - MEETING_PULL
-        player.velocity.x = pull_velocity
+        self.pull_event(player)
       else:
         player.movement_event = False
+
+  def pull_event(self, player, **kwargs):
+    """a function to give the player"""
+    # distance = kwargs['distance']
+    distance = eng.distance(self.rect, player.rect)
+    if self.rect.x >= player.rect.x:
+      # on the right side of it, pull to the right
+      if not player.moving or distance < MEETING_EVENT_HORIZON:
+        pull_velocity = MEETING_PULL
+        # player.pull_velocity.x = MEETING_PULL
+      else:
+        pull_velocity = player.direction * PLAYER_SPEED + MEETING_PULL
+    elif self.rect.x < player.rect.x:
+      # on the left side of it, pull to the left
+      if not player.moving or distance < MEETING_EVENT_HORIZON:
+        pull_velocity = -MEETING_PULL
+      else:
+        pull_velocity = player.direction * PLAYER_SPEED - MEETING_PULL
+    player.velocity.x = pull_velocity
 
   def un_trap(self, game_obj):
     """Release the mortal from the bonds of responsibility"""
