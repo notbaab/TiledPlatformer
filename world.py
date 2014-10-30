@@ -24,6 +24,10 @@ MEETING_GRAVITAIONAL_SPHERE = 100  # the distance where the player begins to be 
 MEETING_PULL = 5
 MEETING_TIMER = .01
 DEBUG = True
+STUN_VELOCITY_LOSER = eng.Vector(10, -15)
+STUN_VELOCITY_WINNER = eng.Vector(5, -10)
+STUN_WINNER_TIMER = 10
+STUN_LOSER_TIMER = 20
 
 
 def draw_message(x, bottom, message, window):
@@ -291,16 +295,21 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.message_str = "hello"
     self.movement_event = False  # set to true if another object is mucking with the players velocity
     self.escape_mash_number = PLAYER_MASH_NUMBER
+    self.stunned_timer = 0
+    self.stunned_velocity = eng.Vector(0, 0)
 
 
 
   def jump(self):
-    if not self.trapped:
+    if not self.trapped and not self.stunned_timer:
       self.velocity.y = JUMP_VELOCITY
 
   def update(self):
     """set velocity to be moved by the physics engine"""
-    if not self.movement_event and self.moving and not self.trapped:
+    if self.stunned_timer:
+      self.stunned_timer -= 1
+      # self.velocity.x = self.stunned_velocity.x
+    elif not self.movement_event and self.moving and not self.trapped:
       self.velocity.x = self.direction * PLAYER_SPEED
 
   def escape(self, direction):
@@ -386,17 +395,50 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
         self.change_animation('hasdata')
     else:
       super().respond_to_collision(obj, axis)
-      if (isinstance(obj, Meeting) or isinstance(obj, Follower)) and not self.trapped:
+      if isinstance(obj, Player) and not self.stunned_timer:
+        self.joust_attack(obj)
+      if (isinstance(obj, Meeting) or (isinstance(obj, Follower)) and not obj.stunned_timer) and not self.trapped:
         # got sucked into a meeting
         obj.trap(self)
         print('lkj', ...)
-        # self.trapped = True
-        # obj.timer = MEETING_TIMER
-        # self.trapper = obj
-      # if isinstance(obj, Follower) and not self.trapped:
-      #   self.trapped = True
-      #   self.trapper = obj
-      #   print('hit')
+
+  def joust_attack(self, other_player):
+    """The player collided with another, determine who 'won' and properly stun the player"""
+    if self.rect.centery < other_player.rect.centery:
+      dominate_player = self
+      losing_player = other_player
+    elif self.rect.centery > other_player.rect.centery:
+      dominate_player = other_player
+      losing_player = self
+    else:
+      return  # are currently on the same plane
+    # figure out which way the dominate player bumped into the loser were going
+    if dominate_player.rect.centerx > losing_player.rect.centerx:
+      # hit right side of loser, push to the left
+      losing_player.velocity.x = -STUN_VELOCITY_LOSER.x
+      dominate_player.velocity.x = STUN_VELOCITY_WINNER.x
+    elif dominate_player.rect.centerx < losing_player.rect.centerx:
+      losing_player.velocity.x = STUN_VELOCITY_LOSER.x
+      dominate_player.velocity.x = -STUN_VELOCITY_WINNER.x
+    else:
+      # on top of the other player, pick one at random
+      modifier = random.randint(0, 1) * 2 - 1
+      losing_player.velocity.x = STUN_VELOCITY_LOSER.x * modifier
+      dominate_player.velocity.x = STUN_VELOCITY_WINNER.x * -modifier
+
+    losing_player.stunned_timer = STUN_LOSER_TIMER
+    dominate_player.stunned_timer = STUN_WINNER_TIMER
+    dominate_player.velocity.y = STUN_VELOCITY_WINNER.y
+    losing_player.velocity.y = STUN_VELOCITY_LOSER.y
+    if losing_player.data:
+      losing_player.drop_data()
+
+    
+  def drop_data(self):
+    self.throw_data()
+  def stun_event(self):
+    """ if something is happening the the player, """
+
 
   def throw_data(self):
     """Through the data that the player is holding"""
@@ -622,7 +664,7 @@ class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.leader = None
     self.velocity = eng.Vector(0, 0)
     self.site = site_range
-    self.stunned = False
+    self.stunned_timer = 0
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
 
@@ -631,7 +673,9 @@ class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     game_obj.trapper = self
 
   def update(self):
-    if self.leader and eng.distance(self.rect, self.leader.rect) < self.site and not self.stunned:
+    if self.stunned_timer:
+      self.stunned_timer -= 1
+    if self.leader and eng.distance(self.rect, self.leader.rect) < self.site and not self.stunned_timer:
       # figure out which direction to move
       if self.leader.rect.centerx - self.rect.centerx > 0:
         self.velocity.x = FOLLOWER_SPEED  # move right
@@ -656,13 +700,13 @@ class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       self.leader = closest_leader
 
   def respond_to_collision(self, obj, axis=None):
-    self.stunned = False
-    if isinstance(obj, Player):
+    if isinstance(obj, Player) and not self.stunned_timer:
       obj.respond_to_collision(self, axis)
     super().respond_to_collision(obj, axis)
 
   def stun(self):
     self.stunned = True
+    self.stunned_timer = 60
 
 
 class Patroller(Follower):
@@ -728,7 +772,7 @@ class Meeting(SimpleScenery, NetworkedObject):
 
     for player in players:
       distance = eng.distance(self.rect, player.rect)
-        
+      
       if eng.distance(self.rect, player.rect) < MEETING_GRAVITAIONAL_SPHERE:
         player.movement_event = True  # inform the player that the meeting is in control now!!
         # ipdb.set_trace()
