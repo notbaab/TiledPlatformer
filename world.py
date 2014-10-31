@@ -28,11 +28,11 @@ STUN_VELOCITY_LOSER = eng.Vector(10, -15)
 STUN_VELOCITY_WINNER = eng.Vector(5, -10)
 STUN_WINNER_TIMER = 10
 STUN_LOSER_TIMER = 20
+LEFT_FRAME_ID = 'l_'
 
 
 def draw_message(x, bottom, message, window):
   """draw text somewhere on the screen"""
-  return
   eng.FONT.set_bold(True)
   font_to_render = eng.FONT.render(str(message), True, (0, 0, 0))
   font_rect = font_to_render.get_rect()
@@ -50,10 +50,9 @@ def draw_timer(game_obj, surface, ascending=True):
   if ascending:
     timer_rect.width = TIMER_WIDTH * game_obj.timer
   else:
-    timer_rect.width = 101 - TIMER_WIDTH * game_obj.timer  # off by one error, it's too late and too beer at night for me to spend time to fix it. 
-                                                           # Sober me, it's cause by setting the timer to MEETING_TIMER. Fix the timer conditionals
-                                                           # or just leave this like this, fuck if I care. 
-
+    timer_rect.width = 101 - TIMER_WIDTH * game_obj.timer  # off by one error fix later
+                                                           
+                                                           
 
   print(timer_rect.width)
 
@@ -131,6 +130,11 @@ class AnimateSpriteObject(object):
         int(height), des_width=des_width,
         des_height=des_height)
 
+      # get the left facing sprite
+      left_animation = LEFT_FRAME_ID + animation_name
+      self.sprite_sheets[left_animation] = pygame.transform.flip(self.sprite_sheets[animation_name], 1, 0)
+      self.animation_frames[left_animation] = self.animation_frames[animation_name][::-1]
+
     self.current_animation = 'idle'
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
     self.current_frame = next(self.current_cycle)
@@ -146,6 +150,20 @@ class AnimateSpriteObject(object):
 
     self.current_animation = frame  # TODO: evaluate if we need this member
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
+
+  def reverse_animation(self, direction):
+    """take the current animation and point it in the other direction specified
+    returns new animation name the object needs to change to or None"""
+    is_left = True if LEFT_FRAME_ID in self.current_animation else False
+    new_animation = None
+    if direction == -1 and not is_left:
+      # moving right, but trying to flip to the left
+      new_animation = LEFT_FRAME_ID + self.current_animation
+    elif direction == 1 and is_left:
+      # moving left, but trying to flip right
+      new_animation = self.current_animation[len(LEFT_FRAME_ID):]
+    return new_animation
+
 
   def animate(self):
     """Updates the animation timer goes to next frame in current animation cycle
@@ -176,6 +194,7 @@ class AnimateSpriteObject(object):
     :param des_height: the desired height of a single frame
     :type des_height: int"""
     sheet = pygame.image.load(filename)
+    sheet_rect = sheet.get_rect()
     sheet_width = columns * des_width
     sheet_height = rows * des_height
 
@@ -276,7 +295,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def __init__(self, startx, starty, width, height, sprite_sheet=None, color=None, obj_id=None):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
-    NetworkedObject.__init__(self, ['rect', 'current_frame', 'id',
+    NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id',
                                     'render'])
     self.color = color
     self.rect = pygame.Rect((startx, starty, width, height))
@@ -347,6 +366,10 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     """sets move to the direction passed in"""
     self.direction = direction
     self.moving = True
+    self.change_animation('moving')
+    new_animation = self.reverse_animation(direction)  # change animation frame if need be
+    if new_animation:
+      self.change_animation(new_animation)
 
   def stop_right(self):
     """sets velocity to 0"""
@@ -360,6 +383,11 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     if self.direction == -1:
       self.velocity.x = 0
       self.moving = False
+
+  def read_packet(self, packet):
+    if packet['current_animation'] != self.current_frame:
+      self.change_animation(packet['current_animation'])
+    super().read_packet(packet)
 
   def interact(self, game_objs):
     """a catch all function that called when hitting the interact button. It will
@@ -391,16 +419,14 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       if self.data is None:
         self.data = obj
         self.data.hide_object()
-        # obj.rect.x, obj.rect.y = -100, -100  # TODO: have better way than move off screen
         self.change_animation('hasdata')
     else:
       super().respond_to_collision(obj, axis)
       if isinstance(obj, Player) and not self.stunned_timer:
         self.joust_attack(obj)
       if (isinstance(obj, Meeting) or (isinstance(obj, Follower)) and not obj.stunned_timer) and not self.trapped:
-        # got sucked into a meeting
+        # got sucked trapped by something
         obj.trap(self)
-        print('lkj', ...)
 
   def joust_attack(self, other_player):
     """The player collided with another, determine who 'won' and properly stun the player"""
@@ -607,7 +633,6 @@ class PublishingHouse(DataCruncher):
 
   def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=1,
                concurrent_data=1, obj_id=None, game=None):
-    print(accept_stage)
     super().__init__(startx, starty, width, height, sprite_sheet, accept_stage=accept_stage,
                      amount_data_needed=amount_data_needed, concurrent_data=concurrent_data,
                      obj_id=obj_id, game=game)
