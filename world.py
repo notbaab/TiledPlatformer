@@ -41,6 +41,7 @@ def draw_message(x, bottom, message, window):
   window.blit(font_to_render, font_rect)
   return font_rect
 
+
 def draw_timer(game_obj, surface, ascending=True):
   outline_rect = pygame.Rect(0, 0, TIMER_WIDTH, 20)
   outline_rect.centerx = game_obj.rect.centerx
@@ -59,9 +60,9 @@ def draw_timer(game_obj, surface, ascending=True):
   pygame.draw.rect(surface, (255, 0, 255), timer_rect)
   pygame.draw.rect(surface, (128, 0, 128), outline_rect, 1)
   if timer_rect.width == TIMER_WIDTH - 1 or not ascending:
-    # print('here', ...)
     # TODO: optimize the clearing of the timer if need be
     return outline_rect
+
 
 # TODO: add more things to do
 class GameObject(object):
@@ -299,7 +300,6 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.stunned_velocity = eng.Vector(0, 0)
 
 
-
   def jump(self):
     if not self.trapped and not self.stunned_timer:
       self.velocity.y = JUMP_VELOCITY
@@ -433,9 +433,10 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     if losing_player.data:
       losing_player.drop_data()
 
-    
+
   def drop_data(self):
     self.throw_data()
+
   def stun_event(self):
     """ if something is happening the the player, """
 
@@ -499,7 +500,6 @@ class DataDevice(SimpleScenery, Constructor, AnimateSpriteObject, NetworkedObjec
       pygame.draw.rect(surface, (128, 0, 128), outline_rect, 1)
       if timer_rect.width == TIMER_WIDTH - 1:
         # TODO: clear timer. Do this by returning the area that needs to be cleared
-        # ipdb.set_trace()
         return outline_rect
 
   def update(self):
@@ -546,7 +546,6 @@ class DataCruncher(DataDevice):
       # TODO: THis is wrong, need a destructor 
       self.data = game_obj
       self.data.advance_data()
-      # TODO: Make a better hide/delete function
       self.data.hide_object()
 
   def update(self):
@@ -649,7 +648,6 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
   def advance_data(self):
     # TODO: hacked for now with no sprite sheet
-    # self.frame_idx += 1
     self.stage += 1
 
 
@@ -705,7 +703,6 @@ class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     super().respond_to_collision(obj, axis)
 
   def stun(self):
-    self.stunned = True
     self.stunned_timer = 60
 
 
@@ -757,8 +754,9 @@ class Patroller(Follower):
 
 class Meeting(SimpleScenery, NetworkedObject):
   """A meeting trap that will pull the players into at a certain range"""
+
   def __init__(self, startx, starty, width, height, sprite_sheet, obj_id=None):
-    SimpleScenery.__init__(self, startx, starty, width, height, sprite_sheet=sprite_sheet, 
+    SimpleScenery.__init__(self, startx, starty, width, height, sprite_sheet=sprite_sheet,
                            obj_id=obj_id)
     NetworkedObject.__init__(self, ['rect', 'id', 'timer', 'message_str'])
     self.pulling_player = None
@@ -772,7 +770,7 @@ class Meeting(SimpleScenery, NetworkedObject):
 
     for player in players:
       distance = eng.distance(self.rect, player.rect)
-      
+
       if eng.distance(self.rect, player.rect) < MEETING_GRAVITAIONAL_SPHERE:
         player.movement_event = True  # inform the player that the meeting is in control now!!
         # ipdb.set_trace()
@@ -788,7 +786,6 @@ class Meeting(SimpleScenery, NetworkedObject):
       # on the right side of it, pull to the right
       if not player.moving or distance < MEETING_EVENT_HORIZON:
         pull_velocity = MEETING_PULL
-        # player.pull_velocity.x = MEETING_PULL
       else:
         pull_velocity = player.direction * PLAYER_SPEED + MEETING_PULL
     elif self.rect.x < player.rect.x:
@@ -802,15 +799,14 @@ class Meeting(SimpleScenery, NetworkedObject):
   def un_trap(self, game_obj):
     """Release the mortal from the bonds of responsibility"""
     self.timer = MEETING_TIMER
-    game_obj.movement_event = False  
-
+    game_obj.movement_event = False
 
 
   def draw(self, surface):
     super().draw(surface)
     if self.timer:
       return draw_timer(self, surface, False)  # draw a descending timer
-  
+
   def trap(self, game_obj):
     if not self.timer:
       game_obj.trapped = True

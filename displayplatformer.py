@@ -14,6 +14,7 @@ config = json.load(json_data)
 SCREEN_WIDTH = int(config['display_size'][0])
 SCREEN_HEIGHT = int(config['display_size'][1])
 
+
 class ClientPlatformer(NetworkGame):
   def __init__(self, tile, window_coordinates=None):
     """Sets up all the needed client settings"""
@@ -25,7 +26,7 @@ class ClientPlatformer(NetworkGame):
     self.load_time = .01
 
     self.engine = eng.Engine()
-    self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT) )
+    self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     self.game_objects = {}
     # self.background = pygame.image.load("assets/background" + str(self.tile[0]) + str(self.tile[1]) + ".png")
     self.background = pygame.image.load("assets/backgroun.png")
@@ -62,7 +63,7 @@ class ClientPlatformer(NetworkGame):
     else:
       ipdb.set_trace()
 
-  def clear(self, rects=[]):
+  def clear(self, rects=()):
     """clear where the previous game objects were + whatever rects are specified
     in the passed in rect(good for timers and debug messages"""
     for game_obj in self.game_objects.values():
@@ -70,8 +71,8 @@ class ClientPlatformer(NetworkGame):
         self.window.blit(self.background, (game_obj.rect.x, game_obj.rect.y), game_obj.rect)
     for rect in rects:
       self.window.blit(self.background, (rect.x, rect.y), rect)
-        # self.window.blit(self.background, self.background_rect)
-        # self.window.fill(color)
+      # self.window.blit(self.background, self.background_rect)
+      # self.window.fill(color)
 
   def clear_entire_screen(self):
     self.window.blit(self.background, self.background_rect)
@@ -131,7 +132,7 @@ class ClientPlatformer(NetworkGame):
     # print(update_rects)
     pygame.display.update(update_rects)
     # pygame.display.update(pygame.Rect(0,0,20,20))
-    #pygame.display.flip()
+    # pygame.display.flip()
 
     data_struct = {'state': 'play'}
     return data_struct
@@ -159,14 +160,14 @@ class ClientPlatformer(NetworkGame):
     SCREEN_WIDTH = int(config['display_size'][0])
     SCREEN_HEIGHT = int(config['display_size'][1])
     pygame.draw.line(surface, color, start_pos, end_pos, width=1)
-    grid = [5,3]
+    grid = [5, 3]
     display_size_x = 200
     display_size_y = 200
     bezel_x = 30
     bezel_y = 30
     for x in range(grid[0]):
       for y in range(grid[1]):
-         pygame.draw.line(surface, (255,255,255), start_pos, end_pos, width=1)
+        pygame.draw.line(surface, (255, 255, 255), start_pos, end_pos, width=1)
 
 
 

@@ -14,8 +14,8 @@ config = json.load(json_data)
 GRAVITY_VELOCITY = 2
 FPS = pygame.time.Clock()
 X_FRICTION_CONSTANT = .3
-EDGES = (int(config['display_size'][0]) * (int(config['grid_space'][0])+1), 
-         int(config['display_size'][1]) * (int(config['grid_space'][1])+1))
+EDGES = (int(config['display_size'][0]) * (int(config['grid_space'][0]) + 1),
+         int(config['display_size'][1]) * (int(config['grid_space'][1]) + 1))
 pygame.font.init()
 FONT = pygame.font.SysFont('Arial', 15, 15)
 
@@ -220,11 +220,11 @@ class Engine(object):
         # # print(stage)
         # # print(inner_stage_dict)
 
-        #     for i in range(steps_total):
-        #       background()
-        #       for game_obj, tup_list in inner_stage_dict.items():
-        #         # print(game_obj)
-        #         # print(tup_list)
+        # for i in range(steps_total):
+        # background()
+        # for game_obj, tup_list in inner_stage_dict.items():
+        # # print(game_obj)
+        # # print(tup_list)
         #         for idx, (rec, area) in tup_list:
         #           window.blit(game_obj.sprite, rect, area=area)
         #           try:
