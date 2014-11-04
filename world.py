@@ -2,7 +2,7 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-import ipdb
+# import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
@@ -140,6 +140,7 @@ class AnimateSpriteObject(object):
     self.current_frame = next(self.current_cycle)
     self.animation_time = 3
     self.animation_timer = 0
+    self.hold_end_frame = False  # set to true for animations where the end should be held (like falling)
 
   def change_animation(self, frame):
     """change the frames that player object is currently cycling through.
@@ -226,7 +227,7 @@ class MovableGameObject(GameObject):
   """any game object that moves"""
 
   def __init__(self, startx, starty, width, height, obj_id=None):
-    super().__init__(startx, starty, width, height, obj_id=obj_id)
+    super(MovableGameObject, self).__init__(startx, starty, width, height, obj_id=obj_id)
     self.velocity = eng.Vector(0, 0)
     self.physics = True  # most movable game objects need physics
 
@@ -273,7 +274,7 @@ class SimpleScenery(GameObject, AnimateSpriteObject):
   """Simple SimpleScenery object. Game objects that are just simple shapes"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
-    super().__init__(startx, starty, width, height, obj_id=obj_id)
+    super(SimpleScenery, self).__init__(startx, starty, width, height, obj_id=obj_id)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     self.color = color
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
@@ -387,7 +388,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def read_packet(self, packet):
     if packet['current_animation'] != self.current_frame:
       self.change_animation(packet['current_animation'])
-    super().read_packet(packet)
+    super(Player, self).read_packet(packet)
 
   def interact(self, game_objs):
     """a catch all function that called when hitting the interact button. It will
@@ -421,7 +422,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
         self.data.hide_object()
         self.change_animation('hasdata')
     else:
-      super().respond_to_collision(obj, axis)
+      super(Player, self).respond_to_collision(obj, axis)
       if isinstance(obj, Player) and not self.stunned_timer:
         self.joust_attack(obj)
       if (isinstance(obj, Meeting) or (isinstance(obj, Follower)) and not obj.stunned_timer) and not self.trapped:
@@ -491,7 +492,7 @@ class DataDevice(SimpleScenery, Constructor, AnimateSpriteObject, NetworkedObjec
   """Devices that are scenery, but output data when interacted with"""
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, game=None):
-    super().__init__(startx, starty, width, height, color, obj_id=obj_id, sprite_sheet=sprite_sheet)
+    super(DataDevice, self).__init__(startx, starty, width, height, color, obj_id=obj_id, sprite_sheet=sprite_sheet)
     Constructor.__init__(self, game)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     NetworkedObject.__init__(self, ['rect', 'id', 'timer', 'message_str'])
@@ -553,7 +554,7 @@ class DataCruncher(DataDevice):
   def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=1,
                concurrent_data=1, obj_id=None,
                game=None):
-    super().__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
+    super(DataCruncher, self).__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
     # Constructor.__init__(self, game)
     self.accept_stage = accept_stage
     self.amount_data_needed = amount_data_needed
@@ -594,7 +595,7 @@ class Desk(DataDevice):
 
   def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, obj_id=None,
                game=None):
-    super().__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
+    super(Desk, self).__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
     self.player = None
 
   def update(self):
@@ -633,7 +634,7 @@ class PublishingHouse(DataCruncher):
 
   def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=1,
                concurrent_data=1, obj_id=None, game=None):
-    super().__init__(startx, starty, width, height, sprite_sheet, accept_stage=accept_stage,
+    super(PublishingHouse, self).__init__(startx, starty, width, height, sprite_sheet, accept_stage=accept_stage,
                      amount_data_needed=amount_data_needed, concurrent_data=concurrent_data,
                      obj_id=obj_id, game=game)
 
@@ -656,7 +657,7 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.frame = 'idle'
 
   def draw(self, surface):
-    super().draw(surface)  # animatedSpriteObject.draw
+    super(Data, self).draw(surface)  # animatedSpriteObject.draw
     if DEBUG:
       x = self.rect.centerx
       bottom = self.rect.top - 10
@@ -669,7 +670,7 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       obj.handle_data(self)
     else:
       # TODO: this makes the data go through players
-      super().respond_to_collision(obj, axis)
+      super(Data, self).respond_to_collision(obj, axis)
 
   def advance_data(self):
     # TODO: hacked for now with no sprite sheet
@@ -725,7 +726,7 @@ class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def respond_to_collision(self, obj, axis=None):
     if isinstance(obj, Player) and not self.stunned_timer:
       obj.respond_to_collision(self, axis)
-    super().respond_to_collision(obj, axis)
+    super(Follower, self).respond_to_collision(obj, axis)
 
   def stun(self):
     self.stunned_timer = 60
@@ -735,7 +736,7 @@ class Patroller(Follower):
   """class that patrols it's give x area"""
 
   def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, patrol_range=100, site_range=200):
-    super().__init__(startx, starty, width, height, obj_id=obj_id, sprite_sheet=sprite_sheet, site_range=site_range)
+    super(Patroller, self).__init__(startx, starty, width, height, obj_id=obj_id, sprite_sheet=sprite_sheet, site_range=site_range)
     self.patrol_range = patrol_range
     self.reset_patrol()
     self.direction = 1  # scaler to multiple speed by to get direction
@@ -744,7 +745,7 @@ class Patroller(Follower):
 
   def update(self):
     if self.leader:
-      super().update()
+      super(Patroller, self).update()
       if not self.leader:
         # leader moved out of range, set new start and end patrol to start from the middle
         self.reset_patrol()
@@ -828,7 +829,7 @@ class Meeting(SimpleScenery, NetworkedObject):
 
 
   def draw(self, surface):
-    super().draw(surface)
+    super(Meeting, self).draw(surface)
     if self.timer:
       return draw_timer(self, surface, False)  # draw a descending timer
 
@@ -839,13 +840,8 @@ class Meeting(SimpleScenery, NetworkedObject):
 
 
   def update(self):
-    super().update()
+    super(Meeting, self).update()
     if self.timer:
       self.timer += MEETING_TIMER
       if self.timer >= 1:
         self.timer = None
-
-
-
-
-    

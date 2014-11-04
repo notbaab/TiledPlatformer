@@ -1,11 +1,11 @@
 import pygame
 import sys
-import ipdb
+# import ipdb
 from pygame.locals import *
 import world as wd
 import engine as eng
 import socket
-import pickle
+import cPickle
 import os
 import json
 
@@ -38,7 +38,7 @@ class MasterPlatformer(object):
 
   def __init__(self, localhosts=1, ip_file=None):
     global config
-    super().__init__()
+    super(MasterPlatformer, self).__init__()
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0, 0)  # move window to upper left corner
     pygame.init()
     self.game_objects = {}
@@ -114,7 +114,7 @@ class MasterPlatformer(object):
       new_game_obj = self.game_objects.copy()
       for obj in self.game_objects.values():
         if type(obj) not in DEBUG_CLASSES:
-          print(str(type(obj)), ...)
+          print(str(type(obj)))
           del new_game_obj[obj.id]
       self.game_objects = new_game_obj.copy()
     send_struct = {'game_obj': []}
@@ -125,7 +125,7 @@ class MasterPlatformer(object):
                    "constructor": type(game_obj).__name__}
       send_struct['game_obj'].append(send_dict)
 
-    data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
+    data = cPickle.dumps(send_struct, cPickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
     # TODO: Stop being lazy and read from file.
     # ip_list
     self.ip_list = []
@@ -271,13 +271,13 @@ class MasterPlatformer(object):
       if len(split) != 2:  # it should be 2 elements big if it got the whole message
         pass
       else:
-        x = pickle.loads(split[0])
+        x = cPickle.loads(split[0])
         return x
 
   def serialize_and_sync(self, send_struct):
     """serialize data and send it to the nodes."""
     # serialize the data and send
-    data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
+    data = cPickle.dumps(send_struct, cPickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
     for node in self.socket_list:
       node.sendall(data)
 

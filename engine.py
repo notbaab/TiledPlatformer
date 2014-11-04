@@ -3,7 +3,7 @@ import math
 import world as wd
 import random
 import pygame
-import ipdb
+# import ipdb
 import pprint
 
 LOCAL = True
@@ -40,7 +40,7 @@ class Colors(object):
 
 class Vector(object):
   def __init__(self, x, y):
-    super().__init__()
+    super(Vector, self).__init__()
     self.x = x
     self.y = y
 
@@ -74,7 +74,7 @@ class Engine(object):
   """A game engine that handles managing physics and game related"""
 
   def __init__(self):
-    super().__init__()
+    super(Engine, self).__init__()
 
   def parse_json(self, file):
     json_data = open(file)
@@ -183,7 +183,7 @@ class Engine(object):
     # TODO: Add some randomness
     game_pieces = {}
     for game_obj in game_objects:
-      game_pieces[game_obj] = self.split_sprite(game_obj, 20, 20)
+      game_pieces[game_obj] = self.split_sprite(game_obj, 2, 2)
 
     # move every object on screen out
     step_dict = {}

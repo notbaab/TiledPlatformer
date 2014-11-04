@@ -3,7 +3,7 @@ from networking import NetworkGame
 import world as wd
 import engine as eng
 import json
-import ipdb
+# import ipdb
 import os
 import random
 # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
@@ -27,7 +27,7 @@ SCREEN_HEIGHT = int(config['display_size'][1])
 class ClientPlatformer(NetworkGame):
   def __init__(self, tile, window_coordinates=None):
     """Sets up all the needed client settings"""
-    super().__init__(tile)
+    super(ClientPlatformer, self).__init__(tile)
     if window_coordinates:
       # passed in the location for the window to be at. Used for debugging
       os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (window_coordinates[0], window_coordinates[1])
@@ -58,6 +58,7 @@ class ClientPlatformer(NetworkGame):
 
         self.game_objects[game_obj['id']].render = False
 
+    print self.game_objects
     self.clear_rects = []
     return data
 
@@ -75,13 +76,15 @@ class ClientPlatformer(NetworkGame):
   def clear(self, rects=()):
     """clear where the previous game objects were + whatever rects are specified
     in the passed in rect(good for timers and debug messages"""
+    update_rects = []
     for game_obj in self.game_objects.values():
       if game_obj.render == True and isinstance(game_obj, wd.MovableGameObject):
         self.window.blit(self.background, (game_obj.rect.x, game_obj.rect.y), game_obj.rect)
+        update_rects.append(game_obj.rect)
     for rect in rects:
       self.window.blit(self.background, (rect.x, rect.y), rect)
-      # self.window.blit(self.background, self.background_rect)
-      # self.window.fill(color)
+      update_rects.append(rect)
+    return update_rects
 
   def clear_entire_screen(self):
     self.window.blit(self.background, self.background_rect)
@@ -107,7 +110,7 @@ class ClientPlatformer(NetworkGame):
     object is in the nodes area. If so it sets it to render
     :para data: python dict with various game object packets
     :type data: dict"""
-    self.clear(self.clear_rects)
+    update_rects = self.clear(self.clear_rects)
     self.clear_rects = []
     for obj_id in data['deleted_objs']:
       del self.game_objects[obj_id]
@@ -129,7 +132,7 @@ class ClientPlatformer(NetworkGame):
         self.game_objects[packet['id']].render = False
 
     # TODO: this is what loop over game dict is for
-    update_rects = []
+    # update_rects = []
     for obj_id, game_obj in self.game_objects.items():
       if game_obj.render:
         clear_rect = game_obj.draw(self.window)
@@ -137,11 +140,7 @@ class ClientPlatformer(NetworkGame):
           update_rects.append(game_obj.rect)
         if clear_rect:
           self.clear_rects.append(clear_rect)
-    # print(len(update_rects))
-    # print(update_rects)
     pygame.display.update(update_rects)
-    # pygame.display.update(pygame.Rect(0,0,20,20))
-    # pygame.display.flip()
 
     data_struct = {'state': 'play'}
     return data_struct
