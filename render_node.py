@@ -1,6 +1,15 @@
 import networking as n
 import displayplatformer
 import time
+import json
+
+
+network_settings = json.load(open('network_settings.json'))
+
+if network_settings['localhost'] == "True":
+  HOST = 'localhost'
+else:
+  HOST = '10.0.0.249'
 
 # TODO: Figure out tile location based on hostname
 if __name__ == '__main__':
@@ -8,7 +17,7 @@ if __name__ == '__main__':
   connected = False
   while not connected:
     try:
-      server = n.Server('localhost', 2000, game)
+      server = n.Server(HOST, 2000, game)
       connected = True
     except Exception:
       time.sleep(.5)

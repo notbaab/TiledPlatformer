@@ -9,7 +9,13 @@ import pickle
 import os
 import json
 
-json_data = open('master_settings.json')
+network_settings = json.load(open('network_settings.json'))
+
+if network_settings['localhost'] == "True":
+  json_data = open('master_settings_mac_local.json')
+else:
+  json_data = open('master_settings.json')
+
 config = json.load(json_data)
 # TODO: Maybe it's time to move away from the socket del? That will also require moving off pickling
 SOCKET_DEL = config['package_delimeter'].encode('utf-8')
@@ -21,7 +27,8 @@ GRID_SPACE = [int(config['grid_space'][0]), int(config['grid_space'][1])]
 DISPLAY_SIZE = {"x": int(config['display_size'][0]), "y": int(config['display_size'][1])}
 BEZZEL_SIZE = [30, 30]
 PLAYER_RECT = PLAYER_WIDTH, PLAYER_HEIGHT = 25, 40
-DEBUG_CLASSES = [wd.SimpleScenery, wd.Player]
+DEBUG_CLASSES = []
+# DEBUG_CLASSES = [wd.SimpleScenery, wd.Player]
 
 
 # TODO: have a platformer game class that has all the similar components of the render and 
@@ -29,7 +36,7 @@ DEBUG_CLASSES = [wd.SimpleScenery, wd.Player]
 class MasterPlatformer(object):
   """Class for the platformer head node"""
 
-  def __init__(self, localhosts=1):
+  def __init__(self, localhosts=1, ip_file=None):
     global config
     super().__init__()
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0, 0)  # move window to upper left corner
@@ -123,8 +130,11 @@ class MasterPlatformer(object):
     # ip_list
     self.ip_list = []
 
-    for x in range(0, localhosts):
-      self.ip_list.append(('localhost', 2000 + x))
+    if ip_file:
+      self.ip_list.append(('tile-1-1', 2000))
+    else:
+      for x in range(0, localhosts):
+        self.ip_list.append(('localhost', 2000 + x))
 
     self.socket_list = []
     for node in self.ip_list:
@@ -281,7 +291,7 @@ class MasterPlatformer(object):
 if __name__ == '__main__':
   print(sys.argv)
   if len(sys.argv) != 2:
-    game = MasterPlatformer(localhosts=1)
+    game = MasterPlatformer(localhosts=1, ip_file=True)
   else:
     game = MasterPlatformer(localhosts=int(sys.argv[1]))
   game.run()

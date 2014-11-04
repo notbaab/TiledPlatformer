@@ -6,9 +6,14 @@ import pygame
 import ipdb
 import pprint
 
+LOCAL = True
+network_settings = json.load(open('network_settings.json'))
 
-# I should really just store the config and pass it around
-json_data = open('master_settings.json')
+if network_settings['localhost'] == "True":
+  json_data = open('master_settings_mac_local.json')
+else:
+  json_data = open('master_settings.json')
+
 config = json.load(json_data)
 
 GRAVITY_VELOCITY = 2

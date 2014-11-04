@@ -8,7 +8,16 @@ import os
 import random
 # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
 
-json_data = open('master_settings.json')
+DEBUG = False
+network_settings = json.load(open('network_settings.json'))
+
+if network_settings['localhost'] == "True":
+  json_data = open('master_settings_mac_local.json')
+  PYGAME_FLAGS = 0
+else:
+  json_data = open('master_settings.json')
+  PYGAME_FLAGS = pygame.FULLSCREEN
+
 config = json.load(json_data)
 
 SCREEN_WIDTH = int(config['display_size'][0])
@@ -26,7 +35,7 @@ class ClientPlatformer(NetworkGame):
     self.load_time = .01
 
     self.engine = eng.Engine()
-    self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), PYGAME_FLAGS)
     self.game_objects = {}
     # self.background = pygame.image.load("assets/background" + str(self.tile[0]) + str(self.tile[1]) + ".png")
     self.background = pygame.image.load("assets/backgroun.png")
