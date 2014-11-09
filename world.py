@@ -318,6 +318,8 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.escape_mash_number = PLAYER_MASH_NUMBER
     self.stunned_timer = 0
     self.stunned_velocity = eng.Vector(0, 0)
+    self.invincible_timer = 0
+    self.invincible = False
 
 
   def jump(self):
@@ -331,6 +333,10 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       # self.velocity.x = self.stunned_velocity.x
     elif not self.movement_event and self.moving and not self.trapped:
       self.velocity.x = self.direction * PLAYER_SPEED
+    if self.invincible_timer:
+      self.invincible_timer -= 1
+    else:
+      self.invincible = False
 
   def escape(self, direction):
     """mash a button to escape students"""
@@ -351,6 +357,8 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
         self.mash_left = False
         self.mash_right = False
         self.escape_hit = 0
+        self.invincible_timer = 60
+        self.invincible = True
 
   def write_paper(self):
     return
@@ -425,7 +433,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       super(Player, self).respond_to_collision(obj, axis)
       if isinstance(obj, Player) and not self.stunned_timer:
         self.joust_attack(obj)
-      if (isinstance(obj, Meeting) or (isinstance(obj, Follower)) and not obj.stunned_timer) and not self.trapped:
+      if (isinstance(obj, Meeting) or isinstance(obj, Follower)) and not self.trapped:
         # got sucked trapped by something
         obj.trap(self)
 
@@ -688,18 +696,16 @@ class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.leader = None
     self.velocity = eng.Vector(0, 0)
     self.site = site_range
-    self.stunned_timer = 0
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
 
   def trap(self, game_obj):
-    game_obj.trapped = True
-    game_obj.trapper = self
+    if not game_obj.invincible:
+      game_obj.trapped = True
+      game_obj.trapper = self
 
   def update(self):
-    if self.stunned_timer:
-      self.stunned_timer -= 1
-    if self.leader and eng.distance(self.rect, self.leader.rect) < self.site and not self.stunned_timer:
+    if self.leader and eng.distance(self.rect, self.leader.rect) < self.site:
       # figure out which direction to move
       if self.leader.rect.centerx - self.rect.centerx > 0:
         self.velocity.x = FOLLOWER_SPEED  # move right
@@ -717,19 +723,26 @@ class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     closest_distance = eng.distance(self.rect, closest_leader.rect)
     for potential_leader in leader_list[1:]:
       distance = eng.distance(self.rect, potential_leader.rect)
-      if distance < closest_distance:
+      if distance < closest_distance and (not potential_leader.trapped or potential_leader.trapper == self):
         closest_leader = potential_leader
         closest_distance = distance
-    if closest_distance < self.site:
+    if closest_distance < self.site and (not closest_leader.trapped or potential_leader.trapper == self):
       self.leader = closest_leader
 
   def respond_to_collision(self, obj, axis=None):
-    if isinstance(obj, Player) and not self.stunned_timer:
+    if isinstance(obj, Player):
       obj.respond_to_collision(self, axis)
     super(Follower, self).respond_to_collision(obj, axis)
 
-  def stun(self):
-    self.stunned_timer = 60
+  def un_trap(self, game_obj):
+    """Called after a player has escaped the patrollers grasp"""
+    if self.rect.x < game_obj.rect.x:
+      # on the left, push back to the left
+      self.velocity.x = -10
+      self.velocity.y = -20
+    else:
+      self.velocity.x = 10
+      self.velocity.y = -20
 
 
 class Patroller(Follower):
@@ -766,16 +779,6 @@ class Patroller(Follower):
     self.end_patrol = self.rect.centerx + self.patrol_range / 2
     self.velocity.x = PATROL_SPEED
 
-  def un_trap(self, game_obj):
-    """Called after a player has escaped the patrollers grasp"""
-    if self.rect.x < game_obj.rect.x:
-      # on the left, push back to the left
-      self.velocity.x = -10
-      self.velocity.y = -20
-    else:
-      self.velocity.x = 10
-      self.velocity.y = -20
-    self.stun()
 
 
 class Meeting(SimpleScenery, NetworkedObject):

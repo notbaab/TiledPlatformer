@@ -1,0 +1,102 @@
+{
+  "__terrain__": "true",
+  "floors":
+  [
+    {
+      "x": "0",
+      "y": "650",
+      "width" : "1200",
+      "height": "20",
+      "color": "RED"
+    },
+    {
+      "x": "0",
+      "y": "420",
+      "width" : "200",
+      "height": "10"
+    },
+    {
+      "x": "250",
+      "y": "420",
+      "width" : "700",
+      "height": "10"
+    },
+    {
+      "x": "1000",
+      "y": "420",
+      "width" : "200",
+      "height": "10"
+    },
+    {
+      "x": "0",
+      "y": "200",
+      "width" : "200",
+      "height": "10"
+    },
+    {
+      "x": "250",
+      "y": "200",
+      "width" : "700",
+      "height": "10"
+    },
+    {
+      "x": "1000",
+      "y": "200",
+      "width" : "200",
+      "height": "10"
+    }
+  ],
+  "players":
+  [
+    {
+      "x": "70",
+      "y": "500",
+      "width" : "600",
+      "height": "20",
+      "color": "RED"
+    },
+    {
+      "x": "110",
+      "y": "500",
+      "width" : "600",
+      "height": "20",
+      "color": "RED"
+    }
+  ],
+  "data_object":
+  [],
+  "data_device":
+  [
+  ],
+  "followers":
+  [
+    {
+      "x": "170",
+      "y": "500",
+      "width" : "10",
+      "height": "10",
+      "color": "RED"
+    },
+    {
+      "x": "270",
+      "y": "500",
+      "width" : "10",
+      "height": "10",
+      "color": "RED"
+    }
+  ],
+  "patrollers":
+  [  ],
+  "comet":
+  [
+  ], 
+  "Desk":
+  [
+  ],
+  "PublishingHouse":
+  [
+  ],
+  "Meeting":
+  [
+  ]
+}

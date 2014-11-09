@@ -17,7 +17,7 @@ if __name__ == '__main__':
   connected = False
   while not connected:
     try:
-      server = n.Server(HOST, 2000, game)
+      server = n.Server('', 2000, game)
       connected = True
     except Exception:
       time.sleep(.5)

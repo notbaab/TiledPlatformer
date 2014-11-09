@@ -291,7 +291,7 @@ class MasterPlatformer(object):
 if __name__ == '__main__':
   print(sys.argv)
   if len(sys.argv) != 2:
-    game = MasterPlatformer(localhosts=1, ip_file=True)
+    game = MasterPlatformer(localhosts=1, ip_file=False)
   else:
     game = MasterPlatformer(localhosts=int(sys.argv[1]))
   game.run()
