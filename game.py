@@ -129,19 +129,36 @@ class MasterPlatformer(object):
     # TODO: Stop being lazy and read from file.
     # ip_list
     self.ip_list = []
-
-    if ip_file:
-      self.ip_list.append(('tile-1-1', 2000))
-    else:
-      for x in range(0, localhosts):
-        self.ip_list.append(('localhost', 2000 + x))
-
+    ips = open('tile-hosts.txt', 'r')
+    address = ips.readline().strip()
+    ip_list = []
+    while address:
+        ip_list.append(address)
+        address = ips.readline().strip()
+    idx = 0
     self.socket_list = []
-    for node in self.ip_list:
+    for ip in ip_list:
       self.socket_list.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
-      print(node)
-      self.socket_list[-1].connect(node)
+      self.socket_list[-1].connect((ip, 2000))
       self.socket_list[-1].sendall(data)
+    # for x in range(0, DISPLAY_SIZE['x']):
+    #   for y in range(0, DISPLAY_SIZE['y']):
+    #     self.socket_list.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+    #     self.socket_list[-1].connect((ip_list[idx], 20000))
+    #     self.socket_list[-1].sendall(data)
+    #     idx += 1
+    # if ip_file:
+    #   # self.ip_list.append(('tile-1-1', 2000))
+    # else:
+    #   for x in range(0, localhosts):
+    #     self.ip_list.append(('localhost', 2000 + x))
+
+    # self.socket_list = []
+    # for node in self.ip_list:
+    #   self.socket_list.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+    #   print(node)
+    #   self.socket_list[-1].connect(node)
+    #   self.socket_list[-1].sendall(data)
 
     for node in self.socket_list:
       self.get_whole_packet(node)
@@ -170,8 +187,12 @@ class MasterPlatformer(object):
     player2 = game_dict['Player'][1]
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
+        self.quit()
         sys.exit()
       elif event.type == KEYDOWN:
+        if event.key == K_ESCAPE:
+          self.quit()
+          sys.exit()          
         if event.key == K_LEFT:
           player1.move_left()
           player1.escape(1)
@@ -286,6 +307,12 @@ class MasterPlatformer(object):
       return_list.append(self.get_whole_packet(node))
     # TODO: return real data
     return '', 'play'
+
+  def quit(self):
+    data = cPickle.dumps({'state': 'kill'}, cPickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
+    for node in self.socket_list:
+      node.sendall(data)
+    time.sleep(2)
 
 
 if __name__ == '__main__':

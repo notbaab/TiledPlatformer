@@ -21,6 +21,7 @@ FPS = pygame.time.Clock()
 X_FRICTION_CONSTANT = .3
 EDGES = (int(config['display_size'][0]) * (int(config['grid_space'][0]) + 1),
          int(config['display_size'][1]) * (int(config['grid_space'][1]) + 1))
+print(EDGES)
 pygame.font.init()
 FONT = pygame.font.SysFont('Arial', 15, 15)
 

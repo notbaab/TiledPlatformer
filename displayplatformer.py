@@ -5,6 +5,7 @@ import engine as eng
 import json
 # import ipdb
 import os
+import os.path
 import random
 # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y)
 
@@ -38,7 +39,11 @@ class ClientPlatformer(NetworkGame):
     self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), PYGAME_FLAGS)
     self.game_objects = {}
     # self.background = pygame.image.load("assets/background" + str(self.tile[0]) + str(self.tile[1]) + ".png")
-    self.background = pygame.image.load("assets/backgroun.png")
+    background_file = "assets/BG" + str(self.tile[0]) + str(self.tile[1]) + ".png"
+    if os.path.isfile(background_file):
+      self.background = pygame.image.load(background_file)
+    else:
+      self.background = pygame.image.load("assets/BG30.png") 
     self.background_rect = self.background.get_rect()
 
   def init_game(self, data):
@@ -94,6 +99,13 @@ class ClientPlatformer(NetworkGame):
     :param data: TODO: make this fire off a specific load animation
     :type data: dict"""
     self.clear_entire_screen()
+    if True:  # skip the fancy loading animation for now...the pi's can't handle it :(
+      for obj_id, game_obj in self.game_objects.items():
+        if isinstance(game_obj, wd.SimpleScenery):
+          game_obj.draw(self.window)
+          game_obj.dirt_sprite = False  # DOn't draw again unless it moves
+      pygame.display.flip()
+      return {'state':'play'} 
     obj_on_screen = [game_obj for game_obj in self.game_objects.values() if game_obj.render]
     self.engine.load_animation(obj_on_screen, self.background, self.window)
     update_rects = []
@@ -150,11 +162,12 @@ class ClientPlatformer(NetworkGame):
     :param pos: a tuple of an x and y coordinate
     :type pos: tuple
     :rtype: int or tuple
+            pos[1] < (self.tile[1]+1)*(self.bezely) and 
+        pos[1] >= self.tile[1]*(self.bezely)):
     """
     if ((self.tile[0] + 1) * SCREEN_WIDTH > pos[0] >= self.tile[0] * SCREEN_WIDTH and
-                (self.tile[1] + 1) * SCREEN_HEIGHT > pos[1] >= self.tile[1] * SCREEN_HEIGHT):
-      translated_pos = [pos[0] - self.tile[0] * SCREEN_WIDTH,
-                        (self.tile[1]) * SCREEN_HEIGHT + pos[1]]
+        (self.tile[1] + 1) * SCREEN_HEIGHT > pos[1] >= self.tile[1] * SCREEN_HEIGHT):
+      translated_pos = [pos[0] - self.tile[0] * SCREEN_WIDTH, + pos[1] - (self.tile[1]) * SCREEN_HEIGHT ]
     else:
       translated_pos = 0
     return translated_pos  # , translated_pos_2)

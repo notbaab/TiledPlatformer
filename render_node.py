@@ -2,7 +2,7 @@ import networking as n
 import displayplatformer
 import time
 import json
-
+import socket
 
 network_settings = json.load(open('network_settings.json'))
 
@@ -13,11 +13,27 @@ else:
 
 # TODO: Figure out tile location based on hostname
 if __name__ == '__main__':
-  game = displayplatformer.ClientPlatformer([0, 0], [200, 0])
+  myhostname = socket.gethostname()
+  (_,xindx,yindx) = myhostname.split('-')
+  xindx = int(xindx)
+  yindx = int(yindx)
+  print yindx
+  print xindx
+  first_hit = False
+  for line in open('/etc/hosts').readlines():
+    if line.find(myhostname) > -1:
+      my_ip_address = line.split()[0]
+      break
+  if yindx == 2:
+    yindx = 0
+  elif yindx == 0:
+    yindx = 2
+  game = displayplatformer.ClientPlatformer([xindx, yindx])
   connected = False
+  print my_ip_address
   while not connected:
     try:
-      server = n.Server(HOST, 2000, game)
+      server = n.Server(my_ip_address, 2000, game)
       connected = True
     except Exception:
       time.sleep(.5)

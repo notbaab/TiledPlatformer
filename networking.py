@@ -1,6 +1,7 @@
 import sys
 import socket
 import cPickle
+import pygame
 
 SOCKET_DEL = '*ET*'.encode('utf-8')
 LEFT_SCORE_TILE = [1, 1]
@@ -82,6 +83,7 @@ class Server():
     data = cPickle.loads(pickled_data)
     # print 'kill state' + str(data['kill_state'])
     if data['state'] == 'kill':
+      pygame.quit()
       self.close_connection('died')
       sys.exit()
     struct = self.game.update(data)
