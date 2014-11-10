@@ -3,31 +3,43 @@ import displayplatformer
 import time
 import json
 import socket
+import sys
 
-network_settings = json.load(open('network_settings.json'))
+json_file = open('network_settings.json', "r+")
+network_settings = json.load(json_file)
+my_ip_address = ''
 
 if network_settings['localhost'] == "True":
-  HOST = 'localhost'
-else:
-  HOST = '10.0.0.249'
+  if len(sys.argv) != 3:
+    print "Network_settings curretly set to localhost, need an x and a y argument. Run `python render_node.py x y"
+    sys.exit()
+  xindx = int(sys.argv[1])
+  yindx = int(sys.argv[2])
+  json_file.seek(0)  # lazy pass to game.py
+  data = {"localhost": "True", "x":str(xindx), "y":str(yindx)}
+  json.dump(data, json_file)
+  my_ip_address = 'localhost'
 
 # TODO: Figure out tile location based on hostname
 if __name__ == '__main__':
-  myhostname = socket.gethostname()
-  (_,xindx,yindx) = myhostname.split('-')
-  xindx = int(xindx)
-  yindx = int(yindx)
-  print yindx
-  print xindx
-  first_hit = False
-  for line in open('/etc/hosts').readlines():
-    if line.find(myhostname) > -1:
-      my_ip_address = line.split()[0]
-      break
-  if yindx == 2:
-    yindx = 0
-  elif yindx == 0:
-    yindx = 2
+  if not my_ip_address == 'localhost':
+
+    myhostname = socket.gethostname()
+    (_,xindx,yindx) = myhostname.split('-')
+    xindx = int(xindx)
+    yindx = int(yindx)
+    print yindx
+    print xindx
+    first_hit = False
+    for line in open('/etc/hosts').readlines():
+      if line.find(myhostname) > -1:
+        my_ip_address = line.split()[0]
+        break
+    if yindx == 2:
+      yindx = 0
+    elif yindx == 0:
+      yindx = 2
+    
   game = displayplatformer.ClientPlatformer([xindx, yindx])
   connected = False
   print my_ip_address

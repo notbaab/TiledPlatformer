@@ -47,69 +47,9 @@ class MasterPlatformer(object):
     self.added = []  # list keeping track of which objects are added
     self.deleted = []  # list keeping track of the ids of objects that are deleted
 
-    # load map
-    self.game_objects = {}
+    self.game_objects = self.load_map()
 
-    map_json = self.engine.parse_json(config['global_map_file'])
-    asset_json = self.engine.parse_json(config['asset_file'])
-
-    # TODO: abstract this parsing to dynamically call the constructor based on the 
-    # attribute (reuse map)
-    for tile in map_json['floors']:
-      tmp = wd.SimpleScenery(int(tile["x"]), int(tile["y"]),
-                             int(tile["width"]), int(tile["height"]), sprite_sheet=asset_json["SimpleScenery"])
-      self.game_objects[tmp.id] = tmp
-
-    for player in map_json['players']:
-      tmp = wd.Player(int(player["x"]), int(player["y"]), PLAYER_WIDTH, PLAYER_HEIGHT,
-                      sprite_sheet=asset_json["Player"])
-      self.game_objects[tmp.id] = tmp
-
-    for data in map_json['data_object']:
-      tmp = wd.Data(int(data["x"]), int(data["y"]), int(data["width"]), int(data["height"]),
-                    sprite_sheet=asset_json["Data"])
-      self.game_objects[tmp.id] = tmp
-
-    for data_device in map_json['data_device']:
-      tmp = wd.DataDevice(int(data_device["x"]), int(data_device["y"]), int(data_device["width"]),
-                          int(data_device["height"]), sprite_sheet=asset_json["DataDevice"], game=self)
-      self.game_objects[tmp.id] = tmp
-
-    for follower in map_json['followers']:
-      tmp = wd.Follower(int(follower["x"]), int(follower["y"]), int(follower["width"]),
-                        int(follower["height"]), sprite_sheet=asset_json["Follower"])
-      self.game_objects[tmp.id] = tmp
-
-    for patroler in map_json['patrollers']:
-      tmp = wd.Patroller(int(patroler["x"]), int(patroler["y"]), int(patroler["width"]),
-                         int(patroler["height"]), sprite_sheet=asset_json["Patroller"])
-      self.game_objects[tmp.id] = tmp
-
-    for comet in map_json['comet']:
-      tmp = wd.DataCruncher(int(comet["x"]), int(comet["y"]), int(comet["width"]),
-                            int(comet["height"]), sprite_sheet=asset_json["DataCruncher"])
-      self.game_objects[tmp.id] = tmp
-
-    for desk in map_json['Desk']:
-      tmp = wd.Desk(int(desk["x"]), int(desk["y"]), int(desk["width"]),
-                    int(desk["height"]), sprite_sheet=asset_json["DataCruncher"])
-      self.game_objects[tmp.id] = tmp
-
-    for publish_house in map_json['PublishingHouse']:
-      tmp = wd.PublishingHouse(int(publish_house["x"]), int(publish_house["y"]), int(publish_house["width"]),
-                               int(publish_house["height"]), sprite_sheet=asset_json["PublishingHouse"],
-                               accept_stage=wd.DATA_STAGES["paper"])
-
-      self.game_objects[tmp.id] = tmp
-
-    for config in map_json['Meeting']:
-      tmp = wd.Meeting(int(config["x"]), int(config["y"]), int(config["width"]),
-                       int(config["height"]), sprite_sheet=asset_json["Meeting"])
-
-      self.game_objects[tmp.id] = tmp
-
-    print(self.game_objects)
-
+    # remove none debugin classes if that is what we are doing
     if DEBUG_CLASSES:
       new_game_obj = self.game_objects.copy()
       for obj in self.game_objects.values():
@@ -117,8 +57,9 @@ class MasterPlatformer(object):
           print(str(type(obj)))
           del new_game_obj[obj.id]
       self.game_objects = new_game_obj.copy()
-    send_struct = {'game_obj': []}
+    
     # build the initial data packet
+    send_struct = {'game_obj': []}
     for game_obj in self.game_objects.values():
       send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
                             game_obj.rect.height], "id": game_obj.id, "sprite_sheet": game_obj.sprite_sheet,
@@ -126,44 +67,31 @@ class MasterPlatformer(object):
       send_struct['game_obj'].append(send_dict)
 
     data = cPickle.dumps(send_struct, cPickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
-    # TODO: Stop being lazy and read from file.
-    # ip_list
-    self.ip_list = []
-    ips = open('tile-hosts.txt', 'r')
-    address = ips.readline().strip()
-    ip_list = []
-    while address:
-        ip_list.append(address)
-        address = ips.readline().strip()
-    idx = 0
+    if network_settings['localhost'] == "True":
+      # Testing one local node, read from the setting to find out which tile we are testing and read
+      # move the player to the correct place
+      ip_list = ['localhost'] 
+
+    else:  
+      # ip_list
+      self.ip_list = []
+      ips = open('tile-hosts.txt', 'r')
+      address = ips.readline().strip()
+      ip_list = []
+      while address:
+          ip_list.append(address)
+          address = ips.readline().strip()
+
     self.socket_list = []
     for ip in ip_list:
       self.socket_list.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
       self.socket_list[-1].connect((ip, 2000))
       self.socket_list[-1].sendall(data)
-    # for x in range(0, DISPLAY_SIZE['x']):
-    #   for y in range(0, DISPLAY_SIZE['y']):
-    #     self.socket_list.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
-    #     self.socket_list[-1].connect((ip_list[idx], 20000))
-    #     self.socket_list[-1].sendall(data)
-    #     idx += 1
-    # if ip_file:
-    #   # self.ip_list.append(('tile-1-1', 2000))
-    # else:
-    #   for x in range(0, localhosts):
-    #     self.ip_list.append(('localhost', 2000 + x))
-
-    # self.socket_list = []
-    # for node in self.ip_list:
-    #   self.socket_list.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
-    #   print(node)
-    #   self.socket_list[-1].connect(node)
-    #   self.socket_list[-1].sendall(data)
 
     for node in self.socket_list:
       self.get_whole_packet(node)
 
-    self.state = 'load'
+    self.state = 'play'
 
   def run(self):
     while True:
@@ -313,6 +241,72 @@ class MasterPlatformer(object):
     for node in self.socket_list:
       node.sendall(data)
     time.sleep(2)
+
+
+  def load_map(self):
+    # load map
+    game_objects = {}
+
+    map_json = self.engine.parse_json(config['global_map_file'])
+    asset_json = self.engine.parse_json(config['asset_file'])
+
+    # TODO: abstract this parsing to dynamically call the constructor based on the 
+    # attribute (reuse map)
+    for tile in map_json['floors']:
+      tmp = wd.SimpleScenery(int(tile["x"]), int(tile["y"]),
+                             int(tile["width"]), int(tile["height"]), sprite_sheet=asset_json["SimpleScenery"])
+      game_objects[tmp.id] = tmp
+
+    for player in map_json['players']:
+      tmp = wd.Player(int(player["x"]), int(player["y"]), PLAYER_WIDTH, PLAYER_HEIGHT,
+                      sprite_sheet=asset_json["Player"])
+      game_objects[tmp.id] = tmp
+
+    for data in map_json['data_object']:
+      tmp = wd.Data(int(data["x"]), int(data["y"]), int(data["width"]), int(data["height"]),
+                    sprite_sheet=asset_json["Data"])
+      game_objects[tmp.id] = tmp
+
+    for data_device in map_json['data_device']:
+      tmp = wd.DataDevice(int(data_device["x"]), int(data_device["y"]), int(data_device["width"]),
+                          int(data_device["height"]), sprite_sheet=asset_json["DataDevice"], game=self)
+      game_objects[tmp.id] = tmp
+
+    for follower in map_json['followers']:
+      tmp = wd.Follower(int(follower["x"]), int(follower["y"]), int(follower["width"]),
+                        int(follower["height"]), sprite_sheet=asset_json["Follower"])
+      game_objects[tmp.id] = tmp
+
+    for patroler in map_json['patrollers']:
+      tmp = wd.Patroller(int(patroler["x"]), int(patroler["y"]), int(patroler["width"]),
+                         int(patroler["height"]), sprite_sheet=asset_json["Patroller"])
+      game_objects[tmp.id] = tmp
+
+    for comet in map_json['comet']:
+      tmp = wd.DataCruncher(int(comet["x"]), int(comet["y"]), int(comet["width"]),
+                            int(comet["height"]), sprite_sheet=asset_json["DataCruncher"])
+      game_objects[tmp.id] = tmp
+
+    for desk in map_json['Desk']:
+      tmp = wd.Desk(int(desk["x"]), int(desk["y"]), int(desk["width"]),
+                    int(desk["height"]), sprite_sheet=asset_json["DataCruncher"])
+      game_objects[tmp.id] = tmp
+
+    for publish_house in map_json['PublishingHouse']:
+      tmp = wd.PublishingHouse(int(publish_house["x"]), int(publish_house["y"]), int(publish_house["width"]),
+                               int(publish_house["height"]), sprite_sheet=asset_json["PublishingHouse"],
+                               accept_stage=wd.DATA_STAGES["paper"])
+
+      game_objects[tmp.id] = tmp
+
+    for config in map_json['Meeting']:
+      tmp = wd.Meeting(int(config["x"]), int(config["y"]), int(config["width"]),
+                       int(config["height"]), sprite_sheet=asset_json["Meeting"])
+
+      game_objects[tmp.id] = tmp
+
+    print(game_objects)
+    return game_objects
 
 
 if __name__ == '__main__':
