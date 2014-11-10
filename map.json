@@ -1,13 +1,11 @@
 {
-  "__terrain__": "true",
-  "floors":
+  "SimpleScenery":
   [
     {
       "x": "0",
       "y": "3600",
       "width" : "9600",
-      "height": "40",
-      "color": "RED"
+      "height": "40"
     },
     {
       "x": "0",
@@ -46,26 +44,24 @@
       "height": "10"
     }
   ],
-  "players":
+  "Player":
   [
     {
       "x": "70",
       "y": "500",
-      "width" : "600",
-      "height": "20",
-      "color": "RED"
+      "width" : "25",
+      "height": "40"
     },
     {
       "x": "110",
       "y": "500",
-      "width" : "600",
-      "height": "20",
-      "color": "RED"
+      "width" : "25",
+      "height": "40"
     }
   ],
-  "data_object":
+  "Data":
   [],
-  "data_device":
+  "DataDevice":
   [
     {
       "x": "140",
@@ -92,11 +88,11 @@
       "height": "40"
     }
   ],
-  "followers":
+  "Follower":
   [],
-  "patrollers":
-  [  ],
-  "comet":
+  "Patroller":
+  [],
+  "DataCruncher":
   [
     {
       "x": "540",

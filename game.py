@@ -11,10 +11,7 @@ import json
 
 network_settings = json.load(open('network_settings.json'))
 
-if network_settings['localhost'] == "True":
-  json_data = open('master_settings_mac_local.json')
-else:
-  json_data = open('master_settings.json')
+json_data = open('master_settings.json')
 
 config = json.load(json_data)
 # TODO: Maybe it's time to move away from the socket del? That will also require moving off pickling
@@ -26,7 +23,6 @@ GRID_SPACE = [int(config['grid_space'][0]), int(config['grid_space'][1])]
 # DISPLAY_SIZE = [600, 600]
 DISPLAY_SIZE = {"x": int(config['display_size'][0]), "y": int(config['display_size'][1])}
 BEZZEL_SIZE = [30, 30]
-PLAYER_RECT = PLAYER_WIDTH, PLAYER_HEIGHT = 25, 40
 DEBUG_CLASSES = []
 # DEBUG_CLASSES = [wd.SimpleScenery, wd.Player]
 
@@ -267,58 +263,13 @@ class MasterPlatformer(object):
 
     # TODO: abstract this parsing to dynamically call the constructor based on the 
     # attribute (reuse map)
-    for tile in map_json['floors']:
-      tmp = wd.SimpleScenery(int(tile["x"]), int(tile["y"]),
-                             int(tile["width"]), int(tile["height"]), sprite_sheet=asset_json["SimpleScenery"])
-      game_objects[tmp.id] = tmp
-
-    for player in map_json['players']:
-      tmp = wd.Player(int(player["x"]), int(player["y"]), PLAYER_WIDTH, PLAYER_HEIGHT,
-                      sprite_sheet=asset_json["Player"])
-      game_objects[tmp.id] = tmp
-
-    for data in map_json['data_object']:
-      tmp = wd.Data(int(data["x"]), int(data["y"]), int(data["width"]), int(data["height"]),
-                    sprite_sheet=asset_json["Data"])
-      game_objects[tmp.id] = tmp
-
-    for data_device in map_json['data_device']:
-      tmp = wd.DataDevice(int(data_device["x"]), int(data_device["y"]), int(data_device["width"]),
-                          int(data_device["height"]), sprite_sheet=asset_json["DataDevice"], game=self)
-      game_objects[tmp.id] = tmp
-
-    for follower in map_json['followers']:
-      tmp = wd.Follower(int(follower["x"]), int(follower["y"]), int(follower["width"]),
-                        int(follower["height"]), sprite_sheet=asset_json["Follower"])
-      game_objects[tmp.id] = tmp
-
-    for patroler in map_json['patrollers']:
-      tmp = wd.Patroller(int(patroler["x"]), int(patroler["y"]), int(patroler["width"]),
-                         int(patroler["height"]), sprite_sheet=asset_json["Patroller"])
-      game_objects[tmp.id] = tmp
-
-    for comet in map_json['comet']:
-      tmp = wd.DataCruncher(int(comet["x"]), int(comet["y"]), int(comet["width"]),
-                            int(comet["height"]), sprite_sheet=asset_json["DataCruncher"])
-      game_objects[tmp.id] = tmp
-
-    for desk in map_json['Desk']:
-      tmp = wd.Desk(int(desk["x"]), int(desk["y"]), int(desk["width"]),
-                    int(desk["height"]), sprite_sheet=asset_json["DataCruncher"])
-      game_objects[tmp.id] = tmp
-
-    for publish_house in map_json['PublishingHouse']:
-      tmp = wd.PublishingHouse(int(publish_house["x"]), int(publish_house["y"]), int(publish_house["width"]),
-                               int(publish_house["height"]), sprite_sheet=asset_json["PublishingHouse"],
-                               accept_stage=wd.DATA_STAGES["paper"])
-
-      game_objects[tmp.id] = tmp
-
-    for config in map_json['Meeting']:
-      tmp = wd.Meeting(int(config["x"]), int(config["y"]), int(config["width"]),
-                       int(config["height"]), sprite_sheet=asset_json["Meeting"])
-
-      game_objects[tmp.id] = tmp
+    for key in map_json:
+      print key
+      constructor = getattr(wd, key)
+      for obj_dict in map_json[key]:
+        tmp = constructor(int(obj_dict['x']), int(obj_dict['y']), int(obj_dict['width']),
+                          int(obj_dict['height']), sprite_sheet=asset_json[key])
+        game_objects[tmp.id] = tmp
 
     print(game_objects)
     return game_objects
