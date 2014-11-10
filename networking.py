@@ -1,6 +1,11 @@
 import sys
 import socket
-import cPickle
+
+if (sys.version_info > (3, 0)):
+  import pickle as pickle
+else:
+  import cPickle as pickle
+  
 import pygame
 
 SOCKET_DEL = '*ET*'.encode('utf-8')
@@ -63,7 +68,7 @@ class Server():
     self.socket.listen(1)
     self.open_sock, addr = self.socket.accept()
     init_data = self.get_whole_packet()
-    init_data = cPickle.loads(init_data)
+    init_data = pickle.loads(init_data)
     handshake = self.game.init_game(init_data)
     self.sync(handshake)
     print("connection made to " + str(addr))
@@ -80,7 +85,7 @@ class Server():
     self.sync(state_struct)
 
   def process_request(self, pickled_data):
-    data = cPickle.loads(pickled_data)
+    data = pickle.loads(pickled_data)
     # print 'kill state' + str(data['kill_state'])
     if data['state'] == 'kill':
       pygame.quit()
@@ -101,7 +106,7 @@ class Server():
 
   def sync(self, send_struct):
     # send response back to connecting to say processing is complete
-    x = cPickle.dumps(send_struct, cPickle.HIGHEST_PROTOCOL) + SOCKET_DEL
+    x = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + SOCKET_DEL
     self.open_sock.sendall(x)
     # if send_struct['state'] == 'over':
     #   # clear screen and wait for handshake to proceed
