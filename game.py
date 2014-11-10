@@ -37,7 +37,7 @@ class MasterPlatformer(object):
   """Class for the platformer head node"""
 
   def __init__(self, localhosts=1, ip_file=None):
-    global config
+    global config, network_settings
     super(MasterPlatformer, self).__init__()
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0, 0)  # move window to upper left corner
     pygame.init()
@@ -58,19 +58,22 @@ class MasterPlatformer(object):
           del new_game_obj[obj.id]
       self.game_objects = new_game_obj.copy()
     
-    # build the initial data packet
-    send_struct = {'game_obj': []}
-    for game_obj in self.game_objects.values():
-      send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
-                            game_obj.rect.height], "id": game_obj.id, "sprite_sheet": game_obj.sprite_sheet,
-                   "constructor": type(game_obj).__name__}
-      send_struct['game_obj'].append(send_dict)
-
-    data = cPickle.dumps(send_struct, cPickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
     if network_settings['localhost'] == "True":
       # Testing one local node, read from the setting to find out which tile we are testing and read
       # move the player to the correct place
       ip_list = ['localhost'] 
+      # spawn each player in the corner of the screen
+      left_side = DISPLAY_SIZE["x"] * int(network_settings["x"])
+      top_side = DISPLAY_SIZE["y"] * int(network_settings["y"])
+      game_dict = self.structured_list()  # 
+      player1 = game_dict['Player'][0]
+      player2 = game_dict['Player'][1]
+      player1.rect.x = left_side + 1000
+      player2.rect.x = left_side + 200
+      player1.rect.y = top_side + 200
+      player2.rect.y = top_side + 200
+      print(player1.rect)
+      print(player2.rect)
 
     else:  
       # ip_list
@@ -82,6 +85,16 @@ class MasterPlatformer(object):
           ip_list.append(address)
           address = ips.readline().strip()
 
+    # build the initial data packet
+    send_struct = {'game_obj': []}
+    for game_obj in self.game_objects.values():
+      send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
+                            game_obj.rect.height], "id": game_obj.id, "sprite_sheet": game_obj.sprite_sheet,
+                   "constructor": type(game_obj).__name__}
+      send_struct['game_obj'].append(send_dict)
+
+    data = cPickle.dumps(send_struct, cPickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
+
     self.socket_list = []
     for ip in ip_list:
       self.socket_list.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
@@ -91,7 +104,7 @@ class MasterPlatformer(object):
     for node in self.socket_list:
       self.get_whole_packet(node)
 
-    self.state = 'play'
+    self.state = 'load'
 
   def run(self):
     while True:
@@ -113,6 +126,7 @@ class MasterPlatformer(object):
     game_dict = self.structured_list()  # Structure the game object list to manage easier. n time should be fast
     player1 = game_dict['Player'][0]
     player2 = game_dict['Player'][1]
+    print player1.rect
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         self.quit()
@@ -244,6 +258,7 @@ class MasterPlatformer(object):
 
 
   def load_map(self):
+    global config
     # load map
     game_objects = {}
 
@@ -307,7 +322,6 @@ class MasterPlatformer(object):
 
     print(game_objects)
     return game_objects
-
 
 if __name__ == '__main__':
   print(sys.argv)

@@ -1,7 +1,7 @@
 {
   "package_delimeter" : "*ET*",
   "FPS_TICK" : "30",
-  "grid_space" : ["3", "2"],
+  "grid_space" : ["4", "2"],
   "display_size":["1920", "1200"], 
   "global_map_file":"map.json",
   "asset_file" :"asset_config.json"

@@ -9,10 +9,7 @@ import pprint
 LOCAL = True
 network_settings = json.load(open('network_settings.json'))
 
-if network_settings['localhost'] == "True":
-  json_data = open('master_settings_mac_local.json')
-else:
-  json_data = open('master_settings.json')
+json_data = open('master_settings.json')
 
 config = json.load(json_data)
 
