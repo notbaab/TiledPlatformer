@@ -11,7 +11,7 @@ my_ip_address = ''
 
 if network_settings['localhost'] == "True":
   if len(sys.argv) != 3:
-    print "Network_settings curretly set to localhost, need an x and a y argument. Run `python render_node.py x y"
+    print ("Network_settings curretly set to localhost, need an x and a y argument. Run `python render_node.py x y")
     sys.exit()
   xindx = int(sys.argv[1])
   yindx = int(sys.argv[2])
@@ -28,8 +28,8 @@ if __name__ == '__main__':
     (_,xindx,yindx) = myhostname.split('-')
     xindx = int(xindx)
     yindx = int(yindx)
-    print yindx
-    print xindx
+    print (yindx)
+    print (xindx)
     first_hit = False
     for line in open('/etc/hosts').readlines():
       if line.find(myhostname) > -1:
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     
   game = displayplatformer.ClientPlatformer([xindx, yindx])
   connected = False
-  print my_ip_address
+  print (my_ip_address)
   while not connected:
     try:
       server = n.Server(my_ip_address, 2000, game)

@@ -66,7 +66,7 @@ class ClientPlatformer(NetworkGame):
 
         self.game_objects[game_obj['id']].render = False
 
-    print self.game_objects
+    print (self.game_objects)
     self.clear_rects = []
     return data
 

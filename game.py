@@ -5,7 +5,10 @@ from pygame.locals import *
 import world as wd
 import engine as eng
 import socket
-import cPickle
+if (sys.version_info > (3, 0)):
+  import pickle as pickle
+else:
+  import cPickle as pickle
 import os
 import json
 
@@ -89,7 +92,7 @@ class MasterPlatformer(object):
                    "constructor": type(game_obj).__name__}
       send_struct['game_obj'].append(send_dict)
 
-    data = cPickle.dumps(send_struct, cPickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
+    data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
 
     self.socket_list = []
     for ip in ip_list:
@@ -122,7 +125,6 @@ class MasterPlatformer(object):
     game_dict = self.structured_list()  # Structure the game object list to manage easier. n time should be fast
     player1 = game_dict['Player'][0]
     player2 = game_dict['Player'][1]
-    print player1.rect
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         self.quit()
@@ -230,13 +232,13 @@ class MasterPlatformer(object):
       if len(split) != 2:  # it should be 2 elements big if it got the whole message
         pass
       else:
-        x = cPickle.loads(split[0])
+        x = pickle.loads(split[0])
         return x
 
   def serialize_and_sync(self, send_struct):
     """serialize data and send it to the nodes."""
     # serialize the data and send
-    data = cPickle.dumps(send_struct, cPickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
+    data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
     for node in self.socket_list:
       node.sendall(data)
 
@@ -247,7 +249,7 @@ class MasterPlatformer(object):
     return '', 'play'
 
   def quit(self):
-    data = cPickle.dumps({'state': 'kill'}, cPickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
+    data = pickle.dumps({'state': 'kill'}, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
     for node in self.socket_list:
       node.sendall(data)
     time.sleep(2)
@@ -264,7 +266,7 @@ class MasterPlatformer(object):
     # TODO: abstract this parsing to dynamically call the constructor based on the 
     # attribute (reuse map)
     for key in map_json:
-      print key
+      print (key)
       constructor = getattr(wd, key)
       for obj_dict in map_json[key]:
         tmp = constructor(int(obj_dict['x']), int(obj_dict['y']), int(obj_dict['width']),
