@@ -18,6 +18,7 @@ if network_settings['localhost'] == "True":
   json_file.seek(0)  # lazy pass to game.py
   data = {"localhost": "True", "x":str(xindx), "y":str(yindx)}
   json.dump(data, json_file)
+  json_file.close()
   my_ip_address = 'localhost'
 
 # TODO: Figure out tile location based on hostname

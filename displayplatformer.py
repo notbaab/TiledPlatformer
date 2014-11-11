@@ -103,11 +103,11 @@ class ClientPlatformer(NetworkGame):
     :type data: dict"""
     self.clear_entire_screen()
     if True:  # skip the fancy loading animation for now...the pi's can't handle it :(
-      for obj_id, game_obj in self.game_objects.items():
-        if isinstance(game_obj, wd.SimpleScenery):
-          game_obj.draw(self.window)
-          game_obj.dirt_sprite = False  # DOn't draw again unless it moves
-      pygame.display.flip()
+      # for obj_id, game_obj in self.game_objects.items():
+      #   if isinstance(game_obj, wd.SimpleScenery):
+      #     game_obj.draw(self.window)
+      #     game_obj.dirt_sprite = False  # DOn't draw again unless it moves
+      # pygame.display.flip()
       return {'state':'play'} 
     obj_on_screen = [game_obj for game_obj in self.game_objects.values() if game_obj.render]
     self.engine.load_animation(obj_on_screen, self.background, self.window)

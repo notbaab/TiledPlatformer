@@ -1,0 +1,2 @@
+These go on top of each Tesla Coil. Place so that the first frame is the
+same width of the bottom coil. The height should match from there.

@@ -3,45 +3,38 @@
   [
     {
       "x": "0",
-      "y": "3600",
+      "y": "1055",
       "width" : "9600",
-      "height": "40"
+      "height": "155",
+      "__name__":"Top Floor"
     },
     {
       "x": "0",
-      "y": "420",
-      "width" : "200",
-      "height": "10"
+      "y": "2255",
+      "width" : "2120",
+      "height": "155",
+      "__name__":"Middle Left Floor"
     },
     {
-      "x": "250",
-      "y": "420",
-      "width" : "700",
-      "height": "10"
+      "x": "2320",
+      "y": "2255",
+      "width" : "5010",
+      "height": "155",
+      "__name__":"Middle Middle Floor"
     },
     {
-      "x": "1000",
-      "y": "420",
-      "width" : "200",
-      "height": "10"
+      "x": "7515",
+      "y": "2255",
+      "width" : "2085",
+      "height": "155",
+      "__name__":"Middle Right Floor"
     },
     {
       "x": "0",
-      "y": "200",
-      "width" : "200",
-      "height": "10"
-    },
-    {
-      "x": "250",
-      "y": "200",
-      "width" : "700",
-      "height": "10"
-    },
-    {
-      "x": "1000",
-      "y": "200",
-      "width" : "200",
-      "height": "10"
+      "y": "3455",
+      "width" : "9600",
+      "height": "155",
+      "__name__":"Bottom Floor"
     }
   ],
   "Player":
@@ -49,8 +42,8 @@
     {
       "x": "70",
       "y": "500",
-      "width" : "25",
-      "height": "40"
+      "width" : "175",
+      "height": "280"
     },
     {
       "x": "110",
