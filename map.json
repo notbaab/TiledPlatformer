@@ -37,6 +37,16 @@
       "__name__":"Bottom Floor"
     }
   ],
+  "BackGroundScenery":
+  [
+    {
+      "x": "0",
+      "y": "400",
+      "width" : "300",
+      "height": "155",
+      "__name__":"Top Floor"
+    }
+  ],
   "Player":
   [
     {
@@ -56,30 +66,6 @@
   [],
   "DataDevice":
   [
-    {
-      "x": "140",
-      "y": "610",
-      "width" : "40",
-      "height": "40"
-    },
-    {
-      "x": "1020",
-      "y": "610",
-      "width" : "40",
-      "height": "40"
-    },
-    {
-      "x": "40",
-      "y": "160",
-      "width" : "40",
-      "height": "40"
-    },
-    {
-      "x": "1120",
-      "y": "160",
-      "width" : "40",
-      "height": "40"
-    }
   ],
   "Follower":
   [],
@@ -87,38 +73,14 @@
   [],
   "DataCruncher":
   [
-    {
-      "x": "540",
-      "y": "320",
-      "width" : "120",
-      "height": "100"
-    }
   ], 
   "Desk":
   [
-    {
-      "x": "580",
-      "y": "610",
-      "width" : "40",
-      "height": "40"
-    }
   ],
   "PublishingHouse":
   [
-    {
-      "x": "580",
-      "y": "160",
-      "width" : "40",
-      "height": "40"
-    }
   ],
   "Meeting":
   [
-    {
-      "x": "380",
-      "y": "160",
-      "width" : "40",
-      "height": "40"
-    }
   ]
 }

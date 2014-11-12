@@ -54,17 +54,25 @@ class ClientPlatformer(NetworkGame):
       if constructor == wd.Player:
         print(translate_pos)
         print(game_obj['rect'])
-      # TODO: Send Spritesheet also
       if translate_pos != 0:
-        self.game_objects[game_obj['id']] = constructor(translate_pos[0], translate_pos[1],
-                                                        game_obj['rect'][2], game_obj['rect'][3],
-                                                        sprite_sheet=game_obj['sprite_sheet'], obj_id=game_obj['id'])
+        startx, starty = translate_pos[0], translate_pos[1]
+        to_render = True
       else:
-        self.game_objects[game_obj['id']] = constructor(game_obj['rect'][0], game_obj['rect'][1],
-                                                        game_obj['rect'][2], game_obj['rect'][3],
-                                                        sprite_sheet=game_obj['sprite_sheet'], obj_id=game_obj['id'])
+        startx, starty = game_obj['rect'][0], game_obj['rect'][1]
+        to_render = False
+        
+      if 'sprite_sheet' in game_obj:
+        self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
+                                                        game_obj['rect'][3], 
+                                                        sprite_sheet=game_obj['sprite_sheet'], 
+                                                        obj_id=game_obj['id'])
+      else:
+        self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
+                                                        game_obj['rect'][3], 
+                                                        obj_id=game_obj['id'])
 
-        self.game_objects[game_obj['id']].render = False
+      self.game_objects[game_obj['id']].render = to_render
+
 
     print (self.game_objects)
     self.clear_rects = []

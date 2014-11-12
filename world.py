@@ -2,7 +2,7 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-# import ipdb
+import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
@@ -256,6 +256,10 @@ class MovableGameObject(GameObject):
     :type obj: GameObject
     :param axis: which axis was the player moving along.
     :type axis: String """
+    if isinstance(obj, BackGroundScenery):
+      if axis == 'y':
+        self._handle_background_collision(obj)
+      return
     if axis == 'x':
       if self.velocity.x > 0:
         self.rect.right = obj.rect.left
@@ -268,6 +272,30 @@ class MovableGameObject(GameObject):
       if self.velocity.y < 0:
         self.rect.top = obj.rect.bottom
       self.velocity.y = 0
+
+  def _handle_background_collision(self, obj):
+    """collisions with things that are in the background i.e. things you can
+    jump on but walk through"""
+    # ipdb.set_trace()
+    if self.velocity.y > 0 and self.last_rect.bottom <= obj.rect.top:
+      # only collide going down (rember +y = down)
+      self.rect.bottom = obj.rect.top
+      self.velocity.y = 0  # stop the object
+
+  def update(self):
+    self.last_rect = self.rect.copy()
+
+
+class BackGroundScenery(GameObject):
+  """objects that you can jump on top of but can run through. Think of them as
+  in the background that the play jumps up on. For example a platform in mario. 
+  Doesn't update during gameplay so no need to inherit network object"""
+
+  def __init(self, startx, starty, width, height, obj_id=None):
+    super(BackGroundScenery, self).__init__(startx, starty, width, height, obj_id=obj_id)
+
+  def draw(self, surface):
+    pygame.draw.rect(surface, (128, 0, 128), self.rect, 3)
 
 
 class SimpleScenery(GameObject, AnimateSpriteObject):
@@ -282,8 +310,8 @@ class SimpleScenery(GameObject, AnimateSpriteObject):
 
   def draw(self, surface):
     """Draw the simple scenery object"""
-    if self.dirt_sprite:
-      AnimateSpriteObject.draw(self, surface)
+    # if self.dirt_sprite:
+    #   AnimateSpriteObject.draw(self, surface)
     if self.message_str:
       # message_rect = pygame.Rect(0,0,0,0)
       x = self.rect.centerx
@@ -328,6 +356,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
   def update(self):
     """set velocity to be moved by the physics engine"""
+    MovableGameObject.update(self)
     if self.stunned_timer:
       self.stunned_timer -= 1
       # self.velocity.x = self.stunned_velocity.x
@@ -705,6 +734,7 @@ class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       game_obj.trapper = self
 
   def update(self):
+    MovableGameObject.update(self)
     if self.leader and eng.distance(self.rect, self.leader.rect) < self.site:
       # figure out which direction to move
       if self.leader.rect.centerx - self.rect.centerx > 0:

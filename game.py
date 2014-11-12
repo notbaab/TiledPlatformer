@@ -68,7 +68,7 @@ class MasterPlatformer(object):
       player1 = game_dict['Player'][0]
       player2 = game_dict['Player'][1]
       player1.rect.x = left_side + 1000
-      player2.rect.x = left_side + 200
+      player2.rect.x = left_side + 900
       player1.rect.y = top_side + 200
       player2.rect.y = top_side + 200
       print(player1.rect)
@@ -88,8 +88,10 @@ class MasterPlatformer(object):
     send_struct = {'game_obj': []}
     for game_obj in self.game_objects.values():
       send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
-                            game_obj.rect.height], "id": game_obj.id, "sprite_sheet": game_obj.sprite_sheet,
+                            game_obj.rect.height], "id": game_obj.id,
                    "constructor": type(game_obj).__name__}
+      if hasattr(game_obj,  "sprite_sheet"):
+         send_dict["sprite_sheet"] = game_obj.sprite_sheet
       send_struct['game_obj'].append(send_dict)
 
     data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
@@ -269,8 +271,14 @@ class MasterPlatformer(object):
       print (key)
       constructor = getattr(wd, key)
       for obj_dict in map_json[key]:
-        tmp = constructor(int(obj_dict['x']), int(obj_dict['y']), int(obj_dict['width']),
-                          int(obj_dict['height']), sprite_sheet=asset_json[key])
+        if key not in asset_json:
+          # "invisible object"
+          tmp = constructor(int(obj_dict['x']), int(obj_dict['y']), int(obj_dict['width']),
+                            int(obj_dict['height']))
+          
+        else:
+          tmp = constructor(int(obj_dict['x']), int(obj_dict['y']), int(obj_dict['width']),
+                            int(obj_dict['height']), sprite_sheet=asset_json[key])
         game_objects[tmp.id] = tmp
 
     print(game_objects)
