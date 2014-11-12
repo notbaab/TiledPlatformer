@@ -23,6 +23,9 @@ config = json.load(json_data)
 
 SCREEN_WIDTH = int(config['display_size'][0])
 SCREEN_HEIGHT = int(config['display_size'][1])
+BEZEL_SIZE = 120
+
+
 
 
 class ClientPlatformer(NetworkGame):
@@ -133,6 +136,8 @@ class ClientPlatformer(NetworkGame):
     object is in the nodes area. If so it sets it to render
     :para data: python dict with various game object packets
     :type data: dict"""
+    if 'localhost' in data:
+      self._handle_localhost(data['localhost'])
     update_rects = self.clear(self.clear_rects)
     self.clear_rects = []
     for obj_id in data['deleted_objs']:
@@ -176,9 +181,9 @@ class ClientPlatformer(NetworkGame):
             pos[1] < (self.tile[1]+1)*(self.bezely) and 
         pos[1] >= self.tile[1]*(self.bezely)):
     """
-    if ((self.tile[0] + 1) * SCREEN_WIDTH > pos[0] >= self.tile[0] * SCREEN_WIDTH and
-        (self.tile[1] + 1) * SCREEN_HEIGHT > pos[1] >= self.tile[1] * SCREEN_HEIGHT):
-      translated_pos = [pos[0] - self.tile[0] * SCREEN_WIDTH, + pos[1] - (self.tile[1]) * SCREEN_HEIGHT ]
+    if ((self.tile[0] + 1) * (SCREEN_WIDTH + BEZEL_SIZE) > pos[0] >= self.tile[0] * (SCREEN_WIDTH - BEZEL_SIZE) and
+        (self.tile[1] + 1) * (SCREEN_HEIGHT + BEZEL_SIZE) > pos[1] >= self.tile[1] * (SCREEN_HEIGHT - BEZEL_SIZE)):
+      translated_pos = [pos[0] - self.tile[0] * SCREEN_WIDTH,  pos[1] - (self.tile[1]) * SCREEN_HEIGHT ]
     else:
       translated_pos = 0
     return translated_pos  # , translated_pos_2)
@@ -187,6 +192,22 @@ class ClientPlatformer(NetworkGame):
     """tanstlates the data to the global data """
     pass
 
+  def _handle_localhost(self, tile_packet):
+    """running on local host, some work needs to be done in order to switch screens"""
+    draw_background = False
+    if tile_packet['x'] != self.tile[0]:
+      self.tile[0] = tile_packet['x']
+      draw_background = True
+    if tile_packet['y'] != self.tile[1]:
+      self.tile[1] = tile_packet['y']
+      draw_background = True
+    if draw_background:
+      background_file = "assets/BG" + str(self.tile[0]) + str(self.tile[1]) + ".png"
+      self.background = pygame.image.load(background_file)
+      self.background_rect = self.background.get_rect()
+      self.clear_entire_screen()
+
+
   def draw_grid(self, surface):
     """Dev function to draw the grid space of the display wall"""
     SCREEN_WIDTH = int(config['display_size'][0])
@@ -194,7 +215,7 @@ class ClientPlatformer(NetworkGame):
     pygame.draw.line(surface, color, start_pos, end_pos, width=1)
     grid = [5, 3]
     display_size_x = 200
-    display_size_y = 200
+    display_size_y = 200 
     bezel_x = 30
     bezel_y = 30
     for x in range(grid[0]):

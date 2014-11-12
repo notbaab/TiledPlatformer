@@ -276,7 +276,6 @@ class MovableGameObject(GameObject):
   def _handle_background_collision(self, obj):
     """collisions with things that are in the background i.e. things you can
     jump on but walk through"""
-    # ipdb.set_trace()
     if self.velocity.y > 0 and self.last_rect.bottom <= obj.rect.top:
       # only collide going down (rember +y = down)
       self.rect.bottom = obj.rect.top

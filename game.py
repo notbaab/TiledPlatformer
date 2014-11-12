@@ -178,6 +178,8 @@ class MasterPlatformer(object):
 
     # construct packet
     send_struct = {'state': 'play', 'deleted_objs': [], 'added_objs': []}
+    if network_settings['localhost']:
+      send_struct['localhost'] = self.handle_localhost(game_dict['Player'][0])
 
     # check for objects that have been created and add them to the dict
     for game_obj in self.added:
@@ -221,6 +223,16 @@ class MasterPlatformer(object):
       if isinstance(game_obj, wd.Meeting):
         ret_dict['Meeting'].append(game_obj)
     return ret_dict
+
+  def handle_localhost(self, follow_player):
+    """special function used to handle things like switching the screens when playing on one local host"""
+    # first, find out which tile player one is in. 
+    tile_x = follow_player.rect.centerx / DISPLAY_SIZE['x']
+    tile_y = follow_player.rect.centery / DISPLAY_SIZE['y']
+    return {'x':tile_x, 'y':tile_y}
+    # print(tile_x)
+    # print(tile_y)
+
 
   def add_to_world(self, game_obj):
     self.game_objects[game_obj.id] = game_obj
