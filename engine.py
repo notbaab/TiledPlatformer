@@ -135,8 +135,8 @@ class Engine(object):
         if game_object.rect.colliderect(other_object.rect):
           game_object.respond_to_collision(other_object, 'x')
 
-      game_object.rect.y += game_object.velocity.y
       game_object.velocity.y += GRAVITY_VELOCITY
+      game_object.rect.y += game_object.velocity.y
 
       # Check to make sure the object didn't move off the screen
       if game_object.rect.left < 0:
