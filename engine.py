@@ -130,6 +130,8 @@ class Engine(object):
       for other_object in objects:
         if game_object == other_object:
           continue  # don't do things with itself
+        if not other_object.collision:  # don't interact with things out of the simulation
+          continue
         if game_object.rect.colliderect(other_object.rect):
           game_object.respond_to_collision(other_object, 'x')
 
@@ -150,6 +152,8 @@ class Engine(object):
       for other_object in objects:
         if game_object == other_object:
           continue  # don't do things with itself
+        if not other_object.collision:
+          continue
         if game_object.rect.colliderect(other_object.rect):
           game_object.respond_to_collision(other_object, 'y')
 

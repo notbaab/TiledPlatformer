@@ -3,7 +3,7 @@ from networking import NetworkGame
 import world as wd
 import engine as eng
 import json
-# import ipdb
+import ipdb
 import os
 import os.path
 import random
@@ -37,14 +37,20 @@ class ClientPlatformer(NetworkGame):
       os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (window_coordinates[0], window_coordinates[1])
     pygame.init()
     self.load_time = .01
-
+    
     self.engine = eng.Engine()
     self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), PYGAME_FLAGS)
     self.game_objects = {}
+
     # self.background = pygame.image.load("assets/background" + str(self.tile[0]) + str(self.tile[1]) + ".png")
-    background_file = "assets/BG" + str(self.tile[0]) + str(self.tile[1]) + ".png"
-    if os.path.isfile(background_file):
-      self.background = pygame.image.load(background_file)
+    bg_map_file = open('bg_map.json')
+    self.bg_map = json.load(bg_map_file)
+    bg_map_file.close()
+    bg_file = self.bg_map['dir'] + self.bg_map[str(self.tile[0]) + str(self.tile[1])]
+    print(bg_file)
+    # background_file = "assets/backgrounds/BG" + str(self.tile[0]) + str(self.tile[1]) + ".png"
+    if os.path.isfile(bg_file):
+      self.background = pygame.image.load(bg_file)
     else:
       self.background = pygame.image.load("assets/BG30.png") 
     self.background_rect = self.background.get_rect()
@@ -65,14 +71,29 @@ class ClientPlatformer(NetworkGame):
         to_render = False
         
       if 'sprite_sheet' in game_obj:
-        self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
-                                                        game_obj['rect'][3], 
-                                                        sprite_sheet=game_obj['sprite_sheet'], 
-                                                        obj_id=game_obj['id'])
+        try:
+          
+          self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
+                                                          game_obj['rect'][3], 
+                                                          sprite_sheet=game_obj['sprite_sheet'], 
+                                                          obj_id=game_obj['id'])
+        except Exception, e:
+          ipdb.set_trace()
       else:
-        self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
-                                                        game_obj['rect'][3], 
-                                                        obj_id=game_obj['id'])
+       # if issubclass(constructor, wd.Constructor):
+       #  self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
+       #                                                    game_obj['rect'][3], 
+       #                                                    obj_id=game_obj['id'],)
+       #  else:
+       #    self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
+       #                                                    game_obj['rect'][3], 
+       #                                                    obj_id=game_obj['id'])
+        try:
+          self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
+                                                          game_obj['rect'][3], 
+                                                          obj_id=game_obj['id'])
+        except Exception, e:
+          ipdb.set_trace()
 
       self.game_objects[game_obj['id']].render = to_render
 
@@ -202,8 +223,8 @@ class ClientPlatformer(NetworkGame):
       self.tile[1] = tile_packet['y']
       draw_background = True
     if draw_background:
-      background_file = "assets/BG" + str(self.tile[0]) + str(self.tile[1]) + ".png"
-      self.background = pygame.image.load(background_file)
+      bg_file = self.bg_map['dir'] + self.bg_map[str(self.tile[0]) + str(self.tile[1])]
+      self.background = pygame.image.load(bg_file)
       self.background_rect = self.background.get_rect()
       self.clear_entire_screen()
 

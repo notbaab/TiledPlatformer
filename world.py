@@ -78,7 +78,8 @@ class GameObject(object):
     self.render = True
     self.message_str = None  # info that is displayed above the object
     self.to_del = False
-    self.physics = False  # Does this class need physics?
+    self.physics = False  # Does this class need physics? i.e. movement
+    self.collision = True  # Does this class need collisions
     self.dirt_sprite = True  # only draw sprite if dirty
 
   def update(self):
@@ -230,6 +231,7 @@ class MovableGameObject(GameObject):
     super(MovableGameObject, self).__init__(startx, starty, width, height, obj_id=obj_id)
     self.velocity = eng.Vector(0, 0)
     self.physics = True  # most movable game objects need physics
+    self.last_rect = self.rect.copy()
 
   def move(self, velocity):
     self.velocity = velocity
@@ -297,20 +299,15 @@ class BackGroundScenery(GameObject):
     pygame.draw.rect(surface, (128, 0, 128), self.rect, 3)
 
 
-class SimpleScenery(GameObject, AnimateSpriteObject):
+class SimpleScenery(GameObject):
   """Simple SimpleScenery object. Game objects that are just simple shapes"""
 
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None):
+  def __init__(self, startx, starty, width, height, color=None, obj_id=None):
     super(SimpleScenery, self).__init__(startx, starty, width, height, obj_id=obj_id)
-    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     self.color = color
-    # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
-    self.sprite_sheet = sprite_sheet
 
   def draw(self, surface):
     """Draw the simple scenery object"""
-    # if self.dirt_sprite:
-    #   AnimateSpriteObject.draw(self, surface)
     if self.message_str:
       # message_rect = pygame.Rect(0,0,0,0)
       x = self.rect.centerx
@@ -347,10 +344,13 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.stunned_velocity = eng.Vector(0, 0)
     self.invincible_timer = 0
     self.invincible = False
+    self.jumping = False
+    self.on_ladder = False
+    self.near_ladder = False
 
 
   def jump(self):
-    if not self.trapped and not self.stunned_timer:
+    if not self.trapped and not self.stunned_timer and not self.jumping:
       self.velocity.y = JUMP_VELOCITY
 
   def update(self):
@@ -401,6 +401,9 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
   def move(self, direction):
     """sets move to the direction passed in"""
+    if self.on_ladder:
+      self.do_ladder_things()
+      return  # Don't move to the side while on ladder
     self.direction = direction
     self.moving = True
     self.change_animation('moving')
@@ -437,6 +440,15 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       if isinstance(game_obj, DataDevice):
         if eng.distance(self.rect, game_obj.rect) < self.interact_dist:
           game_obj.interact(self)
+
+  def do_ladder_things(game_obj):
+    if self.rect.colliderect(game_obj.rect):
+      if self.on_ladder:
+        self.on_ladder = False
+      else:
+        self.on_ladder = True
+
+
 
   def draw(self, surface):
     """Draws the player object onto surface
@@ -524,20 +536,20 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       self.change_animation('moving')
 
 
-class DataDevice(SimpleScenery, Constructor, AnimateSpriteObject, NetworkedObject):
+class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
   """Devices that are scenery, but output data when interacted with"""
 
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, game=None):
-    super(DataDevice, self).__init__(startx, starty, width, height, color, obj_id=obj_id, sprite_sheet=sprite_sheet)
+  def __init__(self, startx, starty, width, height, color=None, obj_id=None, game=None):
+    BackGroundScenery.__init__(self, startx, starty, width, height, obj_id=obj_id)
     Constructor.__init__(self, game)
-    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     NetworkedObject.__init__(self, ['rect', 'id', 'timer', 'message_str'])
     self.timer = None
     self.color = color
     self.data = None
+    self.collision = False  # for now, only interaction comes with explicit buttons
 
   def generate_data(self):
-    game_obj = Data(20, 20, 10, 10)
+    game_obj = Data(20, 20, 40, 40)
     print(game_obj)
     game_obj.rect.centerx = self.rect.centerx
     game_obj.rect.bottom = self.rect.top
@@ -552,7 +564,7 @@ class DataDevice(SimpleScenery, Constructor, AnimateSpriteObject, NetworkedObjec
 
 
   def draw(self, surface):
-    SimpleScenery.draw(self, surface)  # SimpleScenery.draw
+    BackGroundScenery.draw(self, surface)  # SimpleScenery.draw
     if self.timer:
       outline_rect = pygame.Rect(0, 0, TIMER_WIDTH, 20)
       outline_rect.centerx = self.rect.centerx
@@ -587,10 +599,10 @@ class DataDevice(SimpleScenery, Constructor, AnimateSpriteObject, NetworkedObjec
 class DataCruncher(DataDevice):
   """Second stage of collecting data"""
 
-  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=1,
+  def __init__(self, startx, starty, width, height, accept_stage=1, amount_data_needed=1,
                concurrent_data=1, obj_id=None,
                game=None):
-    super(DataCruncher, self).__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
+    super(DataCruncher, self).__init__(startx, starty, width, height, obj_id=obj_id, game=None)
     # Constructor.__init__(self, game)
     self.accept_stage = accept_stage
     self.amount_data_needed = amount_data_needed
@@ -629,9 +641,9 @@ class DataCruncher(DataDevice):
 class Desk(DataDevice):
   """Where the player will sit and write the paper after collecting data"""
 
-  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, obj_id=None,
+  def __init__(self, startx, starty, width, height, accept_stage=1, obj_id=None,
                game=None):
-    super(Desk, self).__init__(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id, game=None)
+    super(Desk, self).__init__(startx, starty, width, height, obj_id=obj_id, game=None)
     self.player = None
 
   def update(self):
@@ -668,9 +680,9 @@ class Desk(DataDevice):
 class PublishingHouse(DataCruncher):
   """Where the player brings the final paper"""
 
-  def __init__(self, startx, starty, width, height, sprite_sheet, accept_stage=1, amount_data_needed=1,
+  def __init__(self, startx, starty, width, height, accept_stage=1, amount_data_needed=1,
                concurrent_data=1, obj_id=None, game=None):
-    super(PublishingHouse, self).__init__(startx, starty, width, height, sprite_sheet, accept_stage=accept_stage,
+    super(PublishingHouse, self).__init__(startx, starty, width, height, accept_stage=accept_stage,
                      amount_data_needed=amount_data_needed, concurrent_data=concurrent_data,
                      obj_id=obj_id, game=game)
 
@@ -813,9 +825,8 @@ class Patroller(Follower):
 class Meeting(SimpleScenery, NetworkedObject):
   """A meeting trap that will pull the players into at a certain range"""
 
-  def __init__(self, startx, starty, width, height, sprite_sheet, obj_id=None):
-    SimpleScenery.__init__(self, startx, starty, width, height, sprite_sheet=sprite_sheet,
-                           obj_id=obj_id)
+  def __init__(self, startx, starty, width, height, obj_id=None):
+    SimpleScenery.__init__(self, startx, starty, width, height, obj_id=obj_id)
     NetworkedObject.__init__(self, ['rect', 'id', 'timer', 'message_str'])
     self.pulling_player = None
     self.timer = None
@@ -877,3 +888,31 @@ class Meeting(SimpleScenery, NetworkedObject):
       self.timer += MEETING_TIMER
       if self.timer >= 1:
         self.timer = None
+
+
+def Portal(GameObject):
+  """a special object that contains a pointer to another portal object, creating a 
+  link in gamespace bewteen the two"""
+
+def Laddder(GameObject):
+  """Simple ladder object"""
+  def __init__(self, startx, starty, width, height, obj_id=None):
+    super(Laddder, self)
+
+  def pull_event(self, player, **kwargs):
+    """a function to give the player"""
+    # distance = kwargs['distance']
+    distance = eng.distance(self.rect, player.rect)
+    if self.rect.x >= player.rect.x:
+      # on the right side of it, pull to the right
+      if not player.moving or distance < MEETING_EVENT_HORIZON:
+        pull_velocity = MEETING_PULL
+      else:
+        pull_velocity = player.direction * PLAYER_SPEED + MEETING_PULL
+    elif self.rect.x < player.rect.x:
+      # on the left side of it, pull to the left
+      if not player.moving or distance < MEETING_EVENT_HORIZON:
+        pull_velocity = -MEETING_PULL
+      else:
+        pull_velocity = player.direction * PLAYER_SPEED - MEETING_PULL
+    player.velocity.x = pull_velocity

@@ -1,6 +1,6 @@
 import pygame
 import sys
-# import ipdb
+import ipdb
 from pygame.locals import *
 import world as wd
 import engine as eng
@@ -271,6 +271,9 @@ class MasterPlatformer(object):
 
   def load_map(self):
     global config
+    """this function is stupid as shit. I hope you look back at this and feel 
+    bad about how awful you approached this. You deserve to feel bad for writing it 
+    like this."""
     # load map
     game_objects = {}
 
@@ -282,19 +285,48 @@ class MasterPlatformer(object):
     for key in map_json:
       print (key)
       constructor = getattr(wd, key)
+      # try:
       for obj_dict in map_json[key]:
+        if key == "Portal":
+          self.handle_portal(obj_dict, game_objects)
+          continue
+        if "tile" in obj_dict:
+          # tranlate the x and y coordinates
+          x, y = self.translate_to_tile(obj_dict['tile'][0], int(obj_dict['x']),
+                                        obj_dict['tile'][1], int(obj_dict['y']))
+        else:
+          print("nope")
+          x, y = int(obj_dict['x']), int(obj_dict['y'])
         if key not in asset_json:
           # "invisible object"
-          tmp = constructor(int(obj_dict['x']), int(obj_dict['y']), int(obj_dict['width']),
-                            int(obj_dict['height']))
-          
+          if issubclass(constructor, wd.Constructor):
+
+            tmp = constructor(x, y, int(obj_dict['width']),
+                              int(obj_dict['height']), game=self)
+          else:
+            tmp = constructor(x, y, int(obj_dict['width']),
+                              int(obj_dict['height']))
+            
+
         else:
-          tmp = constructor(int(obj_dict['x']), int(obj_dict['y']), int(obj_dict['width']),
+          tmp = constructor(x, y, int(obj_dict['width']),
                             int(obj_dict['height']), sprite_sheet=asset_json[key])
         game_objects[tmp.id] = tmp
-
+      # except Exception, e:
+      #   ipdb.set_trace()
     print(game_objects)
     return game_objects
+
+  def handle_portal(self, game_objects):
+    """portals are specail objects that need to be created two at a time and
+    have there own setting structure"""
+    return
+
+  def translate_to_tile(self, tile_x, pos_x, tile_y, pos_y):
+    x = int(tile_x) * DISPLAY_SIZE['x'] + pos_x
+    y = int(tile_y) * DISPLAY_SIZE['y'] + pos_y
+    print(x, y)
+    return x, y
 
 if __name__ == '__main__':
   print(sys.argv)
