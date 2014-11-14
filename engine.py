@@ -3,7 +3,7 @@ import math
 import world as wd
 import random
 import pygame
-# import ipdb
+import ipdb
 import pprint
 
 LOCAL = True
@@ -116,6 +116,8 @@ class Engine(object):
     # TODO: a neat (and possibly needed) optimization would be to track which objects are players
     # and to create  a near objects list that the player will check when doing interactions3
     for game_object in objects:
+      # if isinstance(game_object, wd.Player):
+      #   ipdb.set_trace()
       skip = False
       if not game_object.physics:
         continue

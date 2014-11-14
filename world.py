@@ -232,6 +232,7 @@ class MovableGameObject(GameObject):
     self.velocity = eng.Vector(0, 0)
     self.physics = True  # most movable game objects need physics
     self.last_rect = self.rect.copy()
+    self.on_ground = True
 
   def move(self, velocity):
     self.velocity = velocity
@@ -271,6 +272,7 @@ class MovableGameObject(GameObject):
     if axis == 'y':
       if self.velocity.y > 0:
         self.rect.bottom = obj.rect.top
+        self.on_ground = True
       if self.velocity.y < 0:
         self.rect.top = obj.rect.bottom
       self.velocity.y = 0
@@ -278,13 +280,19 @@ class MovableGameObject(GameObject):
   def _handle_background_collision(self, obj):
     """collisions with things that are in the background i.e. things you can
     jump on but walk through"""
-    if self.velocity.y > 0 and self.last_rect.bottom <= obj.rect.top:
+    # if not self.on_ground:
+    #   ipdb.set_trace()
+    if self.velocity.y >= 0 and self.last_rect.bottom <= obj.rect.top:
       # only collide going down (rember +y = down)
       self.rect.bottom = obj.rect.top
       self.velocity.y = 0  # stop the object
+      self.on_ground = True
 
   def update(self):
     self.last_rect = self.rect.copy()
+    if self.velocity.y != 0:
+      # no longer on ground 
+      self.on_ground = False
 
 
 class BackGroundScenery(GameObject):
@@ -350,7 +358,9 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
 
   def jump(self):
-    if not self.trapped and not self.stunned_timer and not self.jumping:
+    print(self.on_ground)
+    if not self.trapped and not self.stunned_timer and self.on_ground:
+      self.jumping = True
       self.velocity.y = JUMP_VELOCITY
 
   def update(self):
@@ -361,6 +371,8 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       # self.velocity.x = self.stunned_velocity.x
     elif not self.movement_event and self.moving and not self.trapped:
       self.velocity.x = self.direction * PLAYER_SPEED
+    if self.jumping:  # do things that involve jumping
+      self.jumping = False
     if self.invincible_timer:
       self.invincible_timer -= 1
     else:

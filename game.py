@@ -66,13 +66,13 @@ class MasterPlatformer(object):
       top_side = DISPLAY_SIZE["y"] * int(network_settings["y"])
       game_dict = self.structured_list()  # 
       player1 = game_dict['Player'][0]
-      player2 = game_dict['Player'][1]
+      # player2 = game_dict['Player'][1]
       player1.rect.x = left_side + 1000
-      player2.rect.x = left_side + 900
+      # player2.rect.x = left_side + 900
       player1.rect.y = top_side + 200
-      player2.rect.y = top_side + 200
+      # player2.rect.y = top_side + 200
       print(player1.rect)
-      print(player2.rect)
+      # print(player2.rect)
 
     else:  
       # ip_list
@@ -126,7 +126,7 @@ class MasterPlatformer(object):
   def play_frame(self):
     game_dict = self.structured_list()  # Structure the game object list to manage easier. n time should be fast
     player1 = game_dict['Player'][0]
-    player2 = game_dict['Player'][1]
+    # player2 = game_dict['Player'][1]
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         self.quit()
@@ -166,8 +166,8 @@ class MasterPlatformer(object):
           player2.stop_right()
 
     self.engine.physics_simulation(self.game_objects.values(), [wd.SimpleScenery])
-
     self.engine.map_attribute_flat(self.game_objects.values(), 'update')
+
     self.engine.map_attribute_flat(self.game_objects.values(), 'animate')
 
     # update the AI after the players have been updated
@@ -227,8 +227,8 @@ class MasterPlatformer(object):
   def handle_localhost(self, follow_player):
     """special function used to handle things like switching the screens when playing on one local host"""
     # first, find out which tile player one is in. 
-    tile_x = int(follow_player.rect.centerx / DISPLAY_SIZE['x'])
-    tile_y = int(follow_player.rect.centery / DISPLAY_SIZE['y'])
+    tile_x = follow_player.rect.centerx / DISPLAY_SIZE['x']
+    tile_y = follow_player.rect.centery / DISPLAY_SIZE['y']
     return {'x':tile_x, 'y':tile_y}
     # print(tile_x)
     # print(tile_y)
