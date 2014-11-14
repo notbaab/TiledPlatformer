@@ -227,8 +227,8 @@ class MasterPlatformer(object):
   def handle_localhost(self, follow_player):
     """special function used to handle things like switching the screens when playing on one local host"""
     # first, find out which tile player one is in. 
-    tile_x = follow_player.rect.centerx / DISPLAY_SIZE['x']
-    tile_y = follow_player.rect.centery / DISPLAY_SIZE['y']
+    tile_x = int(follow_player.rect.centerx / DISPLAY_SIZE['x'])
+    tile_y = int(follow_player.rect.centery / DISPLAY_SIZE['y'])
     return {'x':tile_x, 'y':tile_y}
     # print(tile_x)
     # print(tile_y)
