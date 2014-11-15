@@ -123,8 +123,7 @@ class MasterPlatformer(object):
     # clients handle the load state so wait for their response and play the game
     return self.serialize_and_sync(send_struct)
 
-  def play_frame(self):
-    game_dict = self.structured_list()  # Structure the game object list to manage easier. n time should be fast
+  def handle_keypress(self, game_dict):
     player1 = game_dict['Player'][0]
     # player2 = game_dict['Player'][1]
     for event in pygame.event.get():
@@ -142,9 +141,13 @@ class MasterPlatformer(object):
           player1.move_right()
           player1.escape(2)
         elif event.key == K_UP:
-          player1.jump()
+          player1.up_interact(game_dict['ClimableObject'])
         elif event.key == K_t:
           player1.throw_data()
+        elif event.key == K_z:
+          player1.jump()
+        
+        # player2
         elif event.key == K_a:
           player2.move_left()
           player2.escape(1)
@@ -164,6 +167,12 @@ class MasterPlatformer(object):
           player2.stop_left()
         elif event.key == K_d:
           player2.stop_right()
+
+  def play_frame(self):
+    game_dict = self.structured_list()  # Structure the game object list to manage easier. n time should be fast
+    self.handle_keypress(game_dict)
+    # player1 = game_dict['Player'][0]
+    # player2 = game_dict['Player'][1]
 
     self.engine.physics_simulation(self.game_objects.values(), [wd.SimpleScenery])
     self.engine.map_attribute_flat(self.game_objects.values(), 'update')
@@ -208,7 +217,7 @@ class MasterPlatformer(object):
     objects. An object can be added to multiple lists if it is multiple things i.e.
     a player is a movable game object"""
     ret_dict = {'AI': [], 'StaticObject': [], 'Player': [], 'MovableGameObject': [],
-                'NetworkedObject': [], 'Meeting': []}
+                'NetworkedObject': [], 'Meeting': [], 'ClimableObject': []}
     for game_obj in self.game_objects.values():
       if isinstance(game_obj, wd.Player):
         ret_dict['Player'].append(game_obj)
@@ -220,6 +229,8 @@ class MasterPlatformer(object):
         ret_dict['MovableGameObject'].append(game_obj)
       if isinstance(game_obj, wd.NetworkedObject):
         ret_dict['NetworkedObject'].append(game_obj)
+      if isinstance(game_obj, wd.ClimableObject):
+        ret_dict['ClimableObject'].append(game_obj)
       if isinstance(game_obj, wd.Meeting):
         ret_dict['Meeting'].append(game_obj)
     return ret_dict
@@ -285,6 +296,7 @@ class MasterPlatformer(object):
     for key in map_json:
       print (key)
       constructor = getattr(wd, key)
+      print(constructor)
       # try:
       for obj_dict in map_json[key]:
         if key == "Portal":

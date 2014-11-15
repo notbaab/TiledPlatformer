@@ -184,14 +184,6 @@
       "tile":["3","1"]
     },
     {
-      "x":      "1590",
-      "y":      "526",
-      "width" : "158",
-      "height": "682",
-      "__name__":"Ladder",
-      "tile":["3","1"]
-    },
-    {
       "x":      "230",
       "y":      "0",
       "width" : "152",
@@ -432,17 +424,30 @@
     {
       "x": "822",
       "y": "722",
-      "width" : "696",
-      "height": "318",
+      "width" : "50",
+      "height": "50",
       "__name__":"Meeting",
       "tile":["1","1"]
     },
     {
       "x":      "436",
       "y":      "688",
-      "width" : "696",
-      "height": "376",
+      "width" : "50",
+      "height": "50",
       "__name__":"Meeting",
+      "tile":["3","1"]
+    }
+  ],
+  "ClimableObject":
+  [
+    {
+      "x":      "1590",
+      "y":      "526",
+      "width" : "158",
+      "height": "682",
+      "start" : ["bottom"],
+      "end"   : ["top"],
+      "__name__":"Ladder",
       "tile":["3","1"]
     }
   ]

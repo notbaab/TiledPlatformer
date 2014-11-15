@@ -29,6 +29,7 @@ STUN_VELOCITY_WINNER = eng.Vector(5, -10)
 STUN_WINNER_TIMER = 10
 STUN_LOSER_TIMER = 20
 LEFT_FRAME_ID = 'l_'
+LADDER_CLIMB_SPEED = eng.Vector(0, -10)
 
 
 def draw_message(x, bottom, message, window):
@@ -355,6 +356,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.jumping = False
     self.on_ladder = False
     self.near_ladder = False
+    self.climbing = False
 
 
   def jump(self):
@@ -362,6 +364,25 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     if not self.trapped and not self.stunned_timer and self.on_ground:
       self.jumping = True
       self.velocity.y = JUMP_VELOCITY
+
+  def up_interact(self, climable_objects):
+    """Player pressed up so may be attempting to climb something"""
+    for game_obj in climable_objects:
+      # Check if the center of the player is inbwteen the left and right coordinates
+      if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and 
+          game_obj.rect.top < self.rect.centery < game_obj.rect.bottom):
+         # On ladder, turn off physics
+         self.physics = False
+         self.on_ladder = True
+         self.climbing = True
+         self.ladder = game_obj
+         self.rect.centerx = self.ladder.rect.centerx
+         print("in ladder")
+         print(game_obj.rect)
+         print(game_obj)
+         print(self.rect)
+         break
+
 
   def update(self):
     """set velocity to be moved by the physics engine"""
@@ -377,6 +398,10 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       self.invincible_timer -= 1
     else:
       self.invincible = False
+    if self.climbing:
+      self.handle_ladddery_things()
+      # self.rect.y += self.ladder.climb_speed.y
+
 
   def escape(self, direction):
     """mash a button to escape students"""
@@ -453,12 +478,16 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
         if eng.distance(self.rect, game_obj.rect) < self.interact_dist:
           game_obj.interact(self)
 
-  def do_ladder_things(game_obj):
-    if self.rect.colliderect(game_obj.rect):
-      if self.on_ladder:
-        self.on_ladder = False
-      else:
-        self.on_ladder = True
+  def handle_ladddery_things(self):
+    self.rect.y += self.ladder.climb_speed.y
+    if self.rect.bottom <= self.ladder.top:
+      self.last_rect = self.rect.copy()
+      self.last_rect.bottom = self.ladder.top - 1  # this is the most hacked thing I've ever done ever
+      # at the top
+      self.rect.bottom = self.ladder.top
+      self.physics = True
+      self.on_ladder = False
+      self.climbing = False
 
 
 
@@ -906,25 +935,34 @@ def Portal(GameObject):
   """a special object that contains a pointer to another portal object, creating a 
   link in gamespace bewteen the two"""
 
-def Laddder(GameObject):
+class ClimableObject(BackGroundScenery):
   """Simple ladder object"""
-  def __init__(self, startx, starty, width, height, obj_id=None):
-    super(Laddder, self)
+  def __init__(self, startx, starty, width, height, obj_id=None, clim_type='Vertical'):
+    BackGroundScenery.__init__(self, startx, starty, width, height, obj_id=obj_id)
+    if clim_type == 'Vertical':
+      # ladder set the start and end points to the top and bottom
+      self.top = self.rect.top
+      self.bottom = self.rect.bottom
+      self.climb_speed = LADDER_CLIMB_SPEED
 
-  def pull_event(self, player, **kwargs):
-    """a function to give the player"""
-    # distance = kwargs['distance']
-    distance = eng.distance(self.rect, player.rect)
-    if self.rect.x >= player.rect.x:
-      # on the right side of it, pull to the right
-      if not player.moving or distance < MEETING_EVENT_HORIZON:
-        pull_velocity = MEETING_PULL
-      else:
-        pull_velocity = player.direction * PLAYER_SPEED + MEETING_PULL
-    elif self.rect.x < player.rect.x:
-      # on the left side of it, pull to the left
-      if not player.moving or distance < MEETING_EVENT_HORIZON:
-        pull_velocity = -MEETING_PULL
-      else:
-        pull_velocity = player.direction * PLAYER_SPEED - MEETING_PULL
-    player.velocity.x = pull_velocity
+  def draw(self, surface):
+     pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+
+
+  # def pull_event(self, player, **kwargs):
+  #   """a function to give the player"""
+  #   # distance = kwargs['distance']
+  #   distance = eng.distance(self.rect, player.rect)
+  #   if self.rect.x >= player.rect.x:
+  #     # on the right side of it, pull to the right
+  #     if not player.moving or distance < MEETING_EVENT_HORIZON:
+  #       pull_velocity = MEETING_PULL
+  #     else:
+  #       pull_velocity = player.direction * PLAYER_SPEED + MEETING_PULL
+  #   elif self.rect.x < player.rect.x:
+  #     # on the left side of it, pull to the left
+  #     if not player.moving or distance < MEETING_EVENT_HORIZON:
+  #       pull_velocity = -MEETING_PULL
+  #     else:
+  #       pull_velocity = player.direction * PLAYER_SPEED - MEETING_PULL
+  #   player.velocity.x = pull_velocity
