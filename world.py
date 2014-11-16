@@ -2,7 +2,7 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-# import ipdb
+import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
@@ -638,6 +638,16 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     if not self.timer:  # only allow one timer at a time
       self.timer = timer
 
+  def load_effects(self, effect_name, effect_json):
+    """load the effects for this data object and return effects loaded"""
+    # print(effect_name)
+    # print(effect_json)
+    print(self)
+    animation_dict_blue = effect_json[effect_name +'-Blue']
+    animation_dict_red = effect_json[effect_name +'-Red']
+    blue = Effect(self.rect.x, self.rect.y, 50, 50, animation_dict_blue)
+    red = Effect(self.rect.x+40, self.rect.y, 50, 50, animation_dict_red)
+    return blue, red
 
   def draw(self, surface):
     BackGroundScenery.draw(self, surface)  # SimpleScenery.draw
@@ -982,6 +992,53 @@ class ClimableObject(BackGroundScenery):
 
   def draw(self, surface):
      pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+
+class Stairs(GameObject):
+  def __init__(self, startx, starty, width, height, obj_id=None):
+    GameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
+    self.collision = False
+
+  def make_stairs(self, orientation):
+    if orientation == 'right':
+      bottom = self.rect.left, self.rect.bottom
+      top = self.rect.right, self.rect.top 
+    else:
+      bottom = self.rect.left, self.rect.bottom
+      top = self.rect.right, self.rect.top 
+    return self.__make_steps(12, bottom, top)
+
+  def __make_steps(self, num_of_steps, bottom, top, width=102, height=36):
+    self.steps = []
+    total_height = bottom[1] - top[1] 
+    height_space = total_height / num_of_steps
+    height_padding = height_space - height
+    total_width = abs(bottom[0] - top[0]) 
+    width_padding = total_width / num_of_steps
+    for x in range(0, num_of_steps):
+      startx = x * width_padding + bottom[0]
+      starty = bottom[1] - ((x+1)*height + (x+1)*height_padding)
+      self.steps.append(Step(startx, starty, width, height))
+    # ipdb.set_trace()
+    return self.steps
+
+  def draw(self, surface):
+     pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+
+class Step(BackGroundScenery):
+
+  def __init__(self, startx, starty, widht, height, obj_id=None):
+    BackGroundScenery.__init__(self, startx, starty, widht, height)
+    
+  def draw(self, surface):
+     pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+
+  def set_above_stair(self, next_stair):
+    self.next_stair = next_stair
+
+  def set_previous_stair(self, prev_stair):
+    self.prev_stair = prev_stair
+
+
 
 
 class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
