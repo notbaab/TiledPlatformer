@@ -456,8 +456,8 @@
     {
       "x":      "1590",
       "y":      "426",
-      "width" : "50",
-      "height": "50",
+      "width" : "100",
+      "height": "100",
       "__name__":"Timer-Monitor",
       "effect_name":"Timer-Monitor(Blue)",
       "tile":["3","1"]

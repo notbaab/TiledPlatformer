@@ -5,7 +5,7 @@ import json
 import socket
 import sys
 
-json_file = open('network_settings.json', "r+")
+json_file = open('network_settings.json', "r")
 network_settings = json.load(json_file)
 my_ip_address = ''
 
@@ -13,13 +13,16 @@ if network_settings['localhost'] == "True":
   if len(sys.argv) != 3:
     print ("Network_settings curretly set to localhost, need an x and a y argument. Run `python render_node.py x y")
     sys.exit()
+  json_file.close()  # reopen with write permission
+  json_file = open('network_settings.json', "r+")
   xindx = int(sys.argv[1])
   yindx = int(sys.argv[2])
   json_file.seek(0)  # lazy pass to game.py
   data = {"localhost": "True", "x":str(xindx), "y":str(yindx)}
   json.dump(data, json_file)
-  json_file.close()
   my_ip_address = 'localhost'
+
+json_file.close()
 
 # TODO: Figure out tile location based on hostname
 if __name__ == '__main__':

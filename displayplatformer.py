@@ -3,7 +3,7 @@ from networking import NetworkGame
 import world as wd
 import engine as eng
 import json
-import ipdb
+# import ipdb
 import os
 import os.path
 import random
@@ -140,7 +140,7 @@ class ClientPlatformer(NetworkGame):
       #   if isinstance(game_obj, wd.SimpleScenery):
       #     game_obj.draw(self.window)
       #     game_obj.dirt_sprite = False  # DOn't draw again unless it moves
-      # pygame.display.flip()
+      pygame.display.flip()
       return {'state':'play'} 
     obj_on_screen = [game_obj for game_obj in self.game_objects.values() if game_obj.render]
     self.engine.load_animation(obj_on_screen, self.background, self.window)
