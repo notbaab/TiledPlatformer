@@ -1,6 +1,0 @@
-These should be placed and sized so that they fit over the red circles on the BG
-image (marked A and B respectively).
-
-Spin as desired.
-
-Repeat on all three tape drives.

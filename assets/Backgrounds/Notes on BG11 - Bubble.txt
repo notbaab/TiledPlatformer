@@ -1,3 +1,0 @@
-Small bubble popping animation. Scatter
-several small ones above the chemicals
-in the lab. Place as many as desired.

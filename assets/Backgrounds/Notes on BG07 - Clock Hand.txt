@@ -1,5 +1,0 @@
-Simple spinning clock hand sprite.
-
-Scale and place on clock face to your
-liking. Double up and scale down for
-hour hand and animate at a slower rate.
