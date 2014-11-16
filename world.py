@@ -2,7 +2,7 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-import ipdb
+# import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
@@ -29,7 +29,7 @@ STUN_VELOCITY_WINNER = eng.Vector(5, -10)
 STUN_WINNER_TIMER = 10
 STUN_LOSER_TIMER = 20
 LEFT_FRAME_ID = 'l_'
-LADDER_CLIMB_SPEED = eng.Vector(0, -10)
+LADDER_CLIMB_SPEED = eng.Vector(0, 10)
 
 
 def draw_message(x, bottom, message, window):
@@ -110,7 +110,7 @@ class AnimateSpriteObject(object):
   """a stand alone object that allows the inherited game object to have animation 
   sprites"""
 
-  def __init__(self, animation_dict, des_width, des_height):
+  def __init__(self, animation_dict, des_width, des_height, start_animation='idle'):
     """Initilize all the frames of the animated sprite object
     :param animation_dict: a dictionary that is keyed on the name of the animation. The dictionary 
     contains a tuple pair, with the name of the file at [0] and the number of frames of the sprite sheet
@@ -137,7 +137,7 @@ class AnimateSpriteObject(object):
       self.sprite_sheets[left_animation] = pygame.transform.flip(self.sprite_sheets[animation_name], 1, 0)
       self.animation_frames[left_animation] = self.animation_frames[animation_name][::-1]
 
-    self.current_animation = 'idle'
+    self.current_animation = start_animation
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
     self.current_frame = next(self.current_cycle)
     self.animation_time = 3
@@ -356,7 +356,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.jumping = False
     self.on_ladder = False
     self.near_ladder = False
-    self.climbing = False
+    self.climbing = 0  # climbing modifier 1 for DOWN, -1 for up
 
 
   def jump(self):
@@ -367,6 +367,9 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
   def up_interact(self, climable_objects):
     """Player pressed up so may be attempting to climb something"""
+    if self.on_ladder:
+      self.climbing = -1
+      return
     for game_obj in climable_objects:
       # Check if the center of the player is inbwteen the left and right coordinates
       if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and 
@@ -374,7 +377,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
          # On ladder, turn off physics
          self.physics = False
          self.on_ladder = True
-         self.climbing = True
+         self.climbing = -1
          self.ladder = game_obj
          self.rect.centerx = self.ladder.rect.centerx
          print("in ladder")
@@ -383,6 +386,30 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
          print(self.rect)
          break
 
+  def down_interact(self, climable_objects):
+    """Player pressed up so may be attempting to climb something"""
+    if self.on_ladder:
+      self.climbing = 1
+      return
+    for game_obj in climable_objects:
+      # Check if the center of the player is inbwteen the left and right coordinates
+      if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and 
+         (game_obj.rect.top < self.rect.centery < game_obj.rect.bottom or 
+          game_obj.rect.top == self.rect.bottom)) :
+         # On ladder, turn off physics
+         self.physics = False
+         self.on_ladder = True
+         self.climbing = 1
+         self.ladder = game_obj
+         self.rect.centerx = self.ladder.rect.centerx
+         print("in ladder")
+         print(game_obj.rect)
+         print(game_obj)
+         print(self.rect)
+         break
+
+  def cancel_up_down_interact(self):
+    self.climbing = 0
 
   def update(self):
     """set velocity to be moved by the physics engine"""
@@ -439,8 +466,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def move(self, direction):
     """sets move to the direction passed in"""
     if self.on_ladder:
-      self.do_ladder_things()
-      return  # Don't move to the side while on ladder
+      self._turn_physics_on()  # cancel being on ladder so we can move
     self.direction = direction
     self.moving = True
     self.change_animation('moving')
@@ -479,15 +505,22 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
           game_obj.interact(self)
 
   def handle_ladddery_things(self):
-    self.rect.y += self.ladder.climb_speed.y
-    if self.rect.bottom <= self.ladder.top:
+    self.rect.y += (self.ladder.climb_speed.y * self.climbing)
+    if self.rect.bottom <= self.ladder.top:  # hit the top
       self.last_rect = self.rect.copy()
       self.last_rect.bottom = self.ladder.top - 1  # this is the most hacked thing I've ever done ever
       # at the top
       self.rect.bottom = self.ladder.top
+      self._turn_physics_on()
+    elif self.rect.bottom >= self.ladder.bottom:
+      self.rect.bottom = self.ladder.bottom
+      self._turn_physics_on()
+
+  def _turn_physics_on(self):
       self.physics = True
       self.on_ladder = False
       self.climbing = False
+    
 
 
 
@@ -949,20 +982,20 @@ class ClimableObject(BackGroundScenery):
      pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
 
 
-  # def pull_event(self, player, **kwargs):
-  #   """a function to give the player"""
-  #   # distance = kwargs['distance']
-  #   distance = eng.distance(self.rect, player.rect)
-  #   if self.rect.x >= player.rect.x:
-  #     # on the right side of it, pull to the right
-  #     if not player.moving or distance < MEETING_EVENT_HORIZON:
-  #       pull_velocity = MEETING_PULL
-  #     else:
-  #       pull_velocity = player.direction * PLAYER_SPEED + MEETING_PULL
-  #   elif self.rect.x < player.rect.x:
-  #     # on the left side of it, pull to the left
-  #     if not player.moving or distance < MEETING_EVENT_HORIZON:
-  #       pull_velocity = -MEETING_PULL
-  #     else:
-  #       pull_velocity = player.direction * PLAYER_SPEED - MEETING_PULL
-  #   player.velocity.x = pull_velocity
+class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
+  """Effect objects. Just a simple object that doesn't interact with anything,
+  its just a sprite that gets sent over the network and is told to stop or start"""
+  def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, total_time=120):
+    GameObject.__init__(self, startx, starty, width, height)
+    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
+    NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id',
+                                      'render'])
+    self.sprite_sheet = sprite_sheet
+    # total time is in frames cause I'm bad at time.
+    self.animation_time = total_time / len(self.animation_frames[self.current_animation])
+
+  
+
+
+
+

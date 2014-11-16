@@ -1,6 +1,6 @@
 import pygame
 import sys
-import ipdb
+# import ipdb
 from pygame.locals import *
 import world as wd
 import engine as eng
@@ -142,6 +142,8 @@ class MasterPlatformer(object):
           player1.escape(2)
         elif event.key == K_UP:
           player1.up_interact(game_dict['ClimableObject'])
+        elif event.key == K_DOWN:
+          player1.down_interact(game_dict['ClimableObject'])
         elif event.key == K_t:
           player1.throw_data()
         elif event.key == K_z:
@@ -165,6 +167,10 @@ class MasterPlatformer(object):
           player1.stop_right()
         elif event.key == K_a:
           player2.stop_left()
+        elif event.key == K_UP:
+          player1.cancel_up_down_interact()
+        elif event.key == K_DOWN:
+          player1.cancel_up_down_interact()
         elif event.key == K_d:
           player2.stop_right()
 
@@ -217,7 +223,8 @@ class MasterPlatformer(object):
     objects. An object can be added to multiple lists if it is multiple things i.e.
     a player is a movable game object"""
     ret_dict = {'AI': [], 'StaticObject': [], 'Player': [], 'MovableGameObject': [],
-                'NetworkedObject': [], 'Meeting': [], 'ClimableObject': []}
+                'NetworkedObject': [], 'Meeting': [], 'ClimableObject': [],
+                'Effect':[]}
     for game_obj in self.game_objects.values():
       if isinstance(game_obj, wd.Player):
         ret_dict['Player'].append(game_obj)
@@ -225,6 +232,8 @@ class MasterPlatformer(object):
         ret_dict['StaticObject'].append(game_obj)
       elif isinstance(game_obj, wd.Follower):
         ret_dict['AI'].append(game_obj)
+      elif isinstance(game_obj, wd.Effect):
+        ret_dict['Effect'].append(game_obj)
       if isinstance(game_obj, wd.MovableGameObject):
         ret_dict['MovableGameObject'].append(game_obj)
       if isinstance(game_obj, wd.NetworkedObject):
@@ -290,6 +299,7 @@ class MasterPlatformer(object):
 
     map_json = self.engine.parse_json(config['global_map_file'])
     asset_json = self.engine.parse_json(config['asset_file'])
+    effect_json = self.engine.parse_json(config['effect_file'])
 
     # TODO: abstract this parsing to dynamically call the constructor based on the 
     # attribute (reuse map)
@@ -299,9 +309,9 @@ class MasterPlatformer(object):
       print(constructor)
       # try:
       for obj_dict in map_json[key]:
-        if key == "Portal":
-          self.handle_portal(obj_dict, game_objects)
-          continue
+        # if key == "Portal":
+        #   self.handle_portal(obj_dict, game_objects)
+        #   continue
         if "tile" in obj_dict:
           # tranlate the x and y coordinates
           x, y = self.translate_to_tile(obj_dict['tile'][0], int(obj_dict['x']),
@@ -309,7 +319,9 @@ class MasterPlatformer(object):
         else:
           print("nope")
           x, y = int(obj_dict['x']), int(obj_dict['y'])
-        if key not in asset_json:
+        if key == "Effect":
+          tmp = self._handle_effect(obj_dict, x, y, effect_json)
+        elif key not in asset_json:
           # "invisible object"
           if issubclass(constructor, wd.Constructor):
 
@@ -333,6 +345,16 @@ class MasterPlatformer(object):
     """portals are specail objects that need to be created two at a time and
     have there own setting structure"""
     return
+
+  def _handle_effect(self, obj_dict, x, y,  effect_json):
+    """handle loading the effect objects"""
+    print(effect_json)
+    animation_dict = effect_json[obj_dict['effect_name']]
+    return wd.Effect(x, y, int(obj_dict['width']), int(obj_dict['height']), animation_dict)
+
+
+
+
 
   def translate_to_tile(self, tile_x, pos_x, tile_y, pos_y):
     x = int(tile_x) * DISPLAY_SIZE['x'] + pos_x

@@ -450,5 +450,18 @@
       "__name__":"Ladder",
       "tile":["3","1"]
     }
+  ],
+  "Effect":
+  [
+    {
+      "x":      "1590",
+      "y":      "426",
+      "width" : "50",
+      "height": "50",
+      "__name__":"Timer-Monitor",
+      "effect_name":"Timer-Monitor(Blue)",
+      "tile":["3","1"]
+    }
+
   ]
 }

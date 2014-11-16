@@ -3,7 +3,7 @@ import math
 import world as wd
 import random
 import pygame
-import ipdb
+# import ipdb
 import pprint
 
 LOCAL = True

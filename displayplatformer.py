@@ -118,7 +118,8 @@ class ClientPlatformer(NetworkGame):
     in the passed in rect(good for timers and debug messages"""
     update_rects = []
     for game_obj in self.game_objects.values():
-      if game_obj.render == True and isinstance(game_obj, wd.MovableGameObject):
+      if game_obj.render == True and (isinstance(game_obj, wd.MovableGameObject) or 
+                                      isinstance(game_obj, wd.Effect)):
         self.window.blit(self.background, (game_obj.rect.x, game_obj.rect.y), game_obj.rect)
         update_rects.append(game_obj.rect)
     for rect in rects:

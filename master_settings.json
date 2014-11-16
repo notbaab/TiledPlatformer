@@ -4,7 +4,8 @@
   "grid_space" : ["4", "2"],
   "display_size":["1920", "1200"], 
   "global_map_file":"map.json",
-  "asset_file" :"asset_config.json"
+  "asset_file" :"asset_config.json",
+  "effect_file" :"element_config.json"
 }
 
 
