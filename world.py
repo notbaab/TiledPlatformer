@@ -479,6 +479,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     if self.direction == 1:
       self.velocity.x = 0
       self.moving = False
+      self.change_animation('idle')
 
   # TODO: why have two methods for stop
   def stop_left(self):
@@ -486,6 +487,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     if self.direction == -1:
       self.velocity.x = 0
       self.moving = False
+      self.change_animation('idle')
 
   def read_packet(self, packet):
     if packet['current_animation'] != self.current_frame:

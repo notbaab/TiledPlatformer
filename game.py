@@ -353,9 +353,6 @@ class MasterPlatformer(object):
     return wd.Effect(x, y, int(obj_dict['width']), int(obj_dict['height']), animation_dict)
 
 
-
-
-
   def translate_to_tile(self, tile_x, pos_x, tile_y, pos_y):
     x = int(tile_x) * DISPLAY_SIZE['x'] + pos_x
     y = int(tile_y) * DISPLAY_SIZE['y'] + pos_y
