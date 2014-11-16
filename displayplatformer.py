@@ -48,6 +48,7 @@ class ClientPlatformer(NetworkGame):
     bg_map_file.close()
     bg_file = self.bg_map['dir'] + self.bg_map[str(self.tile[0]) + str(self.tile[1])]
     print(bg_file)
+    # Crop here
     # background_file = "assets/backgrounds/BG" + str(self.tile[0]) + str(self.tile[1]) + ".png"
     if os.path.isfile(bg_file):
       self.background = pygame.image.load(bg_file)
