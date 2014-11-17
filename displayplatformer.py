@@ -78,8 +78,8 @@ class ClientPlatformer(NetworkGame):
                                                           game_obj['rect'][3], 
                                                           sprite_sheet=game_obj['sprite_sheet'], 
                                                           obj_id=game_obj['id'])
-        except Exception, e:
-          ipdb.set_trace()
+        except Exception as e:
+            ipdb.set_trace()
       else:
        # if issubclass(constructor, wd.Constructor):
        #  self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
@@ -93,7 +93,7 @@ class ClientPlatformer(NetworkGame):
           self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
                                                           game_obj['rect'][3], 
                                                           obj_id=game_obj['id'])
-        except Exception, e:
+        except Exception as e:
           ipdb.set_trace()
 
       self.game_objects[game_obj['id']].render = to_render

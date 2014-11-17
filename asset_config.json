@@ -1,16 +1,12 @@
 {
   "Player":
     {
-      "moving": ["gameelements/Character Sprites/Running.png",["7", "1"]], 
-      "idle":   ["gameelements/Character Sprites/Standing.png",["1", "1"]]
+      "moving": ["gameelements/Character Sprites/Running.png",["7", "1"], "50", ["240", "300"]], 
+      "idle":   ["gameelements/Character Sprites/Standing.png",["1", "1"], "44", ["120", "312"]]
     },
   "Data":
     {
       "idle": ["light_blue.png", ["1", "1"]]    
-    },
-  "Follower":
-    {
-      "idle": ["Follower.png", ["1", "1"]]    
     },
   "Patroller":
     {

@@ -127,11 +127,12 @@ class AnimateSpriteObject(object):
     frame_dict = {}
     self.animation_frames = {}
     self.sprite_sheets = {}
-    for animation_name, (filename, (width, height)) in animation_dict.items():
+    for animation_name, (filename, (width, height), vertical_offset, (frame_width, frame_height)) in animation_dict.items():
       self.sprite_sheets[animation_name], self.animation_frames[animation_name] = self._get_frames(
         ASSET_FOLDER + filename, int(width),
         int(height), des_width=des_width,
-        des_height=des_height)
+        des_height=des_height, vertical_offset=int(vertical_offset),
+        frame_width=int(frame_width), frame_height=int(frame_height))
 
       # get the left facing sprite
       left_animation = LEFT_FRAME_ID + animation_name
@@ -152,9 +153,15 @@ class AnimateSpriteObject(object):
     if not frame in self.animation_frames:
       frame = 'idle'
 
+    previous_rect = self.rect.copy()
     self.current_animation = frame  # TODO: evaluate if we need this member
+    #TODO set self.rect based on first frame size, save and set center
+    #TODO pause and restart if needed
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
-
+    self.rect = self.animation_frames[self.current_animation][0]
+    self.rect.centerx = previous_rect.centerx
+    self.rect.bottom = previous_rect.bottom
+    
   def reverse_animation(self, direction):
     """take the current animation and point it in the other direction specified
     returns new animation name the object needs to change to or None"""
@@ -183,7 +190,8 @@ class AnimateSpriteObject(object):
     :type surface: pygame.Surface"""
     surface.blit(self.sprite_sheets[self.current_animation], self.rect, area=self.current_frame)
 
-  def _get_frames(self, filename, columns, rows, des_width=30, des_height=30):
+  def _get_frames(self, filename, columns, rows, des_width=30, des_height=30,
+                  vertical_offset=None, frame_width=None, frame_height=None):
     """returns a new sprite sheet and a list of rectangular coordinates in the
     file that correspond to frames in the file name. It also manipulates the spritesheet 
     so each frame will have the des_width and des_height
@@ -196,20 +204,33 @@ class AnimateSpriteObject(object):
     :param des_width: the desired width of a single frame
     :type des_width: int
     :param des_height: the desired height of a single frame
-    :type des_height: int"""
+    :type des_height: int
+    :param vertical_offset: how far down to crop out the frames
+    :type frame_width: int
+    :param frame_width: the native width of a single frame
+    :type frame_width: int
+    :param frame_height: the native width of a single frame
+    :type frame_height: int
+    """
+
+    # Note: des_width and des_height are ignored, assuming sprites are at
+    # correct size already.
+
     sheet = pygame.image.load(filename)
     sheet_rect = sheet.get_rect()
-    sheet_width = columns * des_width
-    sheet_height = rows * des_height
-
-    sheet = pygame.transform.smoothscale(sheet, (sheet_width, sheet_height))
-    sheet_rect = sheet.get_rect()
+    full_frame_width = sheet_rect.width/columns    
+    left_offset = int((full_frame_width - frame_width)/2)
+    full_frame_height = sheet_rect.height/rows
+    
+    # sheet = pygame.transform.smoothscale(sheet, (sheet_width, sheet_height))
+    # sheet_rect = sheet.get_rect()
     frames = []
-    for x in range(0, sheet_rect.width, des_width):
-      for y in range(0, sheet_rect.height, des_height):
-        frames.append(pygame.Rect(x, y, des_width, des_height))
+    for x in range(0, columns):
+      # next for loop assumes vertical_offset is less than frame height
+      for y in range(0, rows):
+        frames.append(pygame.Rect(x*full_frame_width+left_offset,
+                                  y*full_frame_height+vertical_offset, frame_width, frame_height))
     return sheet, frames
-
 
 class Constructor(object):
   """A special object that contains a reference to the entire game. Inherited
