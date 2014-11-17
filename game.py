@@ -344,6 +344,11 @@ class MasterPlatformer(object):
     # first, find out which tile player one is in. 
     tile_x = follow_player.rect.centerx / DISPLAY_SIZE['x']
     tile_y = follow_player.rect.centery / DISPLAY_SIZE['y']
+    if tile_x == -1:
+      tile_x = 0
+    if tile_x > 4:
+      tile_x = 4
+
     return {'x':tile_x, 'y':tile_y}
     # print(tile_x)
     # print(tile_y)
@@ -450,7 +455,8 @@ class MasterPlatformer(object):
             effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json, red_loc=obj_dict['timer-red-pos'], blue_loc=obj_dict['timer-blue-pos'])
           game_objects[effect_blue.id] = effect_blue
           game_objects[effect_red.id] = effect_red
-          tmp.load_data(obj_dict['timer'], effect_json)
+          if 'rawdata' in obj_dict:
+            tmp.load_data(obj_dict['rawdata'], effect_json)
 
         game_objects[tmp.id] = tmp
       # except Exception, e:

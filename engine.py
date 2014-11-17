@@ -18,6 +18,8 @@ FPS = pygame.time.Clock()
 X_FRICTION_CONSTANT = .3
 EDGES = (int(config['display_size'][0]) * (int(config['grid_space'][0]) + 1),
          int(config['display_size'][1]) * (int(config['grid_space'][1]) + 1))
+
+WRAP_EDGES = (2000,2400)
 print(EDGES)
 pygame.font.init()
 FONT = pygame.font.SysFont('Arial', 15, 15)
@@ -142,9 +144,17 @@ class Engine(object):
 
       # Check to make sure the object didn't move off the screen
       if game_object.rect.left < 0:
-        game_object.rect.left = 0
+        if WRAP_EDGES[0] < game_object.rect.y < WRAP_EDGES[1]:
+           if game_object.rect.right < 0:
+            game_object.rect.right = EDGES[0]
+        else:
+          game_object.rect.left = 0
       elif game_object.rect.right > EDGES[0]:
-        game_object.rect.right = EDGES[0]
+        if WRAP_EDGES[0] < game_object.rect.y < WRAP_EDGES[1]:
+           if game_object.rect.left > EDGES[0]:
+             game_object.rect.left = 0
+        else:
+          game_object.rect.right = EDGES[0]
 
       if game_object.rect.top < 0:
         game_object.rect.top = 0
