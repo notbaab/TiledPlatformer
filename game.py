@@ -319,9 +319,9 @@ class MasterPlatformer(object):
         else:
           print("nope")
           x, y = int(obj_dict['x']), int(obj_dict['y'])
-        if key == "Effect":
-          tmp = self._handle_effect(obj_dict, x, y, effect_json)
-        elif key not in asset_json:
+        if key == "Stairs":
+          tmp = self._handle_stairs(game_objects, obj_dict, x, y)
+        if key not in asset_json:
           # "invisible object"
           if issubclass(constructor, wd.Constructor):
 
@@ -335,6 +335,12 @@ class MasterPlatformer(object):
         else:
           tmp = constructor(x, y, int(obj_dict['width']),
                             int(obj_dict['height']), sprite_sheet=asset_json[key])
+        
+        if isinstance(tmp, wd.DataDevice):
+          effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json)
+          game_objects[effect_blue.id] = effect_blue
+          game_objects[effect_red.id] = effect_red
+
         game_objects[tmp.id] = tmp
       # except Exception, e:
       #   ipdb.set_trace()
@@ -351,6 +357,13 @@ class MasterPlatformer(object):
     print(effect_json)
     animation_dict = effect_json[obj_dict['effect_name']]
     return wd.Effect(x, y, int(obj_dict['width']), int(obj_dict['height']), animation_dict)
+
+  def _handle_stairs(self, game_objects, stair_dict, startx, starty):
+    stairs = wd.Stairs(startx, starty, int(stair_dict['width']), int(stair_dict['height']))
+    steps_list = stairs.make_stairs('right')
+    for step in steps_list:
+      game_objects[step.id] = step
+
 
 
   def translate_to_tile(self, tile_x, pos_x, tile_y, pos_y):
