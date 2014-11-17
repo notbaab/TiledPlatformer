@@ -1,7 +1,7 @@
 {
   "Timer-Monitor-Blue":
     {
-      "idle":["gameelements/Timer - Computer Monitor Magnify (BG4BG15) (Blue).png",["23", "1"]]
+      "idle":["gameelements/Timer - Computer Monitor Magnify (BG4BG15) (Blue).png",["23", "1"], "0", ["200","200"]]
     },
   "Timer-Monitor-Red":
     {

@@ -1,8 +1,8 @@
 {
   "Player":
     {
-      "moving": ["gameelements/Character Sprites/Running.png",["7", "1"], "50", ["240", "300"]], 
-      "idle":   ["gameelements/Character Sprites/Standing.png",["1", "1"], "44", ["120", "312"]]
+      "moving": ["gameelements/Character Sprites/Running.png",["7", "1"], "30", ["240", "320"]], 
+      "idle":   ["gameelements/Character Sprites/Standing.png",["1", "1"], "38", ["120", "320"]]
     },
   "Data":
     {

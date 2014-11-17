@@ -158,7 +158,7 @@ class AnimateSpriteObject(object):
     #TODO set self.rect based on first frame size, save and set center
     #TODO pause and restart if needed
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
-    self.rect = self.animation_frames[self.current_animation][0]
+    self.rect = self.animation_frames[self.current_animation][0].copy()
     self.rect.centerx = previous_rect.centerx
     self.rect.bottom = previous_rect.bottom
     
@@ -668,7 +668,11 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     animation_dict_blue = effect_json[effect_name +'-Blue']
     animation_dict_red = effect_json[effect_name +'-Red']
     blue = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict_blue)
+    blue.physics = False
+    blue.collision = False
     red = Effect(self.rect.x+40, self.rect.y, 200, 200, animation_dict_red)
+    red.physics = False
+    red.collision = False
     return blue, red
 
   def draw(self, surface):
