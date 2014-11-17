@@ -119,8 +119,7 @@ class ClientPlatformer(NetworkGame):
     in the passed in rect(good for timers and debug messages"""
     update_rects = []
     for game_obj in self.game_objects.values():
-      if game_obj.render == True and (isinstance(game_obj, wd.MovableGameObject) or 
-                                      isinstance(game_obj, wd.Effect)):
+      if game_obj.render == True and (isinstance(game_obj, wd.MovableGameObject)):
         self.window.blit(self.background, (game_obj.rect.x, game_obj.rect.y), game_obj.rect)
         update_rects.append(game_obj.rect)
     for rect in rects:
@@ -186,7 +185,10 @@ class ClientPlatformer(NetworkGame):
     # update_rects = []
     for obj_id, game_obj in self.game_objects.items():
       if game_obj.render:
-        clear_rect = game_obj.draw(self.window)
+        if isinstance(game_obj, wd.Effect):
+          game_obj.draw(self.window, self)
+        else:
+          clear_rect = game_obj.draw(self.window)
         if game_obj.dirt_sprite:
           update_rects.append(game_obj.rect)
         if clear_rect:

@@ -2,7 +2,7 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-import ipdb
+# import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
@@ -14,7 +14,7 @@ PLAYER_THROW_SPEED = eng.Vector(20, -5)
 FOLLOWER_SPEED = PLAYER_SPEED - 3  # just slower than the players
 PATROL_SPEED = 4  # just slower than the players
 JUMP_VELOCITY = -20
-DATA_DEVICE_TIMER = .01
+DATA_DEVICE_TIMER = 120
 TIMER_WIDTH = 100
 PLAYER_INTERACT_DIST = 50
 EJECT_SPEED = eng.Vector(20, -20)
@@ -144,7 +144,17 @@ class AnimateSpriteObject(object):
     self.current_frame = next(self.current_cycle)
     self.animation_time = 3
     self.animation_timer = 0
-    self.hold_end_frame = False  # set to true for animations where the end should be held (like falling)
+    self.pause = False  # set to true for animations where the end should be held (like falling)
+    self.pause_frame = None
+
+  def pause_animation(self):
+    self.pause = True
+
+  def stop_pause_animation(self):
+    self.pause = False
+
+  def reset_current_animation(self):
+    self.change_animation(self.current_animation)
 
   def change_animation(self, frame):
     """change the frames that player object is currently cycling through.
@@ -179,10 +189,11 @@ class AnimateSpriteObject(object):
   def animate(self):
     """Updates the animation timer goes to next frame in current animation cycle
     after the alloted animation time has passed."""
-    self.animation_timer += 1
-    if self.animation_timer == self.animation_time:
-      self.current_frame = next(self.current_cycle)
-      self.animation_timer = 0
+    if not self.pause:
+      self.animation_timer += 1
+      if self.animation_timer == self.animation_time:
+        self.current_frame = next(self.current_cycle)
+        self.animation_timer = 0
 
   def draw(self, surface):
     """Draws the player object onto surface
@@ -379,6 +390,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.on_ladder = False
     self.near_ladder = False
     self.climbing = 0  # climbing modifier 1 for DOWN, -1 for up
+    self.team = 'Blue'
 
 
   def jump(self):
@@ -545,9 +557,6 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       self.on_ladder = False
       self.climbing = False
     
-
-
-
   def draw(self, surface):
     """Draws the player object onto surface
     :param surface: the surface to draw the object, typically the window
@@ -640,14 +649,15 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
   def __init__(self, startx, starty, width, height, color=None, obj_id=None, game=None):
     BackGroundScenery.__init__(self, startx, starty, width, height, obj_id=obj_id)
     Constructor.__init__(self, game)
-    NetworkedObject.__init__(self, ['rect', 'id', 'timer', 'message_str'])
-    self.timer = None
+    NetworkedObject.__init__(self, ['rect', 'id', 'message_str'])
+    self.active_timer = None
+    self.timer_count = 0
     self.color = color
     self.data = None
     self.collision = False  # for now, only interaction comes with explicit buttons
 
   def generate_data(self):
-    game_obj = Data(20, 20, 40, 40)
+    game_obj = Data(20, 20, 40, 40, self.data_dict_blue)
     print(game_obj)
     game_obj.rect.centerx = self.rect.centerx
     game_obj.rect.bottom = self.rect.top
@@ -657,8 +667,16 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     return game_obj
 
   def interact(self, player, timer=DATA_DEVICE_TIMER):
-    if not self.timer:  # only allow one timer at a time
-      self.timer = timer
+    if not self.active_timer:  # only allow one timer at a time
+      if player.team == 'blue':
+        self.active_timer = self.blue_timer
+      else:
+        self.active_timer = self.red_timer
+      self.timer_count = 0
+      self.active_timer.reset_current_animation()
+      self.active_timer.render = True
+      self.active_timer.pause = False
+
 
   def load_effects(self, effect_name, effect_json):
     """load the effects for this data object and return effects loaded"""
@@ -667,45 +685,48 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     print(self)
     animation_dict_blue = effect_json[effect_name +'-Blue']
     animation_dict_red = effect_json[effect_name +'-Red']
-    blue = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict_blue)
-    blue.physics = False
-    blue.collision = False
-    red = Effect(self.rect.x+40, self.rect.y, 200, 200, animation_dict_red)
-    red.physics = False
-    red.collision = False
-    return blue, red
+    self.blue_timer = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict_blue)
+    self.blue_timer.physics = False
+    self.blue_timer.collision = False
+    self.blue_timer.animation_time = DATA_DEVICE_TIMER / len(self.blue_timer.animation_frames[self.blue_timer.current_animation])
+    self.red_timer = Effect(self.rect.x+40, self.rect.y, 200, 200, animation_dict_red)
+    self.red_timer.physics = False
+    self.red_timer.collision = False
+    self.red_timer.animation_time = DATA_DEVICE_TIMER / len(self.red_timer.animation_frames[self.red_timer.current_animation])
+    self.timer_total = self.red_timer.animation_time * len(self.red_timer.animation_frames[self.red_timer.current_animation]) + self.red_timer.animation_time
+    print(self.timer_total)
+    print(self.red_timer.animation_time)
+    return self.blue_timer, self.red_timer
+
+  def load_data(self, data_name, data_json):
+    self.data_dict_blue = data_json[data_name +'-Blue']
+    self.data_dict_red = data_json[data_name +'-Red']
+
 
   def draw(self, surface):
     BackGroundScenery.draw(self, surface)  # SimpleScenery.draw
-    if self.timer:
-      outline_rect = pygame.Rect(0, 0, TIMER_WIDTH, 20)
-      outline_rect.centerx = self.rect.centerx
-      outline_rect.centery = self.rect.y - outline_rect.height
-      timer_rect = pygame.Rect(outline_rect)
-      timer_rect.width = TIMER_WIDTH * self.timer
-      pygame.draw.rect(surface, (255, 0, 255), timer_rect)
-      pygame.draw.rect(surface, (128, 0, 128), outline_rect, 1)
-      if timer_rect.width == TIMER_WIDTH - 1:
-        # TODO: clear timer. Do this by returning the area that needs to be cleared
-        return outline_rect
 
   def update(self):
-    if self.timer:
-      self.timer += DATA_DEVICE_TIMER
-      if self.timer >= 1:
+    if self.active_timer:
+      self.timer_count += 1
+      if self.timer_count >= self.timer_total:
         self.generate_data()
-        self.timer = None
+        self.active_timer.render = False
+        self.active_timer.reset_current_animation()
+        self.active_timer.pause_animation()
+        self.active_timer = None
+        self.timer_count = 0
 
   def respond_to_collision(self, obj, axis=None):
     return
 
-  def get_data(self, data):
-    self.timer = DATA_DEVICE_TIMER  # start timer
-    self.data = data
-    # TODO: Make a better hide/delete function
-    data.rect.x, data.rect.y = (-100, -100)
-    data.velocity.x = 0
-    data.velocity.y = 0
+  # def get_data(self, data):
+  #   self.timer = DATA_DEVICE_TIMER  # start timer
+  #   self.data = data
+  #   # TODO: Make a better hide/delete function
+  #   data.rect.x, data.rect.y = (-100, -100)
+  #   data.velocity.x = 0
+  #   data.velocity.y = 0
 
 
 class DataCruncher(DataDevice):
@@ -735,12 +756,12 @@ class DataCruncher(DataDevice):
       self.data.advance_data()
       self.data.hide_object()
 
-  def update(self):
-    if self.timer:
-      self.timer += DATA_DEVICE_TIMER
-      if self.timer >= 1:
-        self.generate_data()
-        self.timer = None
+  # def update(self):
+  #   if self.timer:
+  #     self.timer += DATA_DEVICE_TIMER
+  #     if self.timer >= 1:
+  #       self.generate_data()
+  #       self.timer = None
 
   def generate_data(self):
     self.data.rect.centerx = self.rect.centerx
@@ -804,12 +825,11 @@ class PublishingHouse(DataCruncher):
 
 
 class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
-  def __init__(self, startx, starty, width, height, color=None, sprite_sheet={"idle": ["light_blue.png", ["1", "1"]]},
-               obj_id=None):
+  def __init__(self, startx, starty, width, height, sprite_sheet, obj_id=None):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'id', 'render', 'stage'])
-    self.color = color
+    self.rect = self.animation_frames[self.current_animation][0].copy()
     self.sprite_sheet = sprite_sheet
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
     self.sprite_sheet = sprite_sheet
@@ -818,10 +838,6 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
   def draw(self, surface):
     super(Data, self).draw(surface)  # animatedSpriteObject.draw
-    if DEBUG:
-      x = self.rect.centerx
-      bottom = self.rect.top - 10
-      return draw_message(x, bottom, self.stage, surface)
 
   def respond_to_collision(self, obj, axis=None):
     if isinstance(obj, Player):
@@ -1016,8 +1032,8 @@ class ClimableObject(BackGroundScenery):
       self.bottom = self.rect.bottom
       self.climb_speed = LADDER_CLIMB_SPEED
 
-  def draw(self, surface):
-     pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+  # def draw(self, surface):
+  #    pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
 
 class Stairs(GameObject):
   def __init__(self, startx, starty, width, height, obj_id=None):
@@ -1075,11 +1091,40 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
   def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, total_time=120):
     GameObject.__init__(self, startx, starty, width, height)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
-    NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id',
-                                      'render'])
+    NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id', 'render'])
     self.sprite_sheet = sprite_sheet
     # total time is in frames cause I'm bad at time.
     self.animation_time = total_time / len(self.animation_frames[self.current_animation])
+    self.render = False
+    self.pause_animation()
+    self.render_frames = 0
+    self.animation_time = 5
+  
+  def animate(self):
+    """Updates the animation timer goes to next frame in current animation cycle
+    after the alloted animation time has passed."""
+    if not self.pause:
+      self.animation_timer += 1
+      self.render = False
+      if self.animation_timer == self.animation_time:
+        self.current_frame = next(self.current_cycle)
+        self.animation_timer = 0
+        self.render = True
+
+  def build_packet(self, accumulator):
+    if self.render:
+      super(Effect, self).build_packet(accumulator)
+
+
+  def draw(self, surface, game):
+    """Draws the player object onto surface
+    :param surface: the surface to draw the object, typically the window
+    :type surface: pygame.Surface"""
+    surface.blit(game.background, (self.rect.x, self.rect.y), self.rect)
+    surface.blit(self.sprite_sheets[self.current_animation], self.rect, area=self.current_frame)
+
+
+
 
   
 
