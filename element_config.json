@@ -6,5 +6,22 @@
   "Timer-Monitor-Red":
     {
       "idle":["gameelements/Timer - Computer Monitor Magnify (BG4BG15) (Blue).png",["23", "1"], "0", ["200","200"]]
+    },
+  "Timer-Lab-Blue":
+    {
+      "idle":["gameelements/Timer - Lab (Blue).png",["28", "1"], "0", ["200","200"]]
+    },
+  "Timer-Lab-Red":
+    {
+      "idle":["gameelements/Timer - Lab (Red).png",["28", "1"], "0", ["200","200"]]
+    },
+  "Timer-Observatory-Blue":
+    {
+      "idle":["gameelements/Timer - Observatory (Blue).png",["20", "1"], "0", ["200","200"]]
+    },
+  "Timer-Observatory-Red":
+    {
+      "idle":["gameelements/Timer - Observatory (Red).png",["20", "1"], "0", ["200","200"]]
     }
 }
+

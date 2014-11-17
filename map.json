@@ -281,8 +281,10 @@
       "width" : "158",
       "height": "321",
       "__name__":"Observatory",
-      "timer":"Timer-Monitor",
-      "tile":["1","0"]
+      "timer":"Timer-Observatory",
+      "tile":["1","0"],
+      "timer-blue-pos":["1","1"],
+      "timer-red-pos":["200","10"]
     },    
     {
       "x": "1404",
@@ -291,7 +293,9 @@
       "height": "304",
       "__name__":"Sensors",
       "timer":"Timer-Monitor",
-      "tile":["3","0"]
+      "tile":["3","0"],
+      "timer-blue-pos":["1","1"],
+      "timer-red-pos":["200","10"]
     },
     {
       "x":      "618",
@@ -299,8 +303,10 @@
       "width" : "604",
       "height": "190",
       "__name__":"Lab",
-      "timer":"Timer-Monitor",
-      "tile":["0","2"]
+      "timer":"Timer-Lab",
+      "tile":["0","2"],
+      "timer-blue-pos":["360","500"],
+      "timer-red-pos":["160","500"]
     },   
     {
       "x":      "1696",
@@ -311,7 +317,7 @@
       "timer":"Timer-Monitor",
       "tile":["4","2"],
       "timer-blue-pos":["1","1"],
-      "timer-red-pos":["10","10"]
+      "timer-red-pos":["200","10"]
     }    
   ],
   "Follower":
