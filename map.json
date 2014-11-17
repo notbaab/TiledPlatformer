@@ -41,7 +41,7 @@
   [
     {
       "x": "126",
-      "y": "972",
+      "y": "980",
       "width" : "994",
       "height": "74",
       "__name__":"Observatory Steps",
@@ -56,19 +56,27 @@
       "tile":["4","0"]
     },
     {
-      "x": "38",
-      "y": "6",
-      "width" : "114",
-      "height": "444",
-      "__name__":"VerticalDuct",
+      "x": "16",
+      "y": "0",
+      "width" : "117",
+      "height": "556",
+      "__name__":"Vertical Duct",
       "tile":["1","1"]
     },
     {
-      "x": "40",
-      "y": "340",
-      "width" : "198",
-      "height": "114",
-      "__name__":"HorizontalDuct",
+      "x": "133",
+      "y": "434",
+      "width" : "74",
+      "height": "118",
+      "__name__":"Horizontal Duct Left of Ladder",
+      "tile":["1","1"]
+    },
+    {
+      "x": "333",
+      "y": "434",
+      "width" : "100",
+      "height": "118",
+      "__name__":"Horizontal Duct Right of Ladder",
       "tile":["1","1"]
     },
     {
@@ -86,30 +94,6 @@
       "height": "116",
       "__name__":"LastPlat",
       "tile":["1","1"]
-    },
-    {
-      "x": "728",
-      "y": "520",
-      "width" : "154",
-      "height": "150",
-      "__name__":"Clock",
-      "tile":["1","1"]
-    },
-    {
-      "x": "460",
-      "y": "762",
-      "width" : "122",
-      "height": "300",
-      "__name__":"TerminalLeft",
-      "tile":["2","1"]
-    },
-    {
-      "x": "1390",
-      "y": "760",
-      "width" : "118",
-      "height": "300",
-      "__name__":"TerminalRight",
-      "tile":["2","1"]
     },
     {
       "x":      "0",
@@ -137,51 +121,27 @@
     },
     {
       "x":      "0",
-      "y":      "338",
-      "width" : "381",
-      "height": "122",
-      "__name__":"LDuct",
+      "y":      "434",
+      "width" : "360",
+      "height": "130",
+      "__name__":"Left Duct",
       "tile":["3","1"]
     },
     {
-      "x":      "480",
-      "y":      "322",
+      "x":      "1055",
+      "y":      "513",
       "width" : "242",
-      "height": "68",
-      "__name__":"LPlat",
-      "tile":["3","1"]
-    },
-    {
-      "x":      "848",
-      "y":      "368",
-      "width" : "242",
-      "height": "68",
-      "__name__":"MPlat",
+      "height": "70",
+      "__name__":"Left Light, Classroom",
       "tile":["3","1"]
     },
     {
       "x":      "1206",
       "y":      "412",
       "width" : "242",
-      "height": "68",
-      "__name__":"FPlat",
+      "height": "70",
+      "__name__":"Right Light, Classroom",
       "tile":["3","1"]
-    },
-    {
-      "x":      "230",
-      "y":      "0",
-      "width" : "152",
-      "height": "448",
-      "__name__":"TLadder",
-      "tile":["1","2"]
-    },
-    {
-      "x":      "534",
-      "y":      "450",
-      "width" : "150",
-      "height": "602",
-      "__name__":"BLadder",
-      "tile":["1","2"]
     },
     {
       "x":      "118",
@@ -294,22 +254,6 @@
       "height": "89",
       "__name__":"Right Platform",
       "tile":["3","2"]
-    },
-    {
-      "x":      "1276",
-      "y":      "452",
-      "width" : "158",
-      "height": "606",
-      "__name__":"BLadder",
-      "tile":["3","2"]
-    },
-    {
-      "x":      "1584",
-      "y":      "0",
-      "width" : "148",
-      "height": "452",
-      "__name__":"TLadder",
-      "tile":["3","2"]
     }
   ],
   "Player":
@@ -332,25 +276,25 @@
   "DataDevice":
   [
     {
-      "x": "527",
-      "y": "656",
-      "width" : "157",
-      "height": "327",
+      "x": "505",
+      "y": "658",
+      "width" : "158",
+      "height": "321",
       "__name__":"Observatory",
       "timer":"Timer-Monitor",
       "tile":["1","0"]
     },    
     {
       "x": "1404",
-      "y": "735",
+      "y": "752",
       "width" : "400",
-      "height": "310",
+      "height": "304",
       "__name__":"Sensors",
       "timer":"Timer-Monitor",
       "tile":["3","0"]
     },
     {
-      "x":      "640",
+      "x":      "618",
       "y":      "866",
       "width" : "604",
       "height": "190",
@@ -400,7 +344,7 @@
   [
     {
       "x": "708",
-      "y": "890",
+      "y": "906",
       "width" : "496",
       "height": "155",
       "__name__":"PublishingDesk",
@@ -430,14 +374,12 @@
   "ClimableObject":
   [
     {
-      "x":      "1590",
-      "y":      "526",
-      "width" : "158",
-      "height": "682",
-      "start" : ["bottom"],
-      "end"   : ["top"],
-      "__name__":"Ladder",
-      "tile":["3","1"]
+      "x":      "238",
+      "y":      "434",
+      "width" : "100",
+      "height": "1274",
+      "__name__":"Ladder, Meeting",
+      "tile":["1","1"]
     },
     {
       "x":      "238",
@@ -454,6 +396,30 @@
       "height": "720",
       "__name__":"Right Ladder, Comet",
       "tile":["2","1"]
+    },
+    {
+      "x":      "1286",
+      "y":      "624",
+      "width" : "100",
+      "height": "1084",
+      "__name__":"Ladder, Classroom",
+      "tile":["3","1"]
+    },
+    {
+      "x":      "540",
+      "y":      "448",
+      "width" : "100",
+      "height": "613",
+      "__name__":"Bottom Ladder, Left Hall",
+      "tile":["1","2"]
+    },
+    {
+      "x":      "1286",
+      "y":      "448",
+      "width" : "100",
+      "height": "613",
+      "__name__":"Bottom Ladder, Right Hall",
+      "tile":["3","2"]
     }
   ],
   "Stairs":
