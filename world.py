@@ -30,6 +30,7 @@ STUN_WINNER_TIMER = 10
 STUN_LOSER_TIMER = 20
 LEFT_FRAME_ID = 'l_'
 LADDER_CLIMB_SPEED = eng.Vector(0, 10)
+MAGIC_STAIR_CONSTANT = 2  # DO NOT TOUCH, THIS IS MAGIC
 
 
 def draw_message(x, bottom, message, window):
@@ -1016,6 +1017,8 @@ class Stairs(GameObject):
     width_padding = total_width / num_of_steps
     for x in range(0, num_of_steps):
       startx = x * width_padding + bottom[0]
+      if startx != bottom[0]:
+        startx = startx - MAGIC_STAIR_CONSTANT
       starty = bottom[1] - ((x+1)*height + (x+1)*height_padding)
       self.steps.append(Step(startx, starty, width, height))
     # ipdb.set_trace()
