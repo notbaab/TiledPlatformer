@@ -434,6 +434,10 @@ class MasterPlatformer(object):
         else:
           print("nope")
           x, y = int(obj_dict['x']), int(obj_dict['y'])
+        if key == "Effect":
+          tmp = self._handle_effect(obj_dict, x, y, effect_json)
+          game_objects[tmp.id] = tmp
+          continue
         if key == "Stairs":
           tmp = self._handle_stairs(game_objects, obj_dict, x, y)
         if key not in asset_json:
@@ -476,7 +480,12 @@ class MasterPlatformer(object):
     """handle loading the effect objects"""
     print(effect_json)
     animation_dict = effect_json[obj_dict['effect_name']]
-    return wd.Effect(x, y, int(obj_dict['width']), int(obj_dict['height']), animation_dict)
+    ipdb.set_trace()
+    tmp = wd.Effect(x, y, int(obj_dict['width']), int(obj_dict['height']), animation_dict)
+    tmp.render = True
+    tmp.pause = False
+    tmp.clear = False
+    return tmp
 
   def _handle_stairs(self, game_objects, stair_dict, startx, starty):
     stairs = wd.Stairs(startx, starty, int(stair_dict['width']), int(stair_dict['height']))

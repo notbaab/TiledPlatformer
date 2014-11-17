@@ -1121,6 +1121,7 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
     self.render_frames = 0
     self.animation_time = 5
     self.clear = True
+    self.collision = False
   
   def animate(self):
     """Updates the animation timer goes to next frame in current animation cycle
@@ -1155,6 +1156,7 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
     if self.clear:
       surface.blit(game.background, (self.rect.x, self.rect.y), self.rect)
       self.render = False
+      self.clear = False
     else:
       surface.blit(game.background, (self.rect.x, self.rect.y), self.rect)
       surface.blit(self.sprite_sheets[self.current_animation], self.rect, area=self.current_frame)
