@@ -105,11 +105,11 @@
     },
   "Timer-Paper-Red":
     {
-      "idle":["gameelements/Timer - Paper (Red).png",["65", "1"], "0", ["300","200"]]
+      "idle":["gameelements/Timer - Paper (Red).png",["65", "1"], "0", ["225","150"]]
     },
   "Timer-Paper-Blue":
     {
-      "idle":["gameelements/Timer - Paper (Blue).png",["65", "1"], "0", ["300","200"]]
+      "idle":["gameelements/Timer - Paper (Blue).png",["65", "1"], "0", ["225","150"]]
     },
   "Paper-Red":
     {
