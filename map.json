@@ -35,6 +35,22 @@
       "width" : "9600",
       "height": "155",
       "__name__":"Bottom Floor"
+    },
+    {
+      "x": "16",
+      "y": "0",
+      "width" : "117",
+      "height": "556",
+      "__name__":"Vertical Duct",
+      "tile":["1","1"]
+    },
+    {
+      "x": "918",
+      "y": "578",
+      "width" : "92",
+      "height": "476",
+      "__name__":"Cubicle Partition",
+      "tile":["2","2"]
     }
   ],
   "BackGroundScenery":
@@ -56,14 +72,6 @@
       "tile":["4","0"]
     },
     {
-      "x": "16",
-      "y": "0",
-      "width" : "117",
-      "height": "556",
-      "__name__":"Vertical Duct",
-      "tile":["1","1"]
-    },
-    {
       "x": "133",
       "y": "434",
       "width" : "74",
@@ -72,9 +80,9 @@
       "tile":["1","1"]
     },
     {
-      "x": "333",
+      "x": "362",
       "y": "434",
-      "width" : "100",
+      "width" : "65",
       "height": "118",
       "__name__":"Horizontal Duct Right of Ladder",
       "tile":["1","1"]
@@ -98,23 +106,23 @@
     {
       "x":      "0",
       "y":      "434",
-      "width" : "234",
+      "width" : "200",
       "height": "130",
       "__name__":"Left Duct",
       "tile":["2","1"]
     },
     {
-      "x":      "336",
+      "x":      "370",
       "y":      "434",
-      "width" : "1256",
+      "width" : "1192",
       "height": "130",
       "__name__":"Middle Duct",
       "tile":["2","1"]
     },
     {
-      "x":      "1698",
+      "x":      "1720",
       "y":      "434",
-      "width" : "222",
+      "width" : "200",
       "height": "130",
       "__name__":"Right Duct",
       "tile":["2","1"]
@@ -128,17 +136,17 @@
       "tile":["3","1"]
     },
     {
-      "x":      "576",
+      "x":      "596",
       "y":      "470",
-      "width" : "242",
+      "width" : "202",
       "height": "70",
       "__name__":"Left Light, Classroom",
       "tile":["3","1"]
     },
     {
-      "x":      "1052",
+      "x":      "1072",
       "y":      "512",
-      "width" : "242",
+      "width" : "202",
       "height": "70",
       "__name__":"Right Light, Classroom",
       "tile":["3","1"]
@@ -152,17 +160,17 @@
       "tile":["1","2"]
     },
     {
-      "x":      "843",
+      "x":      "863",
       "y":      "411",
-      "width" : "242",
+      "width" : "202",
       "height": "70",
       "__name__":"Left Light",
       "tile":["1","2"]
     },
     {
-      "x":      "1327",
+      "x":      "1347",
       "y":      "411",
-      "width" : "242",
+      "width" : "202",
       "height": "70",
       "__name__":"Right Light",
       "tile":["1","2"]
@@ -184,17 +192,17 @@
       "tile":["2","2"]
     },
     {
-      "x":      "502",
+      "x":      "522",
       "y":      "379",
-      "width" : "242",
+      "width" : "202",
       "height": "70",
       "__name__":"Left Light",
       "tile":["2","2"]
     },
     {
-      "x":      "1181",
+      "x":      "1201",
       "y":      "379",
-      "width" : "242",
+      "width" : "202",
       "height": "70",
       "__name__":"Right Light",
       "tile":["2","2"]
@@ -208,18 +216,18 @@
       "tile":["2","2"]
     },
     {
-      "x":      "362",
-      "y":      "878",
-      "width" : "316",
-      "height": "176",
+      "x":      "606",
+      "y":      "880",
+      "width" : "314",
+      "height": "172",
       "__name__":"Left Desk",
       "tile":["2","2"]
     },
     {
-      "x":      "1022",
-      "y":      "878",
-      "width" : "316",
-      "height": "176",
+      "x":      "1006",
+      "y":      "880",
+      "width" : "314",
+      "height": "172",
       "__name__":"Right Desk",
       "tile":["2","2"]
     },
@@ -232,17 +240,17 @@
       "tile":["3","2"]
     },
     {
-      "x":      "352",
+      "x":      "322",
       "y":      "411",
-      "width" : "242",
+      "width" : "202",
       "height": "70",
       "__name__":"Left Light",
       "tile":["3","2"]
     },
     {
-      "x":      "836",
+      "x":      "856",
       "y":      "411",
-      "width" : "242",
+      "width" : "202",
       "height": "70",
       "__name__":"Right Light",
       "tile":["3","2"]
@@ -263,13 +271,15 @@
       "y": "500",
       "width" : "130",
       "height": "250",
-      "tile":["3", "1"]
+      "tile":["3", "1"],
+      "team": "red"
     },
     {
       "x": "120",
       "y": "500",
       "width" : "130",
-      "height": "250"
+      "height": "250",
+      "team": "blue"
     }
   ],
   "Data":
@@ -280,9 +290,11 @@
       "x": "505",
       "y": "658",
       "width" : "158",
-      "height": "321",
+      "height": "10",
       "__name__":"Observatory",
       "timer":"Timer-Observatory",
+      "rawdata":"Raw-Data-Observatory",
+      "resultsdata":"Results-Data-Observatory",
       "tile":["1","0"],
       "timer-blue-pos":["1","1"],
       "timer-red-pos":["200","10"]
@@ -294,6 +306,8 @@
       "height": "304",
       "__name__":"Sensors",
       "timer":"Timer-Monitor",
+      "rawdata":"Raw-Data-Sensors",
+      "resultsdata":"Results-Data-Sensors",
       "tile":["3","0"],
       "timer-blue-pos":["1","1"],
       "timer-red-pos":["200","10"]
@@ -302,9 +316,11 @@
       "x":      "618",
       "y":      "866",
       "width" : "604",
-      "height": "190",
+      "height": "240",
       "__name__":"Lab",
       "timer":"Timer-Lab",
+      "rawdata":"Raw-Data-Lab",
+      "resultsdata":"Results-Data-Lab",
       "tile":["0","2"],
       "timer-blue-pos":["360","500"],
       "timer-red-pos":["160","500"]
@@ -316,9 +332,11 @@
       "height": "360",
       "__name__":"tape",
       "timer":"Timer-Monitor",
+      "rawdata":"Raw-Data-Tapes",
+      "resultsdata":"Results-Data-Tapes",
       "tile":["4","2"],
-      "timer-blue-pos":["1","1"],
-      "timer-red-pos":["200","10"]
+      "timer-blue-pos":["-500","-60"],
+      "timer-red-pos":["-800","-60"]
     }    
   ],
   "Follower":
@@ -333,7 +351,7 @@
       "width" : "120",
       "height": "294",
       "__name__":"Left Terminal, Comet",
-      "timer":"Timer-Monitor",
+      "timer":"Timer-Comet",
       "tile":["2","1"]
     },
     {
@@ -342,7 +360,7 @@
       "width" : "120",
       "height": "294",
       "__name__":"Right Terminal, Comet",
-      "timer":"Timer-Monitor",
+      "timer":"Timer-Comet",
       "tile":["2","1"]
     }
   ], 
@@ -357,10 +375,10 @@
       "width" : "496",
       "height": "155",
       "__name__":"PublishingDesk",
-      "timer":"Timer-Monitor",
+      "timer":"Timer-Journal",
       "tile":["2","0"],
-      "timer-blue-pos":["1","1"],
-      "timer-red-pos":["10","10"]
+      "timer-blue-pos":["0","0"],
+      "timer-red-pos":["240","0"]
     }    
   ],
   "Meeting":

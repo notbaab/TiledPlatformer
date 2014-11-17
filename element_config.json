@@ -22,6 +22,110 @@
   "Timer-Observatory-Red":
     {
       "idle":["gameelements/Timer - Observatory (Red).png",["20", "1"], "0", ["200","200"]]
+    },
+  "Timer-Comet-Blue":
+    {
+      "idle":["gameelements/Timer - Comet (Blue).png",["41", "1"], "0", ["200","200"]]
+    },
+  "Timer-Comet-Red":
+    {
+      "idle":["gameelements/Timer - Comet (Red).png",["41", "1"], "0", ["200","200"]]
+    },
+  "Timer-Journal-Blue":
+    {
+      "idle":["gameelements/Timer - Journal (Blue).png",["21", "1"], "0", ["600","700"]]
+    },
+  "Timer-Journal-Red":
+    {
+      "idle":["gameelements/Timer - Journal (Red).png",["21", "1"], "0", ["600","700"]]
+    },
+  "Raw-Data-Observatory-Blue":
+    {
+      "idle":["gameelements/Raw Data - Observatory (Blue).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Raw-Data-Observatory-Red":
+    {
+      "idle":["gameelements/Raw Data - Observatory (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Results-Data-Observatory-Blue":
+    {
+      "idle":["gameelements/Results - Observatory (Blue).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Results-Data-Observatory-Red":
+    {
+      "idle":["gameelements/Results - Observatory (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Raw-Data-Lab-Blue":
+    {
+      "idle":["gameelements/Raw Data - Lab (Blue).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Raw-Data-Lab-Red":
+    {
+      "idle":["gameelements/Raw Data - Lab (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Results-Data-Lab-Blue":
+    {
+      "idle":["gameelements/Results - Lab (Blue).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Results-Data-Lab-Red":
+    {
+      "idle":["gameelements/Results - Lab (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Raw-Data-Sensors-Blue":
+    {
+      "idle":["gameelements/Raw Data - Sensors (Blue).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Raw-Data-Sensors-Red":
+    {
+      "idle":["gameelements/Raw Data - Sensors (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Results-Data-Sensors-Blue":
+    {
+      "idle":["gameelements/Results - Sensors (Blue).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Results-Data-Sensors-Red":
+    {
+      "idle":["gameelements/Results - Sensors (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Raw-Data-Tapes-Blue":
+    {
+      "idle":["gameelements/Raw Data - Tapes (Blue).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Raw-Data-Tapes-Red":
+    {
+      "idle":["gameelements/Raw Data - Tapes (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Results-Data-Tapes-Blue":
+    {
+      "idle":["gameelements/Results - Tapes (Blue).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Results-Data-Tapes-Red":
+    {
+      "idle":["gameelements/Results - Tapes (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Timer-Paper-Red":
+    {
+      "idle":["gameelements/Timer - Paper (Red).png",["65", "1"], "0", ["300","200"]]
+    },
+  "Timer-Paper-Blue":
+    {
+      "idle":["gameelements/Timer - Paper (Blue).png",["65", "1"], "0", ["300","200"]]
+    },
+  "Paper-Red":
+    {
+      "idle":["gameelements/Paper (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Paper-Blue":
+    {
+      "idle":["gameelements/Paper (Blue).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Paper-Edited-Red":
+    {
+      "idle":["gameelements/Paper - Edited (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Paper-Edited-Blue":
+    {
+      "idle":["gameelements/Paper - Edited (Blue).png",["1", "1"], "0", ["200","200"]]
     }
 }
 
