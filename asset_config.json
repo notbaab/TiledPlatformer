@@ -4,6 +4,16 @@
       "moving": ["gameelements/Character Sprites/Running/Running - Female (Red).png",["7", "1"], "30", ["240", "320"]], 
       "idle":   ["gameelements/Character Sprites/Standing/Standing - Female (Red).png",["1", "1"], "38", ["120", "320"]],
       "ladder":   ["gameelements/Character Sprites/Ladder Climb/Ladder Climb - Female (Red).png",["2", "1"], "60", ["120", "320"]]
+
+      "stairup":   ["gameelements/Character Sprites/Ladder Climb/Ladder Climb - Female (Red).png",["2", "1"], "60", ["120", "320"]]
+      "stairdown":   ["gameelements/Character Sprites/Ladder Climb/Ladder Climb - Female (Red).png",["2", "1"], "60", ["120", "320"]]
+
+      "jumpup":   ["gameelements/Character Sprites/Jumping Up/Jumping Up - Female (Red).png",["2", "1"], "60", ["240", "340"]]
+      "jumpdown":   ["gameelements/Character Sprites/Jumping Down/Jumping Down - Female (Red).png",["2", "1"], "60", ["120", "320"]]
+
+      "sit":   ["gameelements/Character Sprites/Sitting - Static/Sitting - Static - Female (Red).png",["1", "1"], "0", ["400", "400"]]
+      "sitmeeting":   ["gameelements/Character Sprites/Sitting - Meeting/Sitting\ -\ Meeting\ -\ Female\ \(Red\).png",["2", "1"], "0", ["400", "400"]]
+      "sittype":   ["gameelements/Character Sprites/Sitting - Typing/Sitting\ -\ Typing\ -\ Female\ \(Red\).png",["3", "1"], "0", ["400", "400"]]
     },
   "Player-blue":
     {

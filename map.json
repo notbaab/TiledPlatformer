@@ -6,35 +6,88 @@
       "y": "1048",
       "width" : "10560",
       "height": "155",
-      "__name__":"Top Floor"
+      "__name__":"Top Floor",
+      "tile":["0","0"]
     },
     {
       "x": "0",
-      "y": "2415",
+      "y": "0",
+      "width" : "135",
+      "height": "627",
+      "__name__":"Left Journal Wall",
+      "tile":["1","0"]
+    },
+    {
+      "x": "1065",
+      "y": "0",
+      "width" : "135",
+      "height": "627",
+      "__name__":"Right Journal Wall",
+      "tile":["1","0"]
+    },
+    {
+      "x": "0",
+      "y": "1155",
       "width" : "2180",
       "height": "45",
-      "__name__":"Middle Left Floor"
+      "__name__":"Middle Left Floor",
+      "tile":["0","1"]
     },
     {
-      "x": "2352",
-      "y": "2415",
+      "x": "1785",
+      "y": "0",
+      "width" : "5",
+      "height": "726",
+      "__name__":"Stairwell Wall",
+      "tile":["0","1"]
+    },
+    {
+      "x": "372",
+      "y": "1155",
       "width" : "5138",
       "height": "45",
-      "__name__":"Middle Middle Floor"
+      "__name__":"Middle Middle Floor",
+      "tile":["1","1"]
     },
     {
-      "x": "7664",
-      "y": "2415",
+      "x": "1726",
+      "y": "1155",
       "width" : "2172",
       "height": "45",
-      "__name__":"Middle Right Floor"
+      "__name__":"Middle Right Floor",
+      "tile":["3","1"]
     },
     {
       "x": "0",
-      "y": "3455",
-      "width" : "9600",
+      "y": "0",
+      "width" : "5",
+      "height": "726",
+      "__name__":"Stairwell Wall",
+      "tile":["4","1"]
+    },
+    {
+      "x": "0",
+      "y": "0",
+      "width" : "126",
+      "height": "1045",
+      "__name__":"Left Lab Wall",
+      "tile":["0","2"]
+    },
+    {
+      "x": "1796",
+      "y": "0",
+      "width" : "126",
+      "height": "544",
+      "__name__":"Right Lab Wall",
+      "tile":["0","2"]
+    },
+    {
+      "x": "0",
+      "y": "1045",
+      "width" : "9840",
       "height": "155",
-      "__name__":"Bottom Floor"
+      "__name__":"Bottom Floor",
+      "tile":["0","2"]
     },
     {
       "x": "16",
@@ -120,9 +173,9 @@
       "tile":["2","1"]
     },
     {
-      "x":      "1720",
+      "x":      "1736",
       "y":      "434",
-      "width" : "200",
+      "width" : "184",
       "height": "130",
       "__name__":"Right Duct",
       "tile":["2","1"]
@@ -240,7 +293,7 @@
       "tile":["3","2"]
     },
     {
-      "x":      "322",
+      "x":      "372",
       "y":      "411",
       "width" : "202",
       "height": "70",
