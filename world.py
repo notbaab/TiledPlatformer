@@ -645,8 +645,8 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     print(self)
     animation_dict_blue = effect_json[effect_name +'-Blue']
     animation_dict_red = effect_json[effect_name +'-Red']
-    blue = Effect(self.rect.x, self.rect.y, 50, 50, animation_dict_blue)
-    red = Effect(self.rect.x+40, self.rect.y, 50, 50, animation_dict_red)
+    blue = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict_blue)
+    red = Effect(self.rect.x+40, self.rect.y, 200, 200, animation_dict_red)
     return blue, red
 
   def draw(self, surface):

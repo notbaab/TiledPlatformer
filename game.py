@@ -125,7 +125,7 @@ class MasterPlatformer(object):
 
   def handle_keypress(self, game_dict):
     player1 = game_dict['Player'][0]
-    # player2 = game_dict['Player'][1]
+    player2 = game_dict['Player'][1]
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         self.quit()
