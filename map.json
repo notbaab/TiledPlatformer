@@ -279,9 +279,11 @@
       "x": "505",
       "y": "658",
       "width" : "158",
-      "height": "321",
+      "height": "10",
       "__name__":"Observatory",
       "timer":"Timer-Observatory",
+      "rawdata":"Raw-Data-Observatory",
+      "resultsdata":"Results-Data-Observatory",
       "tile":["1","0"],
       "timer-blue-pos":["1","1"],
       "timer-red-pos":["200","10"]
@@ -293,6 +295,8 @@
       "height": "304",
       "__name__":"Sensors",
       "timer":"Timer-Monitor",
+      "rawdata":"Raw-Data-Sensors",
+      "resultsdata":"Results-Data-Sensors",
       "tile":["3","0"],
       "timer-blue-pos":["1","1"],
       "timer-red-pos":["200","10"]
@@ -301,9 +305,11 @@
       "x":      "618",
       "y":      "866",
       "width" : "604",
-      "height": "190",
+      "height": "240",
       "__name__":"Lab",
       "timer":"Timer-Lab",
+      "rawdata":"Raw-Data-Lab",
+      "resultsdata":"Results-Data-Lab",
       "tile":["0","2"],
       "timer-blue-pos":["360","500"],
       "timer-red-pos":["160","500"]
@@ -315,6 +321,8 @@
       "height": "360",
       "__name__":"tape",
       "timer":"Timer-Monitor",
+      "rawdata":"Raw-Data-Tapes",
+      "resultsdata":"Results-Data-Tapes",
       "tile":["4","2"],
       "timer-blue-pos":["1","1"],
       "timer-red-pos":["200","10"]
@@ -332,7 +340,7 @@
       "width" : "120",
       "height": "294",
       "__name__":"Left Terminal, Comet",
-      "timer":"Timer-Monitor",
+      "timer":"Timer-Comet",
       "tile":["2","1"]
     },
     {
@@ -341,7 +349,7 @@
       "width" : "120",
       "height": "294",
       "__name__":"Right Terminal, Comet",
-      "timer":"Timer-Monitor",
+      "timer":"Timer-Comet",
       "tile":["2","1"]
     }
   ], 
@@ -356,10 +364,10 @@
       "width" : "496",
       "height": "155",
       "__name__":"PublishingDesk",
-      "timer":"Timer-Monitor",
+      "timer":"Timer-Journal",
       "tile":["2","0"],
-      "timer-blue-pos":["1","1"],
-      "timer-red-pos":["10","10"]
+      "timer-blue-pos":["0","0"],
+      "timer-red-pos":["240","0"]
     }    
   ],
   "Meeting":
