@@ -514,5 +514,18 @@
       "__name__":"Stairs_right",
       "tile":["4","1"]
     }
+  ],
+  "Effect":
+  [
+    {
+      "x":      "500",
+      "y":      "500",
+      "width" : "900",
+      "height": "900",
+      "__name__":"Stairs_right",
+      "effect_name":"Timer-Monitor-Blue",
+      "animation-time":"10",
+      "tile":["0","0"]      
+    }
   ]
 }
