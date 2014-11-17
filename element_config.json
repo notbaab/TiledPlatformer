@@ -126,6 +126,11 @@
   "Paper-Edited-Blue":
     {
       "idle":["gameelements/Paper - Edited (Blue).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Effect-Electricity":
+    {
+      "idle":["backgrounds/BG11 - Electricity.png",["5", "1"], "0", ["400","150"]]
     }
+
 }
 

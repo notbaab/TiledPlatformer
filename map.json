@@ -518,14 +518,24 @@
   "Effect":
   [
     {
-      "x":      "500",
-      "y":      "500",
-      "width" : "900",
-      "height": "900",
-      "__name__":"Stairs_right",
-      "effect_name":"Timer-Monitor-Blue",
-      "animation-time":"10",
-      "tile":["0","0"]      
+      "x":      "200",
+      "y":      "100",
+      "width" : "400",
+      "height": "600",
+      "__name__":"Lab Electricity",
+      "effect_name":"Effect-Electricity",
+      "animation-time":"8",
+      "tile":["0","2"]      
+    },
+    {
+      "x":      "1250",
+      "y":      "100",
+      "width" : "400",
+      "height": "600",
+      "__name__":"Lab Electricity",
+      "effect_name":"Effect-Electricity",
+      "animation-time":"12",
+      "tile":["0","2"]      
     }
   ]
 }
