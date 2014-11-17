@@ -136,10 +136,11 @@ class ClientPlatformer(NetworkGame):
     :type data: dict"""
     self.clear_entire_screen()
     if True:  # skip the fancy loading animation for now...the pi's can't handle it :(
-      # for obj_id, game_obj in self.game_objects.items():
-      #   if isinstance(game_obj, wd.SimpleScenery):
-      #     game_obj.draw(self.window)
-      #     game_obj.dirt_sprite = False  # DOn't draw again unless it moves
+      for obj_id, game_obj in self.game_objects.items():
+        if isinstance(game_obj, wd.SimpleScenery):
+          game_obj.draw(self.window)
+          game_obj.dirt_sprite = False  # DOn't draw again unless it moves
+          game_obj.render = False
       pygame.display.flip()
       return {'state':'play'} 
     obj_on_screen = [game_obj for game_obj in self.game_objects.values() if game_obj.render]
@@ -186,7 +187,7 @@ class ClientPlatformer(NetworkGame):
     for obj_id, game_obj in self.game_objects.items():
       if game_obj.render:
         if isinstance(game_obj, wd.Effect):
-          game_obj.draw(self.window, self)
+          clear_rect = game_obj.draw(self.window, self)
         else:
           clear_rect = game_obj.draw(self.window)
         if game_obj.dirt_sprite:
@@ -206,9 +207,9 @@ class ClientPlatformer(NetworkGame):
             pos[1] < (self.tile[1]+1)*(self.bezely) and 
         pos[1] >= self.tile[1]*(self.bezely)):
     """
-    if ((self.tile[0] + 1) * (SCREEN_WIDTH + BEZEL_SIZE) > pos[0] >= self.tile[0] * (SCREEN_WIDTH - BEZEL_SIZE) and
-        (self.tile[1] + 1) * (SCREEN_HEIGHT + BEZEL_SIZE) > pos[1] >= self.tile[1] * (SCREEN_HEIGHT - BEZEL_SIZE)):
-      translated_pos = [pos[0] - self.tile[0] * SCREEN_WIDTH,  pos[1] - (self.tile[1]) * SCREEN_HEIGHT ]
+    if ((self.tile[0] + 1) * (SCREEN_WIDTH + BEZEL_SIZE) > pos[0] >= self.tile[0] * (SCREEN_WIDTH) and
+        (self.tile[1] + 1) * (SCREEN_HEIGHT + BEZEL_SIZE) > pos[1] >= self.tile[1] * (SCREEN_HEIGHT)):
+      translated_pos = [pos[0] - self.tile[0] * (SCREEN_WIDTH+BEZEL_SIZE),  pos[1] - (self.tile[1]) * (SCREEN_HEIGHT+BEZEL_SIZE) ]
     else:
       translated_pos = 0
     return translated_pos  # , translated_pos_2)

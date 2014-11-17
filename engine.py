@@ -12,12 +12,12 @@ network_settings = json.load(open('network_settings.json'))
 json_data = open('master_settings.json')
 
 config = json.load(json_data)
-
+BEZEL_SIZE = 120
 GRAVITY_VELOCITY = 2
 FPS = pygame.time.Clock()
-X_FRICTION_CONSTANT = .3
-EDGES = (int(config['display_size'][0]) * (int(config['grid_space'][0]) + 1),
-         int(config['display_size'][1]) * (int(config['grid_space'][1]) + 1))
+X_FRICTION_CONSTANT = 2
+EDGES = (int(config['display_size'][0]) * ((int(config['grid_space'][0]) + 1)) + (BEZEL_SIZE * int(config['grid_space'][0]) + 1),
+         int(config['display_size'][1]) * ((int(config['grid_space'][1]) + 1)) + (BEZEL_SIZE * int(config['grid_space'][1]) + 1))
 
 WRAP_EDGES = (2000,2400)
 print(EDGES)

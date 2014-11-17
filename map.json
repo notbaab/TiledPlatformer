@@ -15,15 +15,15 @@
       "width" : "135",
       "height": "627",
       "__name__":"Left Journal Wall",
-      "tile":["1","0"]
+      "tile":["2","0"]
     },
     {
-      "x": "1065",
+      "x": "1785",
       "y": "0",
       "width" : "135",
       "height": "627",
       "__name__":"Right Journal Wall",
-      "tile":["1","0"]
+      "tile":["2","0"]
     },
     {
       "x": "0",
@@ -84,7 +84,7 @@
     {
       "x": "0",
       "y": "1045",
-      "width" : "9840",
+      "width" : "10560",
       "height": "155",
       "__name__":"Bottom Floor",
       "tile":["0","2"]

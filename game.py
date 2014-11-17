@@ -25,7 +25,10 @@ TICK = int(config['FPS_TICK'])
 GRID_SPACE = [int(config['grid_space'][0]), int(config['grid_space'][1])]
 # DISPLAY_SIZE = [600, 600]
 DISPLAY_SIZE = {"x": int(config['display_size'][0]), "y": int(config['display_size'][1])}
-BEZZEL_SIZE = [30, 30]
+BEZZEL_SIZE = 120
+DISPLAY_SIZE['x'] = DISPLAY_SIZE['x'] + BEZZEL_SIZE
+DISPLAY_SIZE['y'] = DISPLAY_SIZE['y'] + BEZZEL_SIZE
+print(DISPLAY_SIZE)
 DEBUG_CLASSES = []
 # DEBUG_CLASSES = [wd.SimpleScenery, wd.Player]
 
@@ -342,8 +345,8 @@ class MasterPlatformer(object):
   def handle_localhost(self, follow_player):
     """special function used to handle things like switching the screens when playing on one local host"""
     # first, find out which tile player one is in. 
-    tile_x = follow_player.rect.centerx / DISPLAY_SIZE['x']
-    tile_y = follow_player.rect.centery / DISPLAY_SIZE['y']
+    tile_x = follow_player.rect.centerx / (DISPLAY_SIZE['x'] + BEZZEL_SIZE)
+    tile_y = follow_player.rect.centery / (DISPLAY_SIZE['y'] + BEZZEL_SIZE)
     if tile_x == -1:
       tile_x = 0
     if tile_x > 4:
