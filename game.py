@@ -336,10 +336,10 @@ class MasterPlatformer(object):
           tmp = constructor(x, y, int(obj_dict['width']),
                             int(obj_dict['height']), sprite_sheet=asset_json[key])
         
-        if isinstance(tmp, wd.DataDevice):
-          effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json)
-          game_objects[effect_blue.id] = effect_blue
-          game_objects[effect_red.id] = effect_red
+        # if isinstance(tmp, wd.DataDevice):
+          # effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json)
+          # game_objects[effect_blue.id] = effect_blue
+          # game_objects[effect_red.id] = effect_red
 
         game_objects[tmp.id] = tmp
       # except Exception, e:
@@ -360,9 +360,9 @@ class MasterPlatformer(object):
 
   def _handle_stairs(self, game_objects, stair_dict, startx, starty):
     stairs = wd.Stairs(startx, starty, int(stair_dict['width']), int(stair_dict['height']))
-    steps_list = stairs.make_stairs('right')
-    for step in steps_list:
-      game_objects[step.id] = step
+    # steps_list = stairs.make_stairs('right')
+    # for step in steps_list:
+    #   game_objects[step.id] = step
 
 
 

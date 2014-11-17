@@ -2,14 +2,14 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-import ipdb
+# import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
 ASSET_FOLDER = "assets/"
 GRAVITY_VELOCITY = 4  # lets cheat for now
 FLOOR_Y = 580
-PLAYER_SPEED = 20
+PLAYER_SPEED = 100
 PLAYER_THROW_SPEED = eng.Vector(20, -5)
 FOLLOWER_SPEED = PLAYER_SPEED - 3  # just slower than the players
 PATROL_SPEED = 4  # just slower than the players
@@ -1016,8 +1016,8 @@ class ClimableObject(BackGroundScenery):
       self.bottom = self.rect.bottom
       self.climb_speed = LADDER_CLIMB_SPEED
 
-  def draw(self, surface):
-     pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+  # def draw(self, surface):
+  #    pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
 
 class Stairs(GameObject):
   def __init__(self, startx, starty, width, height, obj_id=None):
@@ -1075,11 +1075,11 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
   def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, total_time=120):
     GameObject.__init__(self, startx, starty, width, height)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
-    NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id',
-                                      'render'])
+    NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id', 'render'])
     self.sprite_sheet = sprite_sheet
     # total time is in frames cause I'm bad at time.
     self.animation_time = total_time / len(self.animation_frames[self.current_animation])
+    self.render = False
 
   
 
