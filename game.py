@@ -108,11 +108,12 @@ class MasterPlatformer(object):
     self.state = 'load'
 
   def run(self):
+    send_struct = {}
     while True:
       if self.state == 'play':
-        data, self.state = self.play_frame()
+        self.state, send_struct = self.play_frame(send_struct)
       elif self.state == 'load':
-        data, self.state = self.load()
+        self.state, send_struct = self.load()
       else:
         ipdb.set_trace()
       FPS.tick(TICK)
@@ -121,7 +122,14 @@ class MasterPlatformer(object):
   def load(self):
     send_struct = {'state': 'load'}
     # clients handle the load state so wait for their response and play the game
-    return self.serialize_and_sync(send_struct)
+    self.send(send_struct)
+    self.struct_game_dict = self.structured_list()
+    game_objects_packets = []  # accumulator for the build_packet function
+    send_struct = {'state': 'play', 'deleted_objs': [], 'added_objs': []}
+    self.engine.map_attribute_flat(self.struct_game_dict['NetworkedObject'], 'build_packet', game_objects_packets)
+    send_struct['game_objects'] = game_objects_packets
+    # self.recv()
+    return 'play', send_struct
 
   def handle_keypress(self, game_dict):
     player1 = game_dict['Player'][0]
@@ -174,9 +182,12 @@ class MasterPlatformer(object):
         elif event.key == K_d:
           player2.stop_right()
 
-  def play_frame(self):
-    game_dict = self.structured_list()  # Structure the game object list to manage easier. n time should be fast
-    self.handle_keypress(game_dict)
+  def play_frame(self, send_struct):
+    self.recv()
+    self.send(send_struct)
+
+    # game_dict = self.structured_list()  # Structure the game object list to manage easier. n time should be fast
+    self.handle_keypress(self.struct_game_dict)
     # player1 = game_dict['Player'][0]
     # player2 = game_dict['Player'][1]
 
@@ -186,19 +197,20 @@ class MasterPlatformer(object):
     self.engine.map_attribute_flat(self.game_objects.values(), 'animate')
 
     # update the AI after the players have been updated
-    self.engine.map_attribute_flat(game_dict['AI'], 'check_for_leader', game_dict['Player'])
+    self.engine.map_attribute_flat(self.struct_game_dict['AI'], 'check_for_leader', self.struct_game_dict['Player'])
 
     # update meetings/traps
-    self.engine.map_attribute_flat(game_dict['Meeting'], 'check_player', game_dict['Player'])
+    self.engine.map_attribute_flat(self.struct_game_dict['Meeting'], 'check_player', self.struct_game_dict['Player'])
 
     # construct packet
     send_struct = {'state': 'play', 'deleted_objs': [], 'added_objs': []}
     if network_settings['localhost']:
-      send_struct['localhost'] = self.handle_localhost(game_dict['Player'][0])
+      send_struct['localhost'] = self.handle_localhost(self.struct_game_dict['Player'][0])
 
     # check for objects that have been created and add them to the dict
     for game_obj in self.added:
       self.game_objects[game_obj.id] = game_obj
+      self.add_to_structured_list(game_obj)
       send_struct['added_objs'].append({"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
                                                  game_obj.rect.height], "id": game_obj.id,
                                         "sprite_sheet": game_obj.sprite_sheet,
@@ -213,10 +225,28 @@ class MasterPlatformer(object):
     self.deleted = []
 
     game_objects_packets = []  # accumulator for the build_packet function
-    self.engine.map_attribute_flat(game_dict['NetworkedObject'], 'build_packet', game_objects_packets)
+    self.engine.map_attribute_flat(self.struct_game_dict['NetworkedObject'], 'build_packet', game_objects_packets)
     send_struct['game_objects'] = game_objects_packets
 
-    return self.serialize_and_sync(send_struct)
+    return 'play', send_struct
+
+  def add_to_structured_list(self, game_obj):
+    if isinstance(game_obj, wd.Player):
+      self.struct_game_dict['Player'].append(game_obj)
+    elif isinstance(game_obj, wd.SimpleScenery):
+      self.struct_game_dict['StaticObject'].append(game_obj)
+    elif isinstance(game_obj, wd.Follower):
+      self.struct_game_dict['AI'].append(game_obj)
+    elif isinstance(game_obj, wd.Effect):
+      self.struct_game_dict['Effect'].append(game_obj)
+    if isinstance(game_obj, wd.MovableGameObject):
+      self.struct_game_dict['MovableGameObject'].append(game_obj)
+    if isinstance(game_obj, wd.NetworkedObject):
+      self.struct_game_dict['NetworkedObject'].append(game_obj)
+    if isinstance(game_obj, wd.ClimableObject):
+      self.struct_game_dict['ClimableObject'].append(game_obj)
+    if isinstance(game_obj, wd.Meeting):
+      self.struct_game_dict['Meeting'].append(game_obj)
 
   def structured_list(self):
     """take the game object list and return a dict with the keys for static, AI, and player
@@ -247,8 +277,8 @@ class MasterPlatformer(object):
   def handle_localhost(self, follow_player):
     """special function used to handle things like switching the screens when playing on one local host"""
     # first, find out which tile player one is in. 
-    tile_x = int(follow_player.rect.centerx / DISPLAY_SIZE['x'])
-    tile_y = int(follow_player.rect.centery / DISPLAY_SIZE['y'])
+    tile_x = follow_player.rect.centerx / DISPLAY_SIZE['x']
+    tile_y = follow_player.rect.centery / DISPLAY_SIZE['y']
     return {'x':tile_x, 'y':tile_y}
     # print(tile_x)
     # print(tile_y)
@@ -281,6 +311,18 @@ class MasterPlatformer(object):
       return_list.append(self.get_whole_packet(node))
     # TODO: return real data
     return '', 'play'
+
+  def send(self, send_struct):
+    data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
+    for node in self.socket_list:
+      node.sendall(data)
+
+  def recv(self):
+    return_list = []
+    for node in self.socket_list:
+      return_list.append(self.get_whole_packet(node))
+
+
 
   def quit(self):
     data = pickle.dumps({'state': 'kill'}, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
@@ -336,10 +378,10 @@ class MasterPlatformer(object):
           tmp = constructor(x, y, int(obj_dict['width']),
                             int(obj_dict['height']), sprite_sheet=asset_json[key])
         
-        # if isinstance(tmp, wd.DataDevice):
-          # effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json)
-          # game_objects[effect_blue.id] = effect_blue
-          # game_objects[effect_red.id] = effect_red
+        if isinstance(tmp, wd.DataDevice):
+          effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json)
+          game_objects[effect_blue.id] = effect_blue
+          game_objects[effect_red.id] = effect_red
 
         game_objects[tmp.id] = tmp
       # except Exception, e:
@@ -360,9 +402,9 @@ class MasterPlatformer(object):
 
   def _handle_stairs(self, game_objects, stair_dict, startx, starty):
     stairs = wd.Stairs(startx, starty, int(stair_dict['width']), int(stair_dict['height']))
-    # steps_list = stairs.make_stairs('right')
-    # for step in steps_list:
-    #   game_objects[step.id] = step
+    steps_list = stairs.make_stairs('right')
+    for step in steps_list:
+      game_objects[step.id] = step
 
 
 

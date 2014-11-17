@@ -1079,7 +1079,29 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
     self.sprite_sheet = sprite_sheet
     # total time is in frames cause I'm bad at time.
     self.animation_time = total_time / len(self.animation_frames[self.current_animation])
+    # self.render = False
+    self.render_frames = 0
+    self.animation_time = 5
+  
+  def animate(self):
+    """Updates the animation timer goes to next frame in current animation cycle
+    after the alloted animation time has passed."""
+    self.animation_timer += 1
     self.render = False
+    if self.animation_timer == self.animation_time:
+      self.current_frame = next(self.current_cycle)
+      self.animation_timer = 0
+      self.render = True
+
+  def draw(self, surface, game):
+    """Draws the player object onto surface
+    :param surface: the surface to draw the object, typically the window
+    :type surface: pygame.Surface"""
+    surface.blit(game.background, (self.rect.x, self.rect.y), self.rect)
+    surface.blit(self.sprite_sheets[self.current_animation], self.rect, area=self.current_frame)
+
+
+
 
   
 
