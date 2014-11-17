@@ -379,7 +379,10 @@ class MasterPlatformer(object):
                             int(obj_dict['height']), sprite_sheet=asset_json[key])
         
         if isinstance(tmp, wd.DataDevice):
-          effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json)
+          if isinstance(tmp, wd.DataCruncher):
+            effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json)
+          else:
+            effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json, red_loc=obj_dict['timer-red-pos'], blue_loc=obj_dict['timer-blue-pos'])
           game_objects[effect_blue.id] = effect_blue
           game_objects[effect_red.id] = effect_red
           tmp.load_data(obj_dict['timer'], effect_json)

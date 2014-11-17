@@ -659,8 +659,7 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
   def generate_data(self):
     game_obj = Data(20, 20, 40, 40, self.data_dict_blue)
     print(game_obj)
-    game_obj.rect.centerx = self.rect.centerx
-    game_obj.rect.bottom = self.rect.top
+    game_obj.rect.center = self.active_timer.rect.center
     game_obj.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
     game_obj.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
     self.add_to_world(game_obj)
@@ -678,18 +677,19 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
       self.active_timer.pause = False
 
 
-  def load_effects(self, effect_name, effect_json):
+  def load_effects(self, effect_name, effect_json, red_loc=None, blue_loc=None):
     """load the effects for this data object and return effects loaded"""
     # print(effect_name)
     # print(effect_json)
     print(self)
     animation_dict_blue = effect_json[effect_name +'-Blue']
     animation_dict_red = effect_json[effect_name +'-Red']
-    self.blue_timer = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict_blue)
+    self.blue_timer = Effect(self.rect.x + int(blue_loc[0]), self.rect.y - int(blue_loc[1]), 200, 
+                            200, animation_dict_blue)
     self.blue_timer.physics = False
     self.blue_timer.collision = False
     self.blue_timer.animation_time = DATA_DEVICE_TIMER / len(self.blue_timer.animation_frames[self.blue_timer.current_animation])
-    self.red_timer = Effect(self.rect.x+40, self.rect.y, 200, 200, animation_dict_red)
+    self.red_timer = Effect(self.rect.x + int(red_loc[0]), self.rect.y - int(red_loc[1]), 200, 200, animation_dict_red)
     self.red_timer.physics = False
     self.red_timer.collision = False
     self.red_timer.animation_time = DATA_DEVICE_TIMER / len(self.red_timer.animation_frames[self.red_timer.current_animation])
@@ -714,6 +714,7 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
         self.active_timer.render = False
         self.active_timer.reset_current_animation()
         self.active_timer.pause_animation()
+        self.active_timer.clear = True
         self.active_timer = None
         self.timer_count = 0
 
@@ -755,6 +756,26 @@ class DataCruncher(DataDevice):
       self.data = game_obj
       self.data.advance_data()
       self.data.hide_object()
+
+  def load_effects(self, effect_name, effect_json, red_loc=None, blue_loc= None):
+    """load the effects for this data object and return effects loaded"""
+    # print(effect_name)
+    # print(effect_json)
+    print(self)
+    animation_dict_blue = effect_json[effect_name +'-Blue']
+    animation_dict_red = effect_json[effect_name +'-Red']
+    self.blue_timer = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict_blue)
+    self.blue_timer.physics = False
+    self.blue_timer.collision = False
+    self.blue_timer.animation_time = DATA_DEVICE_TIMER / len(self.blue_timer.animation_frames[self.blue_timer.current_animation])
+    self.red_timer = Effect(self.rect.x+40, self.rect.y, 200, 200, animation_dict_red)
+    self.red_timer.physics = False
+    self.red_timer.collision = False
+    self.red_timer.animation_time = DATA_DEVICE_TIMER / len(self.red_timer.animation_frames[self.red_timer.current_animation])
+    self.timer_total = self.red_timer.animation_time * len(self.red_timer.animation_frames[self.red_timer.current_animation]) + self.red_timer.animation_time
+    print(self.timer_total)
+    print(self.red_timer.animation_time)
+    return self.blue_timer, self.red_timer
 
   # def update(self):
   #   if self.timer:
@@ -1091,7 +1112,7 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
   def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, total_time=120):
     GameObject.__init__(self, startx, starty, width, height)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
-    NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id', 'render'])
+    NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id', 'render', 'clear'])
     self.sprite_sheet = sprite_sheet
     # total time is in frames cause I'm bad at time.
     self.animation_time = total_time / len(self.animation_frames[self.current_animation])
@@ -1099,6 +1120,7 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
     self.pause_animation()
     self.render_frames = 0
     self.animation_time = 5
+    self.clear = False
   
   def animate(self):
     """Updates the animation timer goes to next frame in current animation cycle
@@ -1114,14 +1136,28 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
   def build_packet(self, accumulator):
     if self.render:
       super(Effect, self).build_packet(accumulator)
+    if self.clear:
+      super(Effect, self).build_packet(accumulator)
+      self.clear = False
+
+
+  def read_packet(self, packet):
+    for attribute in self.attribute_list:
+      self.__setattr__(attribute, packet[attribute])
+    if self.clear:
+      self.render = True
 
 
   def draw(self, surface, game):
     """Draws the player object onto surface
     :param surface: the surface to draw the object, typically the window
     :type surface: pygame.Surface"""
-    surface.blit(game.background, (self.rect.x, self.rect.y), self.rect)
-    surface.blit(self.sprite_sheets[self.current_animation], self.rect, area=self.current_frame)
+    if self.clear:
+      surface.blit(game.background, (self.rect.x, self.rect.y), self.rect)
+      self.render = False
+    else:
+      surface.blit(game.background, (self.rect.x, self.rect.y), self.rect)
+      surface.blit(self.sprite_sheets[self.current_animation], self.rect, area=self.current_frame)
 
 
 
