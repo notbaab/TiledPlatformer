@@ -35,6 +35,14 @@
       "width" : "9600",
       "height": "155",
       "__name__":"Bottom Floor"
+    },
+    {
+      "x": "16",
+      "y": "0",
+      "width" : "117",
+      "height": "556",
+      "__name__":"Vertical Duct",
+      "tile":["1","1"]
     }
   ],
   "BackGroundScenery":
@@ -56,14 +64,6 @@
       "tile":["4","0"]
     },
     {
-      "x": "16",
-      "y": "0",
-      "width" : "117",
-      "height": "556",
-      "__name__":"Vertical Duct",
-      "tile":["1","1"]
-    },
-    {
       "x": "133",
       "y": "434",
       "width" : "74",
@@ -72,9 +72,9 @@
       "tile":["1","1"]
     },
     {
-      "x": "333",
+      "x": "362",
       "y": "434",
-      "width" : "100",
+      "width" : "65",
       "height": "118",
       "__name__":"Horizontal Duct Right of Ladder",
       "tile":["1","1"]
@@ -98,23 +98,23 @@
     {
       "x":      "0",
       "y":      "434",
-      "width" : "234",
+      "width" : "200",
       "height": "130",
       "__name__":"Left Duct",
       "tile":["2","1"]
     },
     {
-      "x":      "336",
+      "x":      "370",
       "y":      "434",
-      "width" : "1256",
+      "width" : "1192",
       "height": "130",
       "__name__":"Middle Duct",
       "tile":["2","1"]
     },
     {
-      "x":      "1698",
+      "x":      "1720",
       "y":      "434",
-      "width" : "222",
+      "width" : "200",
       "height": "130",
       "__name__":"Right Duct",
       "tile":["2","1"]
@@ -262,13 +262,15 @@
       "x": "70",
       "y": "500",
       "width" : "130",
-      "height": "250"
+      "height": "250",
+      "team": "red"
     },
     {
       "x": "120",
       "y": "500",
       "width" : "130",
-      "height": "250"
+      "height": "250",
+      "team": "blue"
     }
   ],
   "Data":
@@ -324,8 +326,8 @@
       "rawdata":"Raw-Data-Tapes",
       "resultsdata":"Results-Data-Tapes",
       "tile":["4","2"],
-      "timer-blue-pos":["1","1"],
-      "timer-red-pos":["200","10"]
+      "timer-blue-pos":["-500","-60"],
+      "timer-red-pos":["-800","-60"]
     }    
   ],
   "Follower":

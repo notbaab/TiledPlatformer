@@ -102,6 +102,30 @@
   "Results-Data-Tapes-Red":
     {
       "idle":["gameelements/Results - Tapes (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Timer-Paper-Red":
+    {
+      "idle":["gameelements/Timer - Paper (Red).png",["65", "1"], "0", ["300","200"]]
+    },
+  "Timer-Paper-Blue":
+    {
+      "idle":["gameelements/Timer - Paper (Blue).png",["65", "1"], "0", ["300","200"]]
+    },
+  "Paper-Red":
+    {
+      "idle":["gameelements/Paper (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Paper-Blue":
+    {
+      "idle":["gameelements/Paper (Blue).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Paper-Edited-Red":
+    {
+      "idle":["gameelements/Paper - Edited (Red).png",["1", "1"], "0", ["200","200"]]
+    },
+  "Paper-Edited-Blue":
+    {
+      "idle":["gameelements/Paper - Edited (Blue).png",["1", "1"], "0", ["200","200"]]
     }
 }
 
