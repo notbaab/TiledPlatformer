@@ -9,11 +9,11 @@ DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
 ASSET_FOLDER = "assets/"
 GRAVITY_VELOCITY = 4  # lets cheat for now
 FLOOR_Y = 580
-PLAYER_SPEED = 20
-PLAYER_THROW_SPEED = eng.Vector(20, -5)
+PLAYER_SPEED = 50
+PLAYER_THROW_SPEED = eng.Vector(5, -5)
 FOLLOWER_SPEED = PLAYER_SPEED - 3  # just slower than the players
 PATROL_SPEED = 4  # just slower than the players
-JUMP_VELOCITY = -20
+JUMP_VELOCITY = -40
 DATA_DEVICE_TIMER = 120
 TIMER_WIDTH = 100
 PLAYER_INTERACT_DIST = 50
@@ -29,7 +29,7 @@ STUN_VELOCITY_WINNER = eng.Vector(5, -10)
 STUN_WINNER_TIMER = 10
 STUN_LOSER_TIMER = 20
 LEFT_FRAME_ID = 'l_'
-LADDER_CLIMB_SPEED = eng.Vector(0, 10)
+LADDER_CLIMB_SPEED = eng.Vector(0, 30)
 MAGIC_STAIR_CONSTANT = 2  # DO NOT TOUCH, THIS IS MAGIC
 
 
@@ -535,9 +535,12 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     :param game_objs: A list of game objects that the player can potentially interact
     with
     :type game_objs: list of GameObject"""
+    if self.data:
+      self.throw_data()
+      return
     for game_obj in game_objs:
       if isinstance(game_obj, DataDevice):
-        if eng.distance(self.rect, game_obj.rect) < self.interact_dist:
+        if self.rect.colliderect(game_obj.rect):
           game_obj.interact(self)
 
   def handle_ladddery_things(self):
@@ -741,17 +744,14 @@ class DataCruncher(DataDevice):
     self.accept_stage = accept_stage
     self.amount_data_needed = amount_data_needed
     self.data_collected = 0
+    self.collision = True
 
+
+  # TODO: THIS IS BROKEN HERE< FIX THIS.
   def handle_data(self, game_obj):
     if game_obj.stage == self.accept_stage:
       self.data_collected += 1
-      if self.data_collected == self.amount_data_needed:
-        self.timer = DATA_DEVICE_TIMER  # start timer
-        self.message_str = None
-        self.data_collected = 0
-      else:
-        # if there can be more data 
-        self.message_str = str(self.data_collected) + "/" + str(self.amount_data_needed)
+      self.timer = DATA_DEVICE_TIMER  # start timer
       # TODO: THis is wrong, need a destructor 
       self.data = game_obj
       self.data.advance_data()
@@ -861,9 +861,11 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     super(Data, self).draw(surface)  # animatedSpriteObject.draw
 
   def respond_to_collision(self, obj, axis=None):
+    # ipdb.set_trace()
     if isinstance(obj, Player):
       obj.respond_to_collision(self)
-    elif isinstance(obj, DataCruncher) and self.stage == obj.accept_stage:
+    elif isinstance(obj, DataCruncher):# and self.stage == obj.accept_stage:
+      print("hit soemthing")
       obj.handle_data(self)
     else:
       # TODO: this makes the data go through players
@@ -1104,8 +1106,6 @@ class Step(BackGroundScenery):
     self.prev_stair = prev_stair
 
 
-
-
 class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
   """Effect objects. Just a simple object that doesn't interact with anything,
   its just a sprite that gets sent over the network and is told to stop or start"""
@@ -1120,7 +1120,7 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
     self.pause_animation()
     self.render_frames = 0
     self.animation_time = 5
-    self.clear = False
+    self.clear = True
   
   def animate(self):
     """Updates the animation timer goes to next frame in current animation cycle
