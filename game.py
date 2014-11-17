@@ -382,6 +382,7 @@ class MasterPlatformer(object):
           effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json)
           game_objects[effect_blue.id] = effect_blue
           game_objects[effect_red.id] = effect_red
+          tmp.load_data(obj_dict['timer'], effect_json)
 
         game_objects[tmp.id] = tmp
       # except Exception, e:
