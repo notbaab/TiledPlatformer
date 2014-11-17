@@ -131,7 +131,7 @@ class MasterPlatformer(object):
     # self.recv()
     return 'play', send_struct
 
-  def handle_keypress(self, game_dict):
+  def handle_keypress_local(self, game_dict):
     player1 = game_dict['Player'][0]
     player2 = game_dict['Player'][1]
     for event in pygame.event.get():
@@ -180,14 +180,79 @@ class MasterPlatformer(object):
         elif event.key == K_DOWN:
           player1.cancel_up_down_interact()
         elif event.key == K_d:
+          player2.stop_right()  
+
+  def handle_keypress(self, game_dict):
+    player1 = game_dict['Player'][0]
+    player2 = game_dict['Player'][1]
+    for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+        self.quit()
+        sys.exit()
+      elif event.type == KEYDOWN:
+        if event.key == K_ESCAPE:
+          self.quit()
+          sys.exit()          
+        if event.key == K_KP4:
+          player1.move_left()
+          player1.escape(1)
+        elif event.key == K_KP6:
+          player1.move_right()
+          player1.escape(2)
+        elif event.key == K_KP8:
+          player1.up_interact(game_dict['ClimableObject'])
+        elif event.key == K_KP2:
+          player1.down_interact(game_dict['ClimableObject'])
+        elif event.key == K_c:
+          player1.interact(self.game_objects.values())  # TODO: We are passing in way to much data here, fix it.
+        # elif event.key == K_t:
+        #   player1.throw_data()
+        elif event.key == K_5:
+          player1.jump()
+        
+        # player2
+        elif event.key == K_d:
+          player2.move_left()
+          player2.escape(1)
+        elif event.key == K_g:
+          player2.move_right()
+          player2.escape(2)
+        elif event.key == K_r:
+          player1.up_interact(game_dict['ClimableObject'])
+        elif event.key == K_f:
+          player1.down_interact(game_dict['ClimableObject'])
+        elif event.key == K_6:
+          player2.jump()
+        elif event.key == K_RIGHTBRACKET:
+          player2.interact(self.game_objects.values())
+      elif event.type == KEYUP:
+        if event.key == K_KP4:
+          player1.stop_left()
+        elif event.key == K_KP6:
+          player1.stop_right()
+        elif event.key == K_KP8:
+          player1.cancel_up_down_interact()
+        elif event.key == K_KP2:
+          player1.cancel_up_down_interact()
+        elif event.key == K_d:
+          player2.stop_left()
+        elif event.key == K_g:
           player2.stop_right()
+        elif event.key == K_f:
+          player1.up_interact(game_dict['ClimableObject'])
+        elif event.key == K_6:
+          player1.down_interact(game_dict['ClimableObject'])
 
   def play_frame(self, send_struct):
     self.recv()
     self.send(send_struct)
 
     # game_dict = self.structured_list()  # Structure the game object list to manage easier. n time should be fast
-    self.handle_keypress(self.struct_game_dict)
+    if network_settings['localhost']:
+      self.handle_keypress_local(self.struct_game_dict)
+    else:
+      self.handle_keypress(self.struct_game_dict)
+
     # player1 = game_dict['Player'][0]
     # player2 = game_dict['Player'][1]
 
