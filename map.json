@@ -48,7 +48,7 @@
       "tile":["1","0"]
     },
     {
-      "x": "1694",
+      "x": "1684",
       "y": "604",
       "width" : "190",
       "height": "450",
@@ -80,41 +80,41 @@
       "tile":["1","1"]
     },
     {
-      "x": "690",
-      "y": "468",
-      "width" : "226",
-      "height": "44",
-      "__name__":"FirstPlat",
+      "x": "939",
+      "y": "482",
+      "width" : "260",
+      "height": "123",
+      "__name__":"Slanted Duct",
       "tile":["1","1"]
     },
     {
-      "x": "1626",
-      "y": "340",
-      "width" : "336",
-      "height": "116",
-      "__name__":"LastPlat",
+      "x": "1614",
+      "y": "434",
+      "width" : "306",
+      "height": "118",
+      "__name__":"Far Right Duct",
       "tile":["1","1"]
     },
     {
       "x":      "0",
       "y":      "434",
-      "width" : "200",
+      "width" : "234",
       "height": "130",
       "__name__":"Left Duct",
       "tile":["2","1"]
     },
     {
-      "x":      "370",
+      "x":      "336",
       "y":      "434",
-      "width" : "1190",
+      "width" : "1256",
       "height": "130",
       "__name__":"Middle Duct",
       "tile":["2","1"]
     },
     {
-      "x":      "1730",
+      "x":      "1698",
       "y":      "434",
-      "width" : "180",
+      "width" : "222",
       "height": "130",
       "__name__":"Right Duct",
       "tile":["2","1"]
@@ -124,20 +124,20 @@
       "y":      "434",
       "width" : "360",
       "height": "130",
-      "__name__":"Left Duct",
+      "__name__":"Left Duct, Classroom",
       "tile":["3","1"]
     },
     {
-      "x":      "1055",
-      "y":      "513",
+      "x":      "576",
+      "y":      "470",
       "width" : "242",
       "height": "70",
       "__name__":"Left Light, Classroom",
       "tile":["3","1"]
     },
     {
-      "x":      "1206",
-      "y":      "412",
+      "x":      "1052",
+      "y":      "512",
       "width" : "242",
       "height": "70",
       "__name__":"Right Light, Classroom",
@@ -146,7 +146,7 @@
     {
       "x":      "118",
       "y":      "448",
-      "width" : "392",
+      "width" : "422",
       "height": "89",
       "__name__":"Left Platform",
       "tile":["1","2"]
@@ -177,34 +177,34 @@
     },
     {
       "x":      "0",
-      "y":      "446",
-      "width" : "382",
-      "height": "88",
-      "__name__":"LPlat",
+      "y":      "455",
+      "width" : "432",
+      "height": "80",
+      "__name__":"Left Platform",
       "tile":["2","2"]
     },
     {
-      "x":      "520",
-      "y":      "374",
+      "x":      "502",
+      "y":      "379",
       "width" : "242",
-      "height": "68",
-      "__name__":"LLight",
+      "height": "70",
+      "__name__":"Left Light",
       "tile":["2","2"]
     },
     {
-      "x":      "1206",
-      "y":      "374",
+      "x":      "1181",
+      "y":      "379",
       "width" : "242",
-      "height": "68",
-      "__name__":"RLight",
+      "height": "70",
+      "__name__":"Right Light",
       "tile":["2","2"]
     },
     {
-      "x":      "1506",
-      "y":      "448",
-      "width" : "460",
-      "height": "90",
-      "__name__":"RPlat",
+      "x":      "1488",
+      "y":      "455",
+      "width" : "432",
+      "height": "80",
+      "__name__":"Right Platform",
       "tile":["2","2"]
     },
     {
@@ -212,7 +212,7 @@
       "y":      "878",
       "width" : "316",
       "height": "176",
-      "__name__":"LDesk",
+      "__name__":"Left Desk",
       "tile":["2","2"]
     },
     {
@@ -220,7 +220,7 @@
       "y":      "878",
       "width" : "316",
       "height": "176",
-      "__name__":"RDesk",
+      "__name__":"Right Desk",
       "tile":["2","2"]
     },
     {
@@ -248,9 +248,9 @@
       "tile":["3","2"]
     },
     {
-      "x":      "1407",
+      "x":      "1374",
       "y":      "448",
-      "width" : "392",
+      "width" : "424",
       "height": "89",
       "__name__":"Right Platform",
       "tile":["3","2"]
@@ -303,13 +303,15 @@
       "tile":["0","2"]
     },   
     {
-      "x":      "596",
-      "y":      "522",
-      "width" : "970",
-      "height": "538",
+      "x":      "1696",
+      "y":      "695",
+      "width" : "155",
+      "height": "360",
       "__name__":"tape",
       "timer":"Timer-Monitor",
-      "tile":["4","2"]
+      "tile":["4","2"],
+      "timer-blue-pos":["1","1"],
+      "timer-red-pos":["10","10"]
     }    
   ],
   "Follower":
@@ -349,7 +351,9 @@
       "height": "155",
       "__name__":"PublishingDesk",
       "timer":"Timer-Monitor",
-      "tile":["2","0"]
+      "tile":["2","0"],
+      "timer-blue-pos":["1","1"],
+      "timer-red-pos":["10","10"]
     }    
   ],
   "Meeting":
@@ -398,7 +402,7 @@
       "tile":["2","1"]
     },
     {
-      "x":      "1286",
+      "x":      "1597",
       "y":      "624",
       "width" : "100",
       "height": "1084",
