@@ -220,7 +220,7 @@
     {
       "x":      "1488",
       "y":      "455",
-      "width" : "6788",
+      "width" : "678",
       "height": "80",
       "__name__":"Right Platform",
       "tile":["2","2"]
@@ -432,49 +432,49 @@
   "ClimableObject":
   [
     {
-      "x":      "238",
+      "x":      "205",
       "y":      "434",
-      "width" : "100",
+      "width" : "166",
       "height": "1274",
       "__name__":"Ladder, Meeting",
       "tile":["1","1"]
     },
     {
-      "x":      "238",
+      "x":      "205",
       "y":      "440",
-      "width" : "100",
+      "width" : "166",
       "height": "720",
       "__name__":"Left Ladder, Comet",
       "tile":["2","1"]
     },
     {
-      "x":      "1594",
+      "x":      "1562",
       "y":      "440",
-      "width" : "100",
+      "width" : "166",
       "height": "720",
       "__name__":"Right Ladder, Comet",
       "tile":["2","1"]
     },
     {
-      "x":      "1597",
+      "x":      "1564",
       "y":      "624",
-      "width" : "100",
-      "height": "1084",
+      "width" : "166",
+      "height": "1164",
       "__name__":"Ladder, Classroom",
       "tile":["3","1"]
     },
     {
-      "x":      "540",
+      "x":      "507",
       "y":      "448",
-      "width" : "100",
+      "width" : "166",
       "height": "613",
       "__name__":"Bottom Ladder, Left Hall",
       "tile":["1","2"]
     },
     {
-      "x":      "1286",
+      "x":      "1253",
       "y":      "448",
-      "width" : "100",
+      "width" : "166",
       "height": "613",
       "__name__":"Bottom Ladder, Right Hall",
       "tile":["3","2"]

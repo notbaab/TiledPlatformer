@@ -129,8 +129,7 @@
     },
   "Effect-Electricity":
     {
-      "idle":["backgrounds/BG11 - Electricity.png",["5", "1"], "0", ["400","150"]]
+      "idle":["backgrounds/BG11 - Electricity.png",["5", "1"], "0", ["400","600"]]
     }
-
 }
 
