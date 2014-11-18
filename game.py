@@ -32,7 +32,6 @@ print(DISPLAY_SIZE)
 DEBUG_CLASSES = []
 # DEBUG_CLASSES = [wd.SimpleScenery, wd.Player]
 
-
 # TODO: have a platformer game class that has all the similar components of the render and 
 # master node, and inherit from that?
 class MasterPlatformer(object):
@@ -48,6 +47,8 @@ class MasterPlatformer(object):
     self.engine = eng.Engine()
     self.added = []  # list keeping track of which objects are added
     self.deleted = []  # list keeping track of the ids of objects that are deleted
+    self.blue_score = 0
+    self.red_score = 0
 
     self.game_objects = self.load_map()
 
@@ -90,12 +91,13 @@ class MasterPlatformer(object):
     # build the initial data packet
     send_struct = {'game_obj': []}
     for game_obj in self.game_objects.values():
-      send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
-                            game_obj.rect.height], "id": game_obj.id,
-                   "constructor": type(game_obj).__name__}
-      if hasattr(game_obj,  "sprite_sheet"):
-         send_dict["sprite_sheet"] = game_obj.sprite_sheet
-      send_struct['game_obj'].append(send_dict)
+      if isinstance(game_obj, wd.NetworkedObject):
+        send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
+                              game_obj.rect.height], "id": game_obj.id,
+                     "constructor": type(game_obj).__name__}
+        if hasattr(game_obj,  "sprite_sheet"):
+           send_dict["sprite_sheet"] = game_obj.sprite_sheet
+        send_struct['game_obj'].append(send_dict)
 
     data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
 
@@ -221,9 +223,9 @@ class MasterPlatformer(object):
           player2.move_right()
           player2.escape(2)
         elif event.key == K_r:
-          player1.up_interact(game_dict['ClimableObject'])
+          player2.up_interact(game_dict['ClimableObject'])
         elif event.key == K_f:
-          player1.down_interact(game_dict['ClimableObject'])
+          player2.down_interact(game_dict['ClimableObject'])
         elif event.key == K_6:
           player2.jump()
         elif event.key == K_RIGHTBRACKET:
@@ -242,9 +244,9 @@ class MasterPlatformer(object):
         elif event.key == K_g:
           player2.stop_right()
         elif event.key == K_f:
-          player1.up_interact(game_dict['ClimableObject'])
+          player2.cancel_up_down_interact()
         elif event.key == K_6:
-          player1.down_interact(game_dict['ClimableObject'])
+          player2.cancel_up_down_interact()
 
   def play_frame(self, send_struct):
     self.recv()
@@ -295,6 +297,7 @@ class MasterPlatformer(object):
     game_objects_packets = []  # accumulator for the build_packet function
     self.engine.map_attribute_flat(self.struct_game_dict['NetworkedObject'], 'build_packet', game_objects_packets)
     send_struct['game_objects'] = game_objects_packets
+    send_struct['score'] = [self.blue_score, self.red_score]
     # print(send_struct)
 
     return 'play', send_struct

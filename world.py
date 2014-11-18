@@ -2,7 +2,7 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-# import ipdb
+import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
@@ -695,7 +695,7 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
 
   def generate_data(self):
     game_obj = Data(20, 20, 40, 40, self.data_dict_blue)
-    print(game_obj)
+    # print(game_obj)
     game_obj.rect.center = self.active_timer.rect.center
     game_obj.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
     game_obj.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
@@ -703,6 +703,7 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     return game_obj
 
   def interact(self, player, timer=DATA_DEVICE_TIMER):
+    # ipdb.set_trace()
     if not self.active_timer:  # only allow one timer at a time
       if player.team == 'blue':
         self.active_timer = self.blue_timer
@@ -712,6 +713,8 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
       self.active_timer.reset_current_animation()
       self.active_timer.render = True
       self.active_timer.pause = False
+      self.active_timer.send_data = True
+      self.active_timer.clear = False
 
 
   def load_effects(self, effect_name, effect_json, red_loc=None, blue_loc=None):
@@ -897,6 +900,7 @@ class Desk(DataDevice):
       self.active_timer.reset_current_animation()
       self.active_timer.render = True
       self.active_timer.pause = False
+      self.active_timer.clear = False
 
       # self.player.rect.x, self.player.rect.y = self.player_sit_loc
       self.move_player(player)

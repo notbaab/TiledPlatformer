@@ -3,7 +3,7 @@ from networking import NetworkGame
 import world as wd
 import engine as eng
 import json
-import ipdb
+# import ipdb
 import os
 import os.path
 import random
@@ -25,7 +25,15 @@ SCREEN_WIDTH = int(config['display_size'][0])
 SCREEN_HEIGHT = int(config['display_size'][1])
 BEZEL_SIZE = 120
 
-
+def draw_score(x, bottom, message, window):
+  """draw text somewhere on the screen"""
+  eng.FONT.set_bold(True)
+  font_to_render = eng.FONT.render(str(message), True, (255, 0, 0))
+  font_rect = font_to_render.get_rect()
+  font_rect.x = x
+  font_rect.bottom = bottom
+  window.blit(font_to_render, font_rect)
+  return font_rect
 
 
 class ClientPlatformer(NetworkGame):
@@ -41,6 +49,14 @@ class ClientPlatformer(NetworkGame):
     self.engine = eng.Engine()
     self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), PYGAME_FLAGS)
     self.game_objects = {}
+    if tile[0] == 2 and tile[1] == 0:
+      self.score_node = True
+      self.blue_score = 0
+      self.blue_score_loc = 400, 400
+      self.red_score = 0
+      self.red_score_loc = 1400, 400
+    else:
+      self.score_node = False
 
     # self.background = pygame.image.load("assets/background" + str(self.tile[0]) + str(self.tile[1]) + ".png")
     bg_map_file = open('bg_map.json')
@@ -81,14 +97,6 @@ class ClientPlatformer(NetworkGame):
         except Exception as e:
             ipdb.set_trace()
       else:
-       # if issubclass(constructor, wd.Constructor):
-       #  self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
-       #                                                    game_obj['rect'][3], 
-       #                                                    obj_id=game_obj['id'],)
-       #  else:
-       #    self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
-       #                                                    game_obj['rect'][3], 
-       #                                                    obj_id=game_obj['id'])
         try:
           self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
                                                           game_obj['rect'][3], 
@@ -141,17 +149,15 @@ class ClientPlatformer(NetworkGame):
           game_obj.draw(self.window)
           game_obj.dirt_sprite = False  # DOn't draw again unless it moves
           game_obj.render = False
+      if self.score_node:
+          draw_score(self.blue_score_loc[0],self.blue_score_loc[1], self.blue_score, self.window)
+          draw_score(self.red_score_loc[0],self.red_score_loc[1], self.red_score, self.window)
+
       pygame.display.flip()
       # return {'state':'play'} 
     # obj_on_screen = [game_obj for game_obj in self.game_objects.values() if game_obj.render]
     # self.engine.load_animation(obj_on_screen, self.background, self.window)
-    update_rects = []
-    for obj_id, game_obj in self.game_objects.items():
-      if isinstance(game_obj, wd.SimpleScenery):
-        game_obj.draw(self.window)
-        game_obj.dirt_sprite = False  # DOn't draw again unless it moves
-        update_rects.append(game_obj.rect)
-    pygame.display.update(update_rects)
+
     return {'state': 'play'}
 
   def play_state(self, data):
@@ -162,6 +168,14 @@ class ClientPlatformer(NetworkGame):
     if 'localhost' in data:
       self._handle_localhost(data['localhost'])
     update_rects = self.clear(self.clear_rects)
+    if self.score_node:
+      if 'score' in data:
+        if data['score'][0] != self.blue_score:
+          self.blue_score = data['score'][0]
+          update_rects.append(draw_score(self.blue_score_loc[0],self.blue_score_loc[1], self.blue_score, self.window))
+        if data['score'][1] != self.red_score:
+          self.red_score = data['score'][1]
+          update_rects.append(draw_score(self.red_score_loc[0],self.red_score_loc[1], self.red_score, self.window))
     self.clear_rects = []
     for obj_id in data['deleted_objs']:
       del self.game_objects[obj_id]
