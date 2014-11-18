@@ -504,7 +504,60 @@
       "width" : "900",
       "height": "900",
       "__name__":"Stairs_right",
+      "dir":"right",
       "tile":["4","1"]
+    },    
+    {
+      "x":      "0",
+      "y":      "255",
+      "width" : "900",
+      "height": "900",
+      "__name__":"Stairs_right",
+      "dir":"left",
+      "tile":["0","1"]
+    }
+  ],
+  "Door":
+  [
+    {
+      "x":      "0",
+      "y":      "800",
+      "width" : "150",
+      "height": "200",
+      "__name__":"Police Box",
+      "end_point":["9800", "1420"],
+      "interactable":"True",
+      "tile":["0","0"]
+    }, 
+    {
+      "x":      "1910",
+      "y":      "0",
+      "width" : "150",
+      "height": "1",
+      "__name__":"Police Box",
+      "end_point":["200", "600"],
+      "interactable":"True",
+      "tile":["4","1"]
+    },
+    {
+      "x":      "1888",
+      "y":      "800",
+      "width" : "150",
+      "height": "200",
+      "__name__":"Coffee Shop",
+      "end_point":["200", "1420"],
+      "interactable":"True",
+      "tile":["4","0"]
+    }, 
+    {
+      "x":      "0",
+      "y":      "0",
+      "width" : "1",
+      "height": "1",
+      "__name__":"Police Box",
+      "end_point":["9800", "600"],
+      "interactable":"True",
+      "tile":["0","1"]
     }
   ]
 }

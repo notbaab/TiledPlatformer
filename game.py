@@ -341,6 +341,8 @@ class MasterPlatformer(object):
         ret_dict['ClimableObject'].append(game_obj)
       if isinstance(game_obj, wd.Meeting):
         ret_dict['Meeting'].append(game_obj)
+      if isinstance(game_obj, wd.Door):
+        ret_dict['ClimableObject'].append(game_obj)
     return ret_dict
 
   def handle_localhost(self, follow_player):
@@ -425,9 +427,6 @@ class MasterPlatformer(object):
       print(constructor)
       # try:
       for obj_dict in map_json[key]:
-        # if key == "Portal":
-        #   self.handle_portal(obj_dict, game_objects)
-        #   continue
         if "tile" in obj_dict:
           # tranlate the x and y coordinates
           x, y = self.translate_to_tile(obj_dict['tile'][0], int(obj_dict['x']),
@@ -438,6 +437,12 @@ class MasterPlatformer(object):
         if key == "Effect":
           tmp = self._handle_effect(obj_dict, x, y, effect_json)
           game_objects[tmp.id] = tmp
+          continue
+        if key == "Door":
+          tmp = self.handle_door(obj_dict, game_objects)
+          game_objects[tmp.id] = tmp
+          tmp.rect.x = x
+          tmp.rect.y = y
           continue
         if key == "Stairs":
           tmp = self._handle_stairs(game_objects, obj_dict, x, y)
@@ -476,10 +481,11 @@ class MasterPlatformer(object):
     print(game_objects)
     return game_objects
 
-  def handle_portal(self, game_objects):
+  def handle_door(self, obj_dict, game_objects):
     """portals are specail objects that need to be created two at a time and
     have there own setting structure"""
-    return
+    tmp = wd.Door(int(obj_dict['x']), int(obj_dict['y']), int(obj_dict['width']), int(obj_dict['height']), end_point=obj_dict['end_point'])
+    return tmp
 
   def _handle_effect(self, obj_dict, x, y,  effect_json):
     """handle loading the effect objects"""
@@ -493,7 +499,7 @@ class MasterPlatformer(object):
 
   def _handle_stairs(self, game_objects, stair_dict, startx, starty):
     stairs = wd.Stairs(startx, starty, int(stair_dict['width']), int(stair_dict['height']))
-    steps_list = stairs.make_stairs('right')
+    steps_list = stairs.make_stairs(stair_dict['dir'])
     for step in steps_list:
       game_objects[step.id] = step
 

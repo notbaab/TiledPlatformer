@@ -431,18 +431,23 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       # Check if the center of the player is inbwteen the left and right coordinates
       if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and 
          (game_obj.rect.top < self.rect.centery < game_obj.rect.bottom or 
-          game_obj.rect.top == self.rect.bottom)) :
-         # On ladder, turn off physics
-         self.physics = False
-         self.on_ladder = True
-         self.climbing = 1
-         self.ladder = game_obj
-         self.rect.centerx = self.ladder.rect.centerx
-         print("in ladder")
-         print(game_obj.rect)
-         print(game_obj)
-         print(self.rect)
-         break
+          game_obj.rect.top == self.rect.bottom)):
+          # On ladder, turn off physics
+          self.physics = False
+          self.on_ladder = True
+          self.climbing = 1
+          self.ladder = game_obj
+          self.rect.centerx = self.ladder.rect.centerx
+          print("in ladder")
+          print(game_obj.rect)
+          print(game_obj)
+          print(self.rect)
+          break
+
+  def do_door(self, door):
+    self.rect.x = door.end_point[0]
+    self.rect.y = door.end_point[1]
+
 
   def cancel_up_down_interact(self):
     self.climbing = 0
@@ -595,6 +600,8 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
         self.data.hide_object()
         self.change_animation('hasdata')
         self.data.player = self
+    elif type(obj) == Door:
+      self.do_door(obj)
     else:
       super(Player, self).respond_to_collision(obj, axis)
       if isinstance(obj, Player) and not self.stunned_timer:
@@ -1119,24 +1126,34 @@ class Stairs(GameObject):
     if orientation == 'right':
       bottom = self.rect.left, self.rect.bottom
       top = self.rect.right, self.rect.top 
+      direct=1
     else:
-      bottom = self.rect.left, self.rect.bottom
-      top = self.rect.right, self.rect.top 
-    return self.__make_steps(12, bottom, top)
+      bottom = self.rect.right, self.rect.bottom
+      top = self.rect.left, self.rect.top 
+      direct = -1
+    return self.__make_steps(12, bottom, top, direct)
 
-  def __make_steps(self, num_of_steps, bottom, top, width=102, height=36):
+  def __make_steps(self, num_of_steps, bottom, top, direct, width=102, height=36 ):
     self.steps = []
     total_height = bottom[1] - top[1] 
     height_space = total_height / num_of_steps
     height_padding = height_space - height
     total_width = abs(bottom[0] - top[0]) 
     width_padding = total_width / num_of_steps
+    print(direct)
+    ipdb.set_trace()
     for x in range(0, num_of_steps):
-      startx = x * width_padding + bottom[0]
+      if direct == -1:
+        startx = bottom[0] - x * width_padding
+      else:
+        startx = x * width_padding + (bottom[0])
+
       if startx != bottom[0]:
         startx = startx - MAGIC_STAIR_CONSTANT
       starty = bottom[1] - ((x+1)*height + (x+1)*height_padding)
       self.steps.append(Step(startx, starty, width, height))
+      if direct == -1:
+        self.steps[-1].rect.right = startx
     # ipdb.set_trace()
     return self.steps
 
@@ -1223,11 +1240,14 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
     self.render = False
 
 
-class Door(GameObject):
+class Door(BackGroundScenery):
   """docstring for Door"""
-  def __init__(self, startx, startx, width, height, obj_id=None, end_point=None):
-    super(Door, self).__init__(startx, starty, widht, height)
-    self.end_point = end_point
+  def __init__(self, startx, starty, width, height, obj_id=None, end_point=None):
+    # ipdb.set_trace()
+    super(Door, self).__init__(startx, starty, width, height, obj_id=obj_id)
+    if end_point:
+      self.end_point = int(end_point[0]), int(end_point[1])
+
     
 
   
