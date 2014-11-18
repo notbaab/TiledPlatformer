@@ -2,7 +2,7 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-# import ipdb
+import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
@@ -10,7 +10,7 @@ ASSET_FOLDER = "assets/"
 GRAVITY_VELOCITY = 4  # lets cheat for now
 FLOOR_Y = 580
 PLAYER_SPEED = 50
-PLAYER_THROW_SPEED = eng.Vector(5, -5)
+PLAYER_THROW_SPEED = eng.Vector(20, -5)
 FOLLOWER_SPEED = PLAYER_SPEED - 3  # just slower than the players
 PATROL_SPEED = 4  # just slower than the players
 JUMP_VELOCITY = -40
@@ -95,12 +95,14 @@ class GameObject(object):
 class NetworkedObject(object):
   def __init__(self, attribute_list):
     self.attribute_list = attribute_list
+    self.send_data = True
 
   def build_packet(self, accumulator):
-    packet = {}
-    for attribute in self.attribute_list:
-      packet[attribute] = self.__getattribute__(attribute)
-    accumulator.append(packet)
+    if self.send_data:
+      packet = {}
+      for attribute in self.attribute_list:
+        packet[attribute] = self.__getattribute__(attribute)
+      accumulator.append(packet)
 
   def read_packet(self, packet):
     for attribute in self.attribute_list:
@@ -536,12 +538,25 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     with
     :type game_objs: list of GameObject"""
     if self.data:
-      self.throw_data()
-      return
+      throw_data = True
+    else:
+      throw_data = False
+      # self.throw_data()
+      # return
+    interact_obj = None
     for game_obj in game_objs:
       if isinstance(game_obj, DataDevice):
         if self.rect.colliderect(game_obj.rect):
-          game_obj.interact(self)
+          interact_obj = game_obj
+
+    if not interact_obj and throw_data:
+      self.throw_data()
+    elif isinstance(interact_obj, Desk) and self.data:
+      interact_obj.interact(self)
+    elif isinstance(interact_obj, DataDevice) and self.data:
+      self.throw_data()
+    elif isinstance(interact_obj, DataDevice) and not self.data:
+      interact_obj.interact(self)
 
   def handle_ladddery_things(self):
     self.rect.y += (self.ladder.climb_speed.y * self.climbing)
@@ -579,6 +594,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
         self.data = obj
         self.data.hide_object()
         self.change_animation('hasdata')
+        self.data.player = self
     else:
       super(Player, self).respond_to_collision(obj, axis)
       if isinstance(obj, Player) and not self.stunned_timer:
@@ -628,11 +644,12 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
   def throw_data(self):
     """Through the data that the player is holding"""
+    # ipdb.set_trace()
     if self.data:
       if self.moving:
         exit_buff = PLAYER_SPEED  # if the player is moving, have to throw the data ahead a frame
       else:
-        exit_buff = 0
+        exit_buff = 20
       if self.direction == -1:
         self.data.rect.right = self.rect.left + (exit_buff * self.direction)
       else:
@@ -643,7 +660,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       self.data.velocity.y = PLAYER_THROW_SPEED.y
       self.data.unhide_object()
       self.data = None
-      self.change_animation('moving')
+      # self.change_animation('')
 
 
 class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
@@ -749,9 +766,17 @@ class DataCruncher(DataDevice):
 
   # TODO: THIS IS BROKEN HERE< FIX THIS.
   def handle_data(self, game_obj):
+    # ipdb.set_trace()
     if game_obj.stage == self.accept_stage:
       self.data_collected += 1
-      self.timer = DATA_DEVICE_TIMER  # start timer
+      if game_obj.player.team == 'blue':
+        self.active_timer = self.blue_timer
+      else:
+        self.active_timer = self.red_timer
+      self.active_timer.reset_current_animation()
+      self.active_timer.render = True
+      self.active_timer.pause = False
+
       # TODO: THis is wrong, need a destructor 
       self.data = game_obj
       self.data.advance_data()
@@ -791,6 +816,9 @@ class DataCruncher(DataDevice):
     self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
     self.data.unhide_object()
 
+  def interact(self, player, timer=DATA_DEVICE_TIMER):
+    return
+
 
 class Desk(DataDevice):
   """Where the player will sit and write the paper after collecting data"""
@@ -801,16 +829,32 @@ class Desk(DataDevice):
     self.player = None
 
   def update(self):
-    if self.player:
-      self.player.escape_hit = 0  # Don't allow player to escape
-      # player siting at desk, update timer
-      if self.timer:
-        self.timer += DATA_DEVICE_TIMER
-        if self.timer >= 1:
-          self.generate_data()
-          self.timer = None
-          self.player.trapped = False
-          self.player = None
+    if self.active_timer:
+      self.timer_count += 1
+      if self.timer_count >= self.timer_total:
+        self.generate_data()
+        self.active_timer.render = False
+        self.active_timer.reset_current_animation()
+        self.active_timer.pause_animation()
+        self.active_timer.clear = True
+        self.active_timer = None
+        self.timer_count = 0
+        self.player.trapped = False
+        self.player = None
+
+  def load_json(self, obj_dict, effect_json):
+    timer_name = obj_dict['timer'] +"-"+ obj_dict['team']
+    animation_dict = effect_json[timer_name]
+    self.timer = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict)
+    self.timer.rect.centerx, self.timer.rect.y = self.rect.centerx, self.rect.y - 300
+    self.timer.physics = False
+    self.timer.collision = False
+    self.timer.animation_time = DATA_DEVICE_TIMER / len(self.timer.animation_frames[self.timer.current_animation])
+    self.timer_total = self.timer.animation_time * len(self.timer.animation_frames[self.timer.current_animation]) + self.timer.animation_time
+    self.player_sit_loc = (self.rect.x + int(obj_dict['chair'][0]) , self.rect.y + int(obj_dict['chair'][1]))
+    print(self.timer_total)
+    return self.timer
+
 
   def generate_data(self):
     self.data.rect.centerx = self.rect.centerx
@@ -820,13 +864,20 @@ class Desk(DataDevice):
     self.data.advance_data()
     self.data.unhide_object()
 
-  def interact(self, player, timer=DATA_DEVICE_TIMER):
+  def interact(self, player):
+    ipdb.set_trace()
     if not self.player and player.data:
       # player hasn't interacted yet and has data
       self.player = player
       self.player.trapped = True
       self.player.escape_hit = 0
-      self.timer = timer
+      self.active_timer = self.timer
+      self.timer_count = 0
+      self.active_timer.reset_current_animation()
+      self.active_timer.render = True
+      self.active_timer.pause = False
+      self.player.rect.x, self.player.rect.y = self.player_sit_loc
+
       self.data = self.player.data
       self.player.data = None
 
@@ -856,13 +907,14 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.sprite_sheet = sprite_sheet
     self.stage = 1
     self.frame = 'idle'
+    self.player = None
 
   def draw(self, surface):
     super(Data, self).draw(surface)  # animatedSpriteObject.draw
 
   def respond_to_collision(self, obj, axis=None):
     # ipdb.set_trace()
-    if isinstance(obj, Player):
+    if (isinstance(obj, Player) and (not self.player or self.player == obj)):
       obj.respond_to_collision(self)
     elif isinstance(obj, DataCruncher):# and self.stage == obj.accept_stage:
       print("hit soemthing")
@@ -1109,17 +1161,19 @@ class Step(BackGroundScenery):
 class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
   """Effect objects. Just a simple object that doesn't interact with anything,
   its just a sprite that gets sent over the network and is told to stop or start"""
-  def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, total_time=120):
+  def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, total_time=120, animation_time=None):
     GameObject.__init__(self, startx, starty, width, height)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id', 'render', 'clear'])
     self.sprite_sheet = sprite_sheet
     # total time is in frames cause I'm bad at time.
-    self.animation_time = total_time / len(self.animation_frames[self.current_animation])
+    if not animation_time:
+      self.animation_time = total_time / len(self.animation_frames[self.current_animation])
+    else:
+      self.animation_time = animation_time
     self.render = False
     self.pause_animation()
     self.render_frames = 0
-    self.animation_time = 5
     self.clear = True
     self.collision = False
   
@@ -1129,17 +1183,23 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
     if not self.pause:
       self.animation_timer += 1
       self.render = False
+      self.send_data = False
       if self.animation_timer == self.animation_time:
         self.current_frame = next(self.current_cycle)
         self.animation_timer = 0
         self.render = True
+        self.send_data = True
+    else:
+      self.send_data = False
+
 
   def build_packet(self, accumulator):
-    if self.render:
-      super(Effect, self).build_packet(accumulator)
-    if self.clear:
-      super(Effect, self).build_packet(accumulator)
-      self.clear = False
+    if self.send_data:
+      if self.render:
+        super(Effect, self).build_packet(accumulator)
+      elif self.clear:
+        super(Effect, self).build_packet(accumulator)
+        self.clear = False
 
 
   def read_packet(self, packet):
@@ -1160,9 +1220,15 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
     else:
       surface.blit(game.background, (self.rect.x, self.rect.y), self.rect)
       surface.blit(self.sprite_sheets[self.current_animation], self.rect, area=self.current_frame)
+    self.render = False
 
 
-
+class Door(GameObject):
+  """docstring for Door"""
+  def __init__(self, startx, startx, width, height, obj_id=None, end_point=None):
+    super(Door, self).__init__(startx, starty, widht, height)
+    self.end_point = end_point
+    
 
   
 

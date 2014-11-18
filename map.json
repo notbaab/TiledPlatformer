@@ -269,22 +269,6 @@
       "tile":["2","2"]
     },
     {
-      "x":      "606",
-      "y":      "880",
-      "width" : "314",
-      "height": "172",
-      "__name__":"Left Desk",
-      "tile":["2","2"]
-    },
-    {
-      "x":      "1006",
-      "y":      "880",
-      "width" : "314",
-      "height": "172",
-      "__name__":"Right Desk",
-      "tile":["2","2"]
-    },
-    {
       "x":      "0",
       "y":      "455",
       "width" : "126",
@@ -419,6 +403,30 @@
   ], 
   "Desk":
   [
+    {
+      "x":      "606",
+      "y":      "880",
+      "width" : "314",
+      "height": "172",
+      "__name__":"Left Desk",
+      "chair":["-80", "-20"],
+      "timer":"Timer-Paper",
+      "team":"Red",
+      "rawdata":"Paper",
+      "tile":["2","2"]
+    },
+    {
+      "x":      "1006",
+      "y":      "880",
+      "width" : "314",
+      "height": "172",
+      "__name__":"Right Desk",
+      "chair":["80", "-20"],
+      "timer":"Timer-Paper",
+      "team":"Blue",
+      "rawdata":"Paper",
+      "tile":["2","2"]
+    }
   ],
   "PublishingHouse":
   [

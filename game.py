@@ -295,6 +295,7 @@ class MasterPlatformer(object):
     game_objects_packets = []  # accumulator for the build_packet function
     self.engine.map_attribute_flat(self.struct_game_dict['NetworkedObject'], 'build_packet', game_objects_packets)
     send_struct['game_objects'] = game_objects_packets
+    # print(send_struct)
 
     return 'play', send_struct
 
@@ -346,7 +347,7 @@ class MasterPlatformer(object):
     """special function used to handle things like switching the screens when playing on one local host"""
     # first, find out which tile player one is in. 
     tile_x = follow_player.rect.centerx / (DISPLAY_SIZE['x'] + BEZZEL_SIZE)
-    tile_y = follow_player.rect.centery / (DISPLAY_SIZE['y'] + BEZZEL_SIZE)
+    tile_y = follow_player.rect.bottom / (DISPLAY_SIZE['y']) 
     if tile_x == -1:
       tile_x = 0
     if tile_x > 4:
@@ -456,12 +457,16 @@ class MasterPlatformer(object):
                             int(obj_dict['height']), sprite_sheet=asset_json[key])
         
         if isinstance(tmp, wd.DataDevice):
-          if isinstance(tmp, wd.DataCruncher):
-            effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json)
-          else:
-            effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json, red_loc=obj_dict['timer-red-pos'], blue_loc=obj_dict['timer-blue-pos'])
-          game_objects[effect_blue.id] = effect_blue
-          game_objects[effect_red.id] = effect_red
+          if isinstance(tmp, wd.Desk):
+            timer = tmp.load_json(obj_dict, effect_json)
+            game_objects[timer.id] = timer
+          else:  
+            if isinstance(tmp, wd.DataCruncher):
+              effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json)
+            else:
+              effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json, red_loc=obj_dict['timer-red-pos'], blue_loc=obj_dict['timer-blue-pos'])
+            game_objects[effect_blue.id] = effect_blue
+            game_objects[effect_red.id] = effect_red
           if 'rawdata' in obj_dict:
             tmp.load_data(obj_dict['rawdata'], effect_json)
 
@@ -480,8 +485,7 @@ class MasterPlatformer(object):
     """handle loading the effect objects"""
     print(effect_json)
     animation_dict = effect_json[obj_dict['effect_name']]
-    ipdb.set_trace()
-    tmp = wd.Effect(x, y, int(obj_dict['width']), int(obj_dict['height']), animation_dict)
+    tmp = wd.Effect(x, y, int(obj_dict['width']), int(obj_dict['height']), animation_dict, animation_time=int(obj_dict['animation-time']))
     tmp.render = True
     tmp.pause = False
     tmp.clear = False
