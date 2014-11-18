@@ -220,15 +220,15 @@
     {
       "x":      "1920",
       "y":      "0",
-      "width" : "480",
+      "width" : "177",
       "height": "80",
       "__name__":"Left Window",
       "tile":["1","2"]
     },
     {
-      "x":      "1560",
+      "x":      "1863",
       "y":      "0",
-      "width" : "480",
+      "width" : "177",
       "height": "80",
       "__name__":"Right Window",
       "tile":["2","2"]
