@@ -10,17 +10,17 @@
       "tile":["0","0"]
     },
     {
-      "x": "0",
+      "x": "1920",
       "y": "0",
-      "width" : "135",
+      "width" : "255",
       "height": "627",
       "__name__":"Left Journal Wall",
-      "tile":["2","0"]
+      "tile":["1","0"]
     },
     {
       "x": "1785",
       "y": "0",
-      "width" : "135",
+      "width" : "255",
       "height": "627",
       "__name__":"Right Journal Wall",
       "tile":["2","0"]
@@ -34,9 +34,9 @@
       "tile":["0","1"]
     },
     {
-      "x": "1915",
+      "x": "1920",
       "y": "0",
-      "width" : "5",
+      "width" : "120",
       "height": "726",
       "__name__":"Stairwell Wall",
       "tile":["0","1"]
@@ -58,12 +58,12 @@
       "tile":["3","1"]
     },
     {
-      "x": "0",
+      "x": "1920",
       "y": "0",
-      "width" : "5",
+      "width" : "120",
       "height": "726",
       "__name__":"Stairwell Wall",
-      "tile":["4","1"]
+      "tile":["3","1"]
     },
     {
       "x": "0",
@@ -76,7 +76,7 @@
     {
       "x": "1796",
       "y": "0",
-      "width" : "126",
+      "width" : "246",
       "height": "544",
       "__name__":"Right Lab Wall",
       "tile":["0","2"]
@@ -130,6 +130,14 @@
       "tile":["1","1"]
     },
     {
+      "x":      "1920",
+      "y":      "564",
+      "width" : "120",
+      "height": "594",
+      "__name__":"Right Wall",
+      "tile":["1","1"]
+    },
+    {
       "x":      "370",
       "y":      "434",
       "width" : "1192",
@@ -143,6 +151,14 @@
       "width" : "664",
       "height": "130",
       "__name__":"Right Duct",
+      "tile":["2","1"]
+    },
+    {
+      "x":      "1920",
+      "y":      "564",
+      "width" : "120",
+      "height": "594",
+      "__name__":"Right Wall",
       "tile":["2","1"]
     },
     {
@@ -194,6 +210,30 @@
       "tile":["1","2"]
     },
     {
+      "x": "1920",
+      "y": "537",
+      "width" : "177",
+      "height": "544",
+      "__name__":"Left Office Wall",
+      "tile":["1","2"]
+    },
+    {
+      "x":      "1920",
+      "y":      "0",
+      "width" : "177",
+      "height": "80",
+      "__name__":"Left Window",
+      "tile":["1","2"]
+    },
+    {
+      "x":      "1863",
+      "y":      "0",
+      "width" : "177",
+      "height": "80",
+      "__name__":"Right Window",
+      "tile":["2","2"]
+    },
+    {
       "x":      "572",
       "y":      "379",
       "width" : "100",
@@ -228,9 +268,17 @@
     {
       "x":      "1488",
       "y":      "455",
-      "width" : "6788",
+      "width" : "678",
       "height": "80",
       "__name__":"Right Platform",
+      "tile":["2","2"]
+    },
+    {
+      "x": "1863",
+      "y": "537",
+      "width" : "177",
+      "height": "544",
+      "__name__":"Right Office Wall",
       "tile":["2","2"]
     },
     {
@@ -258,12 +306,12 @@
       "tile":["3","2"]
     },
     {
-      "x": "0",
+      "x": "1920",
       "y": "0",
-      "width" : "5",
+      "width" : "120",
       "height": "620",
       "__name__":"Tapes Wall",
-      "tile":["4","2"]
+      "tile":["3","2"]
     }
   ],
   "BackGroundScenery":
@@ -448,49 +496,49 @@
   "ClimableObject":
   [
     {
-      "x":      "238",
+      "x":      "205",
       "y":      "434",
-      "width" : "100",
+      "width" : "166",
       "height": "1274",
       "__name__":"Ladder, Meeting",
       "tile":["1","1"]
     },
     {
-      "x":      "238",
+      "x":      "205",
       "y":      "440",
-      "width" : "100",
+      "width" : "166",
       "height": "720",
       "__name__":"Left Ladder, Comet",
       "tile":["2","1"]
     },
     {
-      "x":      "1594",
+      "x":      "1562",
       "y":      "440",
-      "width" : "100",
+      "width" : "166",
       "height": "720",
       "__name__":"Right Ladder, Comet",
       "tile":["2","1"]
     },
     {
-      "x":      "1597",
+      "x":      "1564",
       "y":      "624",
-      "width" : "100",
-      "height": "1084",
+      "width" : "166",
+      "height": "1164",
       "__name__":"Ladder, Classroom",
       "tile":["3","1"]
     },
     {
-      "x":      "540",
+      "x":      "507",
       "y":      "448",
-      "width" : "100",
+      "width" : "166",
       "height": "613",
       "__name__":"Bottom Ladder, Left Hall",
       "tile":["1","2"]
     },
     {
-      "x":      "1286",
+      "x":      "1253",
       "y":      "448",
-      "width" : "100",
+      "width" : "166",
       "height": "613",
       "__name__":"Bottom Ladder, Right Hall",
       "tile":["3","2"]
