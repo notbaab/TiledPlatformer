@@ -2,7 +2,7 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-import ipdb
+# import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
@@ -24,8 +24,8 @@ MEETING_GRAVITAIONAL_SPHERE = 100  # the distance where the player begins to be 
 MEETING_PULL = 5
 MEETING_TIMER = .01
 DEBUG = True
-STUN_VELOCITY_LOSER = eng.Vector(10, -15)
-STUN_VELOCITY_WINNER = eng.Vector(5, -10)
+STUN_VELOCITY_LOSER = eng.Vector(30, -20)
+STUN_VELOCITY_WINNER = eng.Vector(10, -10)
 STUN_WINNER_TIMER = 10
 STUN_LOSER_TIMER = 20
 LEFT_FRAME_ID = 'l_'
@@ -325,6 +325,11 @@ class MovableGameObject(GameObject):
       self.on_ground = True
 
   def update(self):
+    # if self.last_rect.x == self.rect.x and self.last_rect.y == self.rect.y:
+    #   # didn't move, stop rendering
+    #   self.render = False
+    # else:
+    #   self.render = True
     self.last_rect = self.rect.copy()
     if self.velocity.y != 0:
       # no longer on ground 
@@ -424,13 +429,14 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
   def down_interact(self, climable_objects):
     """Player pressed up so may be attempting to climb something"""
+    # ipdb.set_trace()
     if self.on_ladder:
       self.climbing = 1
       return
     for game_obj in climable_objects:
       # Check if the center of the player is inbwteen the left and right coordinates
       if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and 
-         (game_obj.rect.top < self.rect.centery < game_obj.rect.bottom or 
+         (game_obj.rect.top < self.rect.bottom < game_obj.rect.bottom or 
           game_obj.rect.top == self.rect.bottom)):
           # On ladder, turn off physics
           self.physics = False
@@ -585,7 +591,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     :param surface: the surface to draw the object, typically the window
     :type surface: pygame.Surface"""
     AnimateSpriteObject.draw(self, surface)
-    pygame.draw.rect(surface, (128, 0, 128), self.rect, 1)
+    # pygame.draw.rect(surface, (128, 0, 128), self.rect, 1)
 
   def respond_to_collision(self, obj, axis=None):
     """Contains the callback for the collision between a player object and a game object passed in. Axis is needed
@@ -603,7 +609,11 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     elif type(obj) == Door:
       self.do_door(obj)
     else:
-      super(Player, self).respond_to_collision(obj, axis)
+      if self.on_ladder and type(obj) == SimpleScenery:
+        if type(obj) != SimpleScenery:
+          super(Player, self).respond_to_collision(obj, axis)
+      else:
+        super(Player, self).respond_to_collision(obj, axis)
       if isinstance(obj, Player) and not self.stunned_timer:
         self.joust_attack(obj)
       if (isinstance(obj, Meeting) or isinstance(obj, Follower)) and not self.trapped:
@@ -731,7 +741,8 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
 
 
   def draw(self, surface):
-    BackGroundScenery.draw(self, surface)  # SimpleScenery.draw
+    self.render = False
+    # BackGroundScenery.draw(self, surface)  # SimpleScenery.draw
 
   def update(self):
     if self.active_timer:
@@ -830,10 +841,12 @@ class DataCruncher(DataDevice):
 class Desk(DataDevice):
   """Where the player will sit and write the paper after collecting data"""
 
-  def __init__(self, startx, starty, width, height, accept_stage=1, obj_id=None,
+  def __init__(self, startx, starty, width, height, accept_stage=2, obj_id=None,
                game=None):
-    super(Desk, self).__init__(startx, starty, width, height, obj_id=obj_id, game=None)
+    super(Desk, self).__init__(startx, starty, width, height, obj_id=obj_id, game=game)
     self.player = None
+    self.collision = True  # for now, only interaction comes with explicit buttons
+    self.accept_stage = accept_stage
 
   def update(self):
     if self.active_timer:
@@ -846,8 +859,9 @@ class Desk(DataDevice):
         self.active_timer.clear = True
         self.active_timer = None
         self.timer_count = 0
-        self.player.trapped = False
-        self.player = None
+        if self.player:
+          self.player.trapped = False
+          self.player = None
 
   def load_json(self, obj_dict, effect_json):
     timer_name = obj_dict['timer'] +"-"+ obj_dict['team']
@@ -872,8 +886,8 @@ class Desk(DataDevice):
     self.data.unhide_object()
 
   def interact(self, player):
-    ipdb.set_trace()
-    if not self.player and player.data:
+    # ipdb.set_trace()
+    if not self.player and player.data and player.data.stage == self.accept_stage:
       # player hasn't interacted yet and has data
       self.player = player
       self.player.trapped = True
@@ -883,24 +897,50 @@ class Desk(DataDevice):
       self.active_timer.reset_current_animation()
       self.active_timer.render = True
       self.active_timer.pause = False
-      self.player.rect.x, self.player.rect.y = self.player_sit_loc
 
+      # self.player.rect.x, self.player.rect.y = self.player_sit_loc
+      self.move_player(player)
       self.data = self.player.data
       self.player.data = None
 
+  def move_player(self, player):
+    player.rect.x, player.rect.y = self.player_sit_loc
 
-class PublishingHouse(DataCruncher):
+
+
+class PublishingHouse(Desk):
   """Where the player brings the final paper"""
 
-  def __init__(self, startx, starty, width, height, accept_stage=1, amount_data_needed=1,
-               concurrent_data=1, obj_id=None, game=None):
+  def __init__(self, startx, starty, width, height, accept_stage=3, obj_id=None,
+               game=None):
     super(PublishingHouse, self).__init__(startx, starty, width, height, accept_stage=accept_stage,
-                     amount_data_needed=amount_data_needed, concurrent_data=concurrent_data,
-                     obj_id=obj_id, game=game)
+                                          game=game)
 
   def generate_data(self):
     # TODO: make a scoring mechanic
-    print("score")
+    if self.scoring_team == 'Blue':
+      self.game.blue_score += 1
+    else:
+      self.game.red_score += 1
+    print(self.game.red_score)
+    print(self.game.blue_score)
+
+  def interact(self, player):
+    if not self.active_timer:  # only allow one timer at a time
+      if player.team == 'blue':
+        self.timer = self.blue_timer
+      else:
+        self.timer = self.red_timer
+    super(PublishingHouse, self).interact(player)
+    if self.player:
+      # we no need no sticking player
+      self.player.trapped = False
+      self.scoring_team = player.team
+      self.player = None
+
+  def move_player(self, player):
+    return
+
 
 
 class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
@@ -924,7 +964,7 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     if (isinstance(obj, Player) and (not self.player or self.player == obj)):
       obj.respond_to_collision(self)
     elif isinstance(obj, DataCruncher):# and self.stage == obj.accept_stage:
-      print("hit soemthing")
+      # print("hit soemthing")
       obj.handle_data(self)
     else:
       # TODO: this makes the data go through players
@@ -1141,7 +1181,7 @@ class Stairs(GameObject):
     total_width = abs(bottom[0] - top[0]) 
     width_padding = total_width / num_of_steps
     print(direct)
-    ipdb.set_trace()
+    # ipdb.set_trace()
     for x in range(0, num_of_steps):
       if direct == -1:
         startx = bottom[0] - x * width_padding
@@ -1158,7 +1198,8 @@ class Stairs(GameObject):
     return self.steps
 
   def draw(self, surface):
-     pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+    return
+     # pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
 
 class Step(BackGroundScenery):
 
@@ -1166,7 +1207,9 @@ class Step(BackGroundScenery):
     BackGroundScenery.__init__(self, startx, starty, widht, height)
     
   def draw(self, surface):
-     pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+    self.render = False
+    return
+     # pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
 
   def set_above_stair(self, next_stair):
     self.next_stair = next_stair
@@ -1247,11 +1290,3 @@ class Door(BackGroundScenery):
     super(Door, self).__init__(startx, starty, width, height, obj_id=obj_id)
     if end_point:
       self.end_point = int(end_point[0]), int(end_point[1])
-
-    
-
-  
-
-
-
-

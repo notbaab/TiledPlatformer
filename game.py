@@ -462,7 +462,7 @@ class MasterPlatformer(object):
                             int(obj_dict['height']), sprite_sheet=asset_json[key])
         
         if isinstance(tmp, wd.DataDevice):
-          if isinstance(tmp, wd.Desk):
+          if isinstance(tmp, wd.Desk) and not isinstance(tmp, wd.PublishingHouse):
             timer = tmp.load_json(obj_dict, effect_json)
             game_objects[timer.id] = timer
           else:  
