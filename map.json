@@ -491,49 +491,49 @@
   "ClimableObject":
   [
     {
-      "x":      "205",
+      "x":      "175",
       "y":      "434",
-      "width" : "166",
+      "width" : "226",
       "height": "1374",
       "__name__":"Ladder, Meeting",
       "tile":["1","1"]
     },
     {
-      "x":      "205",
+      "x":      "175",
       "y":      "430",
-      "width" : "166",
+      "width" : "226",
       "height": "720",
       "__name__":"Left Ladder, Comet",
       "tile":["2","1"]
     },
     {
-      "x":      "1562",
+      "x":      "1532",
       "y":      "430",
-      "width" : "166",
+      "width" : "226",
       "height": "720",
       "__name__":"Right Ladder, Comet",
       "tile":["2","1"]
     },
     {
-      "x":      "1564",
+      "x":      "1534",
       "y":      "624",
-      "width" : "166",
+      "width" : "226",
       "height": "1164",
       "__name__":"Ladder, Classroom",
       "tile":["3","1"]
     },
     {
-      "x":      "507",
+      "x":      "477",
       "y":      "448",
-      "width" : "166",
+      "width" : "226",
       "height": "613",
       "__name__":"Bottom Ladder, Left Hall",
       "tile":["1","2"]
     },
     {
-      "x":      "1253",
+      "x":      "1223",
       "y":      "448",
-      "width" : "166",
+      "width" : "226",
       "height": "613",
       "__name__":"Bottom Ladder, Right Hall",
       "tile":["3","2"]

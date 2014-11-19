@@ -434,7 +434,9 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       return
     for game_obj in climable_objects:
       # Check if the center of the player is inbwteen the left and right coordinates
-      if self.rect.colliderect(game_obj.rect):
+      if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and 
+         (game_obj.rect.top < self.rect.bottom < game_obj.rect.bottom or 
+          game_obj.rect.top == self.rect.bottom)):
           # On ladder, turn off physics
           self.physics = False
           self.on_ladder = True
