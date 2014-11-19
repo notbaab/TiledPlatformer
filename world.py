@@ -2,7 +2,7 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-# import ipdb
+import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
@@ -186,7 +186,6 @@ class AnimateSpriteObject(object):
       # moving left, but trying to flip right
       new_animation = self.current_animation[len(LEFT_FRAME_ID):]
     return new_animation
-
 
   def animate(self):
     """Updates the animation timer goes to next frame in current animation cycle
@@ -597,7 +596,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     :param axis: which axis was the player moving along.
     :type axis: String """
     if type(obj) == Data:
-      if self.data is None:
+      if self.data is None and obj.team == self.team:
         self.data = obj
         self.data.hide_object()
         self.change_animation('hasdata')
@@ -690,7 +689,10 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     self.collision = False  # for now, only interaction comes with explicit buttons
 
   def generate_data(self):
-    game_obj = Data(20, 20, 40, 40, self.data_dict_blue)
+    if self.active_timer == self.blue_timer:
+      game_obj = Data(20, 20, 40, 40, self.data_dict_blue, team='blue')
+    else:
+      game_obj = Data(20, 20, 40, 40, self.data_dict_red, team='red')
     # print(game_obj)
     game_obj.rect.center = self.active_timer.rect.center
     game_obj.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
@@ -765,76 +767,6 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
   #   data.rect.x, data.rect.y = (-100, -100)
   #   data.velocity.x = 0
   #   data.velocity.y = 0
-
-
-class DataCruncher(DataDevice):
-  """Second stage of collecting data"""
-
-  def __init__(self, startx, starty, width, height, accept_stage=1, amount_data_needed=1,
-               concurrent_data=1, obj_id=None,
-               game=None):
-    super(DataCruncher, self).__init__(startx, starty, width, height, obj_id=obj_id, game=None)
-    # Constructor.__init__(self, game)
-    self.accept_stage = accept_stage
-    self.amount_data_needed = amount_data_needed
-    self.data_collected = 0
-    self.collision = True
-
-
-  # TODO: THIS IS BROKEN HERE< FIX THIS.
-  def handle_data(self, game_obj):
-    # ipdb.set_trace()
-    if game_obj.stage == self.accept_stage:
-      self.data_collected += 1
-      if game_obj.player.team == 'blue':
-        self.active_timer = self.blue_timer
-      else:
-        self.active_timer = self.red_timer
-      self.active_timer.reset_current_animation()
-      self.active_timer.render = True
-      self.active_timer.pause = False
-
-      # TODO: THis is wrong, need a destructor 
-      self.data = game_obj
-      self.data.advance_data()
-      self.data.hide_object()
-
-  def load_effects(self, effect_name, effect_json, red_loc=None, blue_loc= None):
-    """load the effects for this data object and return effects loaded"""
-    # print(effect_name)
-    # print(effect_json)
-    print(self)
-    animation_dict_blue = effect_json[effect_name +'-Blue']
-    animation_dict_red = effect_json[effect_name +'-Red']
-    self.blue_timer = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict_blue)
-    self.blue_timer.physics = False
-    self.blue_timer.collision = False
-    self.blue_timer.animation_time = DATA_DEVICE_TIMER / len(self.blue_timer.animation_frames[self.blue_timer.current_animation])
-    self.red_timer = Effect(self.rect.x+40, self.rect.y, 200, 200, animation_dict_red)
-    self.red_timer.physics = False
-    self.red_timer.collision = False
-    self.red_timer.animation_time = DATA_DEVICE_TIMER / len(self.red_timer.animation_frames[self.red_timer.current_animation])
-    self.timer_total = self.red_timer.animation_time * len(self.red_timer.animation_frames[self.red_timer.current_animation]) + self.red_timer.animation_time
-    print(self.timer_total)
-    print(self.red_timer.animation_time)
-    return self.blue_timer, self.red_timer
-
-  # def update(self):
-  #   if self.timer:
-  #     self.timer += DATA_DEVICE_TIMER
-  #     if self.timer >= 1:
-  #       self.generate_data()
-  #       self.timer = None
-
-  def generate_data(self):
-    self.data.rect.centerx = self.rect.centerx
-    self.data.rect.bottom = self.rect.top
-    self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
-    self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
-    self.data.unhide_object()
-
-  def interact(self, player, timer=DATA_DEVICE_TIMER):
-    return
 
 
 class Desk(DataDevice):
@@ -942,12 +874,71 @@ class PublishingHouse(Desk):
     return
 
 
+class DataCruncher(PublishingHouse):
+  """Second stage of collecting data"""
+
+  def __init__(self, startx, starty, width, height, accept_stage=1, amount_data_needed=1,
+               concurrent_data=1, obj_id=None,
+               game=None):
+    super(DataCruncher, self).__init__(startx, starty, width, height, obj_id=obj_id, game=None)
+    # Constructor.__init__(self, game)
+    self.accept_stage = accept_stage
+    self.amount_data_needed = amount_data_needed
+    self.data_collected = 0
+
+
+  def handle_data(self, game_obj):
+    ipdb.set_trace()
+    if game_obj.stage == self.accept_stage:
+      self.data_collected += 1
+      if game_obj.player.team == 'blue':
+        self.active_timer = self.blue_timer
+      else:
+        self.active_timer = self.red_timer
+      self.active_timer.reset_current_animation()
+      self.active_timer.render = True
+      self.active_timer.pause = False
+
+      # TODO: THis is wrong, need a destructor 
+      self.data = game_obj
+      self.data.advance_data()
+      self.data.hide_object()
+
+  def load_effects(self, effect_name, effect_json, red_loc=None, blue_loc= None):
+    """load the effects for this data object and return effects loaded"""
+    # print(effect_name)
+    # print(effect_json)
+    print(self)
+    animation_dict_blue = effect_json[effect_name +'-Blue']
+    animation_dict_red = effect_json[effect_name +'-Red']
+    self.blue_timer = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict_blue)
+    self.blue_timer.physics = False
+    self.blue_timer.collision = False
+    self.blue_timer.animation_time = DATA_DEVICE_TIMER / len(self.blue_timer.animation_frames[self.blue_timer.current_animation])
+    self.red_timer = Effect(self.rect.x+40, self.rect.y, 200, 200, animation_dict_red)
+    self.red_timer.physics = False
+    self.red_timer.collision = False
+    self.red_timer.animation_time = DATA_DEVICE_TIMER / len(self.red_timer.animation_frames[self.red_timer.current_animation])
+    self.timer_total = self.red_timer.animation_time * len(self.red_timer.animation_frames[self.red_timer.current_animation]) + self.red_timer.animation_time
+    print(self.timer_total)
+    print(self.red_timer.animation_time)
+    return self.blue_timer, self.red_timer
+
+  def generate_data(self):
+    self.data.rect.centerx = self.rect.centerx
+    self.data.rect.bottom = self.rect.top
+    self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
+    self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
+    self.data.advance_data()
+    self.data.unhide_object()
+
+
 
 class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
-  def __init__(self, startx, starty, width, height, sprite_sheet, obj_id=None):
+  def __init__(self, startx, starty, width, height, sprite_sheet, team=None, obj_id=None ):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
-    NetworkedObject.__init__(self, ['rect', 'current_frame', 'id', 'render', 'stage'])
+    NetworkedObject.__init__(self, ['rect', 'current_frame', 'id', 'current_animation', 'render', 'stage'])
     self.rect = self.animation_frames[self.current_animation][0].copy()
     self.sprite_sheet = sprite_sheet
     # TODO: Since we are just giving primitives but want to treat them as a sprite, we have to get creative
@@ -955,17 +946,17 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.stage = 1
     self.frame = 'idle'
     self.player = None
+    self.team = team
+
 
   def draw(self, surface):
     super(Data, self).draw(surface)  # animatedSpriteObject.draw
 
   def respond_to_collision(self, obj, axis=None):
     # ipdb.set_trace()
-    if (isinstance(obj, Player) and (not self.player or self.player == obj)):
-      obj.respond_to_collision(self)
-    elif isinstance(obj, DataCruncher):# and self.stage == obj.accept_stage:
-      # print("hit soemthing")
-      obj.handle_data(self)
+    if isinstance(obj, Player):
+      if obj.team == self.team:
+        obj.respond_to_collision(self)
     else:
       # TODO: this makes the data go through players
       super(Data, self).respond_to_collision(obj, axis)
@@ -973,6 +964,8 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def advance_data(self):
     # TODO: hacked for now with no sprite sheet
     self.stage += 1
+    self.frame = str(self.stage)
+    self.change_animation(str(self.stage))
 
 
 class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):

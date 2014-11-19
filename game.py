@@ -414,7 +414,11 @@ class MasterPlatformer(object):
     global config
     """this function is stupid as shit. I hope you look back at this and feel 
     bad about how awful you approached this. You deserve to feel bad for writing it 
-    like this."""
+    like this.
+    I did look back at it past me and I made it worse so fuck you past me and 
+    fuck you future me. Fuck present me for having to deal with this. I am probably
+    never going to be hired if anyone ever looks at this code as an example of my 
+    ability. """
     # load map
     game_objects = {}
 

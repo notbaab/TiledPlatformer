@@ -70,9 +70,9 @@ class ClientPlatformer(NetworkGame):
     # Crop here
     # background_file = "assets/backgrounds/BG" + str(self.tile[0]) + str(self.tile[1]) + ".png"
     if os.path.isfile(bg_file):
-      self.background = pygame.image.load(bg_file)
+      self.background = pygame.image.load(bg_file).convert()
     else:
-      self.background = pygame.image.load("assets/BG30.png") 
+      self.background = pygame.image.load("assets/BG30.png").convert() 
     self.background_rect = self.background.get_rect()
 
   def init_game(self, data):
