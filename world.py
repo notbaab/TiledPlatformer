@@ -113,7 +113,7 @@ class AnimateSpriteObject(object):
   """a stand alone object that allows the inherited game object to have animation 
   sprites"""
 
-  def __init__(self, animation_dict, des_width, des_height, start_animation='idle'):
+  def __init__(self, animation_dict, des_width, des_height, start_animation='idle', convert_alpha=True):
     """Initilize all the frames of the animated sprite object
     :param animation_dict: a dictionary that is keyed on the name of the animation. The dictionary 
     contains a tuple pair, with the name of the file at [0] and the number of frames of the sprite sheet
@@ -134,7 +134,7 @@ class AnimateSpriteObject(object):
         ASSET_FOLDER + filename, int(width),
         int(height), des_width=des_width,
         des_height=des_height, vertical_offset=int(vertical_offset),
-        frame_width=int(frame_width), frame_height=int(frame_height))
+        frame_width=int(frame_width), frame_height=int(frame_height), convert_alpha=convert_alpha)
 
       # get the left facing sprite
       left_animation = LEFT_FRAME_ID + animation_name
@@ -203,7 +203,7 @@ class AnimateSpriteObject(object):
     surface.blit(self.sprite_sheets[self.current_animation], self.rect, area=self.current_frame)
 
   def _get_frames(self, filename, columns, rows, des_width=30, des_height=30,
-                  vertical_offset=None, frame_width=None, frame_height=None):
+                  vertical_offset=None, frame_width=None, frame_height=None, convert_alpha=True):
     """returns a new sprite sheet and a list of rectangular coordinates in the
     file that correspond to frames in the file name. It also manipulates the spritesheet 
     so each frame will have the des_width and des_height
@@ -228,7 +228,10 @@ class AnimateSpriteObject(object):
     # Note: des_width and des_height are ignored, assuming sprites are at
     # correct size already.
 
-    sheet = pygame.image.load(filename)
+    if convert_alpha:
+      sheet = pygame.image.load(filename).convert_alpha()
+    else:
+      sheet = pygame.image.load(filename).convert()
     sheet_rect = sheet.get_rect()
     full_frame_width = sheet_rect.width/columns    
     left_offset = int((full_frame_width - frame_width)/2)
@@ -935,7 +938,7 @@ class DataCruncher(PublishingHouse):
 class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def __init__(self, startx, starty, width, height, sprite_sheet, team=None, obj_id=None ):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
-    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
+    AnimateSpriteObject.__init__(self, sprite_sheet, width, height, convert_alpha=False)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'id', 'current_animation', 'render', 'stage'])
     self.rect = self.animation_frames[self.current_animation][0].copy()
     self.sprite_sheet = sprite_sheet

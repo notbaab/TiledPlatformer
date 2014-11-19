@@ -49,53 +49,53 @@
     },
   "Raw-Data-Observatory-Blue":
     {
-      "idle":["gameelements/Raw Data - Observatory (Blue).png",["1", "1"], "0", ["200","200"]],
-      "2":["gameelements/Results - Observatory (Blue).png",["1", "1"], "0", ["200","200"]],
-      "3":["gameelements/Paper (Blue).png",["1", "1"], "0", ["200","200"]]
+      "idle":["gameelements/Raw Data - Observatory (Blue).png",["1", "1"], "0", ["122","168"]],
+      "2":["gameelements/Results - Observatory (Blue).png",["1", "1"], "0", ["75","189"]],
+      "3":["gameelements/Paper (Blue).png",["1", "1"], "0", ["122","160"]]
     },
   "Raw-Data-Observatory-Red":
     {
-      "idle":["gameelements/Raw Data - Observatory (Red).png",["1", "1"], "0", ["200","200"]],
-      "2":["gameelements/Results - Observatory (Red).png",["1", "1"], "0", ["200","200"]],
-      "3":["gameelements/Paper (Red).png",["1", "1"], "0", ["200","200"]]
+      "idle":["gameelements/Raw Data - Observatory (Red).png",["1", "1"], "0", ["122","168"]],
+      "2":["gameelements/Results - Observatory (Red).png",["1", "1"], "0", ["75","189"]],
+      "3":["gameelements/Paper (Red).png",["1", "1"], "0", ["122","160"]]
     },
   "Raw-Data-Lab-Blue":
     {
-      "idle":["gameelements/Raw Data - Lab (Blue).png",["1", "1"], "0", ["200","200"]],
-      "2":["gameelements/Results - Lab (Blue).png",["1", "1"], "0", ["200","200"]],
-      "3":["gameelements/Paper (Blue).png",["1", "1"], "0", ["200","200"]]
+      "idle":["gameelements/Raw Data - Lab (Blue).png",["1", "1"], "0", ["122","168"]],
+      "2":["gameelements/Results - Lab (Blue).png",["1", "1"], "0", ["75","189"]],
+      "3":["gameelements/Paper (Blue).png",["1", "1"], "0", ["122","160"]]
 
     },
   "Raw-Data-Lab-Red":
     {
-      "idle":["gameelements/Raw Data - Lab (Red).png",["1", "1"], "0", ["200","200"]],
-      "2":["gameelements/Results - Lab (Red).png",["1", "1"], "0", ["200","200"]],
-      "3":["gameelements/Paper (Red).png",["1", "1"], "0", ["200","200"]]
+      "idle":["gameelements/Raw Data - Lab (Red).png",["1", "1"], "0", ["122","168"]],
+      "2":["gameelements/Results - Lab (Red).png",["1", "1"], "0", ["75","189"]],
+      "3":["gameelements/Paper (Red).png",["1", "1"], "0", ["122","160"]]
     },
   "Raw-Data-Sensors-Blue":
     {
-      "idle":["gameelements/Raw Data - Sensors (Blue).png",["1", "1"], "0", ["200","200"]],
-      "2":["gameelements/Results - Sensors (Blue).png",["1", "1"], "0", ["200","200"]],
-      "3":["gameelements/Paper (Blue).png",["1", "1"], "0", ["200","200"]]
+      "idle":["gameelements/Raw Data - Sensors (Blue).png",["1", "1"], "0", ["122","168"]],
+      "2":["gameelements/Results - Sensors (Blue).png",["1", "1"], "0", ["75","189"]],
+      "3":["gameelements/Paper (Blue).png",["1", "1"], "0", ["122","160"]]
     },
   "Raw-Data-Sensors-Red":
     {
-      "idle":["gameelements/Raw Data - Sensors (Red).png",["1", "1"], "0", ["200","200"]],
-      "2":["gameelements/Results - Sensors (Red).png",["1", "1"], "0", ["200","200"]],
-      "3":["gameelements/Paper (Red).png",["1", "1"], "0", ["200","200"]]
+      "idle":["gameelements/Raw Data - Sensors (Red).png",["1", "1"], "0", ["122","168"]],
+      "2":["gameelements/Results - Sensors (Red).png",["1", "1"], "0", ["75","189"]],
+      "3":["gameelements/Paper (Red).png",["1", "1"], "0", ["122","160"]]
     },
   "Raw-Data-Tapes-Blue":
     {
-      "idle":["gameelements/Raw Data - Tapes (Blue).png",["1", "1"], "0", ["200","200"]],
-      "2":["gameelements/Results - Tapes (Blue).png",["1", "1"], "0", ["200","200"]],
-      "3":["gameelements/Paper (Blue).png",["1", "1"], "0", ["200","200"]]
+      "idle":["gameelements/Raw Data - Tapes (Blue).png",["1", "1"], "0", ["122","168"]],
+      "2":["gameelements/Results - Tapes (Blue).png",["1", "1"], "0", ["75","189"]],
+      "3":["gameelements/Paper (Blue).png",["1", "1"], "0", ["122","160"]]
 
     },
   "Raw-Data-Tapes-Red":
     {
-      "idle":["gameelements/Raw Data - Tapes (Red).png",["1", "1"], "0", ["200","200"]],
-      "2":["gameelements/Results - Tapes (Red).png",["1", "1"], "0", ["200","200"]],
-      "3":["gameelements/Paper (Red).png",["1", "1"], "0", ["200","200"]]
+      "idle":["gameelements/Raw Data - Tapes (Red).png",["1", "1"], "0", ["122","168"]],
+      "2":["gameelements/Results - Tapes (Red).png",["1", "1"], "0", ["75","189"]],
+      "3":["gameelements/Paper (Red).png",["1", "1"], "0", ["122","160"]]
     }
 }
 
