@@ -340,7 +340,7 @@
       "y": "500",
       "width" : "130",
       "height": "250",
-      "tile":["3", "1"],
+      "tile":["0", "1"],
       "team": "red"
     },
     {
@@ -348,6 +348,7 @@
       "y": "500",
       "width" : "130",
       "height": "250",
+      "tile":["4", "1"],
       "team": "blue"
     }
   ],
@@ -363,7 +364,6 @@
       "__name__":"Observatory",
       "timer":"Timer-Observatory",
       "rawdata":"Raw-Data-Observatory",
-      "resultsdata":"Results-Data-Observatory",
       "tile":["1","0"],
       "timer-blue-pos":["1","1"],
       "timer-red-pos":["200","10"]
@@ -376,7 +376,6 @@
       "__name__":"Sensors",
       "timer":"Timer-Monitor",
       "rawdata":"Raw-Data-Sensors",
-      "resultsdata":"Results-Data-Sensors",
       "tile":["3","0"],
       "timer-blue-pos":["1","1"],
       "timer-red-pos":["200","10"]
@@ -389,7 +388,6 @@
       "__name__":"Lab",
       "timer":"Timer-Lab",
       "rawdata":"Raw-Data-Lab",
-      "resultsdata":"Results-Data-Lab",
       "tile":["0","2"],
       "timer-blue-pos":["360","500"],
       "timer-red-pos":["160","500"]
@@ -402,7 +400,6 @@
       "__name__":"tape",
       "timer":"Timer-Monitor",
       "rawdata":"Raw-Data-Tapes",
-      "resultsdata":"Results-Data-Tapes",
       "tile":["4","2"],
       "timer-blue-pos":["-500","-60"],
       "timer-red-pos":["-800","-60"]
@@ -444,7 +441,6 @@
       "chair":["-80", "-20"],
       "timer":"Timer-Paper",
       "team":"Red",
-      "rawdata":"Paper",
       "tile":["2","2"]
     },
     {
@@ -456,7 +452,6 @@
       "chair":["80", "-20"],
       "timer":"Timer-Paper",
       "team":"Blue",
-      "rawdata":"Paper",
       "tile":["2","2"]
     }
   ],
@@ -477,20 +472,12 @@
   "Meeting":
   [
     {
-      "x": "822",
-      "y": "722",
+      "x": "949",
+      "y": "920",
       "width" : "50",
       "height": "50",
       "__name__":"Meeting",
       "tile":["1","1"]
-    },
-    {
-      "x":      "436",
-      "y":      "688",
-      "width" : "50",
-      "height": "50",
-      "__name__":"Meeting",
-      "tile":["3","1"]
     }
   ],
   "ClimableObject":
@@ -499,13 +486,13 @@
       "x":      "205",
       "y":      "434",
       "width" : "166",
-      "height": "1274",
+      "height": "1374",
       "__name__":"Ladder, Meeting",
       "tile":["1","1"]
     },
     {
       "x":      "205",
-      "y":      "440",
+      "y":      "430",
       "width" : "166",
       "height": "720",
       "__name__":"Left Ladder, Comet",
@@ -513,7 +500,7 @@
     },
     {
       "x":      "1562",
-      "y":      "440",
+      "y":      "430",
       "width" : "166",
       "height": "720",
       "__name__":"Right Ladder, Comet",
