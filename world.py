@@ -2,7 +2,7 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-import ipdb
+# import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
@@ -366,7 +366,7 @@ class SimpleScenery(GameObject):
 
 
 class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
-  def __init__(self, startx, starty, width, height, sprite_sheet=None, color=None, obj_id=None):
+  def __init__(self, startx, starty, width, height, sprite_sheet=None, color=None, obj_id=None, team='blue'):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id',
@@ -397,7 +397,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.on_ladder = False
     self.near_ladder = False
     self.climbing = 0  # climbing modifier 1 for DOWN, -1 for up
-    self.team = 'Blue'
+    self.team = team
 
 
   def jump(self):
@@ -421,10 +421,6 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
          self.climbing = -1
          self.ladder = game_obj
          self.rect.centerx = self.ladder.rect.centerx
-         print("in ladder")
-         print(game_obj.rect)
-         print(game_obj)
-         print(self.rect)
          break
 
   def down_interact(self, climable_objects):
@@ -922,7 +918,7 @@ class PublishingHouse(Desk):
 
   def generate_data(self):
     # TODO: make a scoring mechanic
-    if self.scoring_team == 'Blue':
+    if self.scoring_team == 'blue':
       self.game.blue_score += 1
     else:
       self.game.red_score += 1

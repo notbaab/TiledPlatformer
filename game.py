@@ -461,7 +461,16 @@ class MasterPlatformer(object):
             
 
         else:
-          tmp = constructor(x, y, int(obj_dict['width']),
+          if 'team' in obj_dict:
+            if obj_dict['team'] == 'red':
+              tmp =constructor(x, y, int(obj_dict['width']),
+                              int(obj_dict['height']), sprite_sheet=asset_json[key], team=obj_dict['team'])
+            else:
+              tmp =constructor(x, y, int(obj_dict['width']),
+                              int(obj_dict['height']), sprite_sheet=asset_json[key + '-blue'], team=obj_dict['team'])
+
+          else:
+            tmp = constructor(x, y, int(obj_dict['width']),
                             int(obj_dict['height']), sprite_sheet=asset_json[key])
         
         if isinstance(tmp, wd.DataDevice):

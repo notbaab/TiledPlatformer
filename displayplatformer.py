@@ -25,11 +25,14 @@ SCREEN_WIDTH = int(config['display_size'][0])
 SCREEN_HEIGHT = int(config['display_size'][1])
 BEZEL_SIZE = 120
 
-def draw_score(x, bottom, message, window):
+def draw_score(x, bottom, message, window, background=None):
   """draw text somewhere on the screen"""
   eng.FONT.set_bold(True)
   font_to_render = eng.FONT.render(str(message), True, (255, 0, 0))
   font_rect = font_to_render.get_rect()
+  if background:
+    window.blit(background, (font_rect.x, font_rect.y), font_rect)
+    pygame.display.update(font_rect)
   font_rect.x = x
   font_rect.bottom = bottom
   window.blit(font_to_render, font_rect)
@@ -172,10 +175,10 @@ class ClientPlatformer(NetworkGame):
       if 'score' in data:
         if data['score'][0] != self.blue_score:
           self.blue_score = data['score'][0]
-          update_rects.append(draw_score(self.blue_score_loc[0],self.blue_score_loc[1], self.blue_score, self.window))
+          update_rects.append(draw_score(self.blue_score_loc[0],self.blue_score_loc[1], self.blue_score, self.window, self.background))
         if data['score'][1] != self.red_score:
           self.red_score = data['score'][1]
-          update_rects.append(draw_score(self.red_score_loc[0],self.red_score_loc[1], self.red_score, self.window))
+          update_rects.append(draw_score(self.red_score_loc[0],self.red_score_loc[1], self.red_score, self.window, self.background))
     self.clear_rects = []
     for obj_id in data['deleted_objs']:
       del self.game_objects[obj_id]
