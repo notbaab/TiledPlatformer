@@ -472,12 +472,20 @@
   "Meeting":
   [
     {
-      "x": "949",
-      "y": "920",
-      "width" : "50",
-      "height": "50",
+      "x": "1038",
+      "y": "986",
+      "width" : "1",
+      "height": "1",
       "__name__":"Meeting",
       "tile":["1","1"]
+    },
+    {
+      "x": "810",
+      "y": "1050",
+      "width" : "1",
+      "height": "1",
+      "__name__":"Meeting",
+      "tile":["3","1"]
     }
   ],
   "ClimableObject":

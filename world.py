@@ -2,7 +2,7 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-import ipdb
+# import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
@@ -19,8 +19,8 @@ TIMER_WIDTH = 100
 PLAYER_INTERACT_DIST = 50
 EJECT_SPEED = eng.Vector(20, -20)
 PLAYER_MASH_NUMBER = 10  # the number of times the player has to mash a button to escape
-MEETING_EVENT_HORIZON = 50  # the distance where the player will need to escape
-MEETING_GRAVITAIONAL_SPHERE = 100  # the distance where the player begins to be pulled in
+MEETING_EVENT_HORIZON = 100  # the distance where the player will need to escape
+MEETING_GRAVITAIONAL_SPHERE = 150  # the distance where the player begins to be pulled in
 MEETING_PULL = 5
 MEETING_TIMER = .01
 DEBUG = True
@@ -412,8 +412,9 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       return
     for game_obj in climable_objects:
       # Check if the center of the player is inbwteen the left and right coordinates
-      if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and 
-          game_obj.rect.top < self.rect.centery < game_obj.rect.bottom):
+      if self.rect.colliderect(game_obj.rect):
+      # if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and 
+      #     game_obj.rect.top < self.rect.centery < game_obj.rect.bottom):
          # On ladder, turn off physics
          self.physics = False
          self.on_ladder = True
@@ -430,9 +431,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       return
     for game_obj in climable_objects:
       # Check if the center of the player is inbwteen the left and right coordinates
-      if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and 
-         (game_obj.rect.top < self.rect.bottom < game_obj.rect.bottom or 
-          game_obj.rect.top == self.rect.bottom)):
+      if self.rect.colliderect(game_obj.rect):
           # On ladder, turn off physics
           self.physics = False
           self.on_ladder = True
@@ -1065,14 +1064,15 @@ class Patroller(Follower):
 
 
 
-class Meeting(SimpleScenery, NetworkedObject):
+class Meeting(GameObject):
   """A meeting trap that will pull the players into at a certain range"""
 
   def __init__(self, startx, starty, width, height, obj_id=None):
-    SimpleScenery.__init__(self, startx, starty, width, height, obj_id=obj_id)
-    NetworkedObject.__init__(self, ['rect', 'id', 'timer', 'message_str'])
+    GameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     self.pulling_player = None
     self.timer = None
+    self.collision = False 
+
 
   def check_player(self, players):
     """check if the player is close enough to be pulled in"""
@@ -1093,36 +1093,37 @@ class Meeting(SimpleScenery, NetworkedObject):
   def pull_event(self, player, **kwargs):
     """a function to give the player"""
     # distance = kwargs['distance']
+    if player.trapped:
+      player.change_animation('sitmeeting')  # HACK
+      return
     distance = eng.distance(self.rect, player.rect)
-    if self.rect.x >= player.rect.x:
+    if self.rect.x >= player.rect.centerx:
       # on the right side of it, pull to the right
       if not player.moving or distance < MEETING_EVENT_HORIZON:
         pull_velocity = MEETING_PULL
       else:
         pull_velocity = player.direction * PLAYER_SPEED + MEETING_PULL
-    elif self.rect.x < player.rect.x:
+    elif self.rect.x < player.rect.centerx:
       # on the left side of it, pull to the left
       if not player.moving or distance < MEETING_EVENT_HORIZON:
         pull_velocity = -MEETING_PULL
       else:
         pull_velocity = player.direction * PLAYER_SPEED - MEETING_PULL
+    if distance < MEETING_EVENT_HORIZON:
+      self.trap(player)
     player.velocity.x = pull_velocity
 
   def un_trap(self, game_obj):
     """Release the mortal from the bonds of responsibility"""
     self.timer = MEETING_TIMER
     game_obj.movement_event = False
-
-
-  def draw(self, surface):
-    super(Meeting, self).draw(surface)
-    if self.timer:
-      return draw_timer(self, surface, False)  # draw a descending timer
+    game_obj.change_animation('running')
 
   def trap(self, game_obj):
     if not self.timer:
       game_obj.trapped = True
       game_obj.trapper = self
+      game_obj.change_animation('sitmeeting')
 
 
   def update(self):
