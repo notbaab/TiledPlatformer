@@ -210,8 +210,6 @@ class MasterPlatformer(object):
           player1.down_interact(game_dict['ClimableObject'])
         elif event.key == K_c:
           player1.interact(self.game_objects.values())  # TODO: We are passing in way to much data here, fix it.
-        # elif event.key == K_t:
-        #   player1.throw_data()
         elif event.key == K_5:
           player1.jump()
         
@@ -230,6 +228,8 @@ class MasterPlatformer(object):
           player2.jump()
         elif event.key == K_RIGHTBRACKET:
           player2.interact(self.game_objects.values())
+
+
       elif event.type == KEYUP:
         if event.key == K_KP4:
           player1.stop_left()
@@ -245,7 +245,7 @@ class MasterPlatformer(object):
           player2.stop_right()
         elif event.key == K_f:
           player2.cancel_up_down_interact()
-        elif event.key == K_6:
+        elif event.key == K_r:
           player2.cancel_up_down_interact()
 
   def play_frame(self, send_struct):
