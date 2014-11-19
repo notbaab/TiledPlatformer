@@ -474,7 +474,6 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def escape(self, direction):
     """mash a button to escape students"""
     if self.trapped:
-      print("trying to escape")
       if direction == 1:
         self.mash_left = True
       elif direction == 2:

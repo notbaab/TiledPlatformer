@@ -91,21 +91,14 @@ class ClientPlatformer(NetworkGame):
         to_render = False
         
       if 'sprite_sheet' in game_obj:
-        try:
-          
           self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
                                                           game_obj['rect'][3], 
                                                           sprite_sheet=game_obj['sprite_sheet'], 
                                                           obj_id=game_obj['id'])
-        except Exception as e:
-            ipdb.set_trace()
       else:
-        try:
           self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2], 
                                                           game_obj['rect'][3], 
                                                           obj_id=game_obj['id'])
-        except Exception as e:
-          ipdb.set_trace()
 
       self.game_objects[game_obj['id']].render = to_render
 

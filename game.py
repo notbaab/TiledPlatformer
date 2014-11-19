@@ -432,7 +432,6 @@ class MasterPlatformer(object):
       print (key)
       constructor = getattr(wd, key)
       print(constructor)
-      # try:
       for obj_dict in map_json[key]:
         if "tile" in obj_dict:
           # tranlate the x and y coordinates
