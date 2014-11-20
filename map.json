@@ -234,22 +234,6 @@
       "tile":["2","2"]
     },
     {
-      "x":      "572",
-      "y":      "379",
-      "width" : "100",
-      "height": "70",
-      "__name__":"Left Light",
-      "tile":["2","2"]
-    },
-    {
-      "x":      "1251",
-      "y":      "379",
-      "width" : "100",
-      "height": "70",
-      "__name__":"Right Light",
-      "tile":["2","2"]
-    },
-    {
       "x":      "1488",
       "y":      "455",
       "width" : "432",
@@ -331,6 +315,22 @@
       "height": "450",
       "__name__":"Coffee shop door",
       "tile":["4","0"]
+    },
+      {
+      "x":      "572",
+      "y":      "379",
+      "width" : "100",
+      "height": "70",
+      "__name__":"Left Light",
+      "tile":["2","2"]
+    },
+    {
+      "x":      "1251",
+      "y":      "379",
+      "width" : "100",
+      "height": "70",
+      "__name__":"Right Light",
+      "tile":["2","2"]
     }
   ],
   "Player":
