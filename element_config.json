@@ -33,11 +33,11 @@
     },
   "Timer-Journal-Blue":
     {
-      "idle":["gameelements/Timer - Journal (Blue).png",["21", "1"], "0", ["600","700"]]
+      "idle":["gameelements/Timer - Journal (Blue).png",["21", "1"], "0", ["600","900"]]
     },
   "Timer-Journal-Red":
     {
-      "idle":["gameelements/Timer - Journal (Red).png",["21", "1"], "0", ["600","700"]]
+      "idle":["gameelements/Timer - Journal (Red).png",["21", "1"], "0", ["600","900"]]
     },
   "Timer-Paper-Red":
     {
