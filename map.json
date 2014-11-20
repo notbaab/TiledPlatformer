@@ -365,8 +365,8 @@
       "timer":"Timer-Observatory",
       "rawdata":"Raw-Data-Observatory",
       "tile":["1","0"],
-      "timer-blue-pos":["1","1"],
-      "timer-red-pos":["200","10"]
+      "timer-blue-pos":["0","200"],
+      "timer-red-pos":["200","200"]
     },    
     {
       "x": "1404",
@@ -377,8 +377,8 @@
       "timer":"Timer-Monitor",
       "rawdata":"Raw-Data-Sensors",
       "tile":["3","0"],
-      "timer-blue-pos":["1","1"],
-      "timer-red-pos":["200","10"]
+      "timer-blue-pos":["0","200"],
+      "timer-red-pos":["200","200"]
     },
     {
       "x":      "618",
@@ -401,8 +401,8 @@
       "timer":"Timer-Monitor",
       "rawdata":"Raw-Data-Tapes",
       "tile":["4","2"],
-      "timer-blue-pos":["-500","-60"],
-      "timer-red-pos":["-800","-60"]
+      "timer-blue-pos":["-500","200"],
+      "timer-red-pos":["-800","200"]
     }    
   ],
   "Follower":
@@ -418,7 +418,9 @@
       "height": "294",
       "__name__":"Left Terminal, Comet",
       "timer":"Timer-Comet",
-      "tile":["2","1"]
+      "tile":["2","1"],
+      "timer-blue-pos":["200","200"],
+      "timer-red-pos":["0","200"]
     },
     {
       "x": "1366",
@@ -427,7 +429,9 @@
       "height": "294",
       "__name__":"Right Terminal, Comet",
       "timer":"Timer-Comet",
-      "tile":["2","1"]
+      "tile":["2","1"],
+      "timer-blue-pos":["200","200"],
+      "timer-red-pos":["0","200"]
     }
   ], 
   "Desk":
@@ -441,7 +445,9 @@
       "chair":["-80", "-20"],
       "timer":"Timer-Paper",
       "team":"Red",
-      "tile":["2","2"]
+      "tile":["2","2"],
+      "timer-blue-pos":["200","200"],
+      "timer-red-pos":["0","200"]
     },
     {
       "x":      "1006",
@@ -452,7 +458,9 @@
       "chair":["80", "-20"],
       "timer":"Timer-Paper",
       "team":"Blue",
-      "tile":["2","2"]
+      "tile":["2","2"],
+      "timer-blue-pos":["200","200"],
+      "timer-red-pos":["0","200"]
     }
   ],
   "PublishingHouse":
