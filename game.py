@@ -4,8 +4,10 @@ import sys
 from pygame.locals import *
 import world as wd
 import engine as eng
-import socket
-if (sys.version_info > (3, 0)):
+# import socket
+from networking import NetworkedMasterGame
+
+if sys.version_info > (3, 0):
   import pickle as pickle
 else:
   import cPickle as pickle
@@ -26,18 +28,20 @@ GRID_SPACE = [int(config['grid_space'][0]), int(config['grid_space'][1])]
 # DISPLAY_SIZE = [600, 600]
 DISPLAY_SIZE = {"x": int(config['display_size'][0]), "y": int(config['display_size'][1])}
 BEZZEL_SIZE = 120
-DISPLAY_SIZE['x'] = DISPLAY_SIZE['x'] + BEZZEL_SIZE
-DISPLAY_SIZE['y'] = DISPLAY_SIZE['y'] + BEZZEL_SIZE
+DISPLAY_SIZE['x'] += BEZZEL_SIZE
+DISPLAY_SIZE['y'] += BEZZEL_SIZE
 print(DISPLAY_SIZE)
 DEBUG_CLASSES = []
 # DEBUG_CLASSES = [wd.SimpleScenery, wd.Player]
+GAME_LENGTH = 3  # in minutes
+
 
 # TODO: have a platformer game class that has all the similar components of the render and 
 # master node, and inherit from that?
-class MasterPlatformer(object):
+class MasterPlatformer(NetworkedMasterGame):
   """Class for the platformer head node"""
 
-  def __init__(self, localhosts=1, ip_file=None):
+  def __init__(self):
     global config, network_settings
     super(MasterPlatformer, self).__init__()
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0, 0)  # move window to upper left corner
@@ -49,10 +53,11 @@ class MasterPlatformer(object):
     self.deleted = []  # list keeping track of the ids of objects that are deleted
     self.blue_score = 0
     self.red_score = 0
+    self.game_length = GAME_LENGTH * 60 * 1000
 
     self.game_objects = self.load_map()
 
-    # remove none debugin classes if that is what we are doing
+    # remove none debugin classes if we want to test a specific class
     if DEBUG_CLASSES:
       new_game_obj = self.game_objects.copy()
       for obj in self.game_objects.values():
@@ -60,34 +65,12 @@ class MasterPlatformer(object):
           print(str(type(obj)))
           del new_game_obj[obj.id]
       self.game_objects = new_game_obj.copy()
-    
-    if network_settings['localhost'] == "True":
-      # Testing one local node, read from the setting to find out which tile we are testing and read
-      # move the player to the correct place
-      ip_list = ['localhost'] 
-      # spawn each player in the corner of the screen
-      left_side = DISPLAY_SIZE["x"] * int(network_settings["x"])
-      top_side = DISPLAY_SIZE["y"] * int(network_settings["y"])
-      game_dict = self.structured_list()  # 
-      player1 = game_dict['Player'][0]
-      # player2 = game_dict['Player'][1]
-      player1.rect.x = left_side + 1000
-      # player2.rect.x = left_side + 900
-      player1.rect.y = top_side + 200
-      # player2.rect.y = top_side + 200
-      print(player1.rect)
-      # print(player2.rect)
 
-    else:  
-      # ip_list
-      self.ip_list = []
-      ips = open('tile-hosts.txt', 'r')
-      address = ips.readline().strip()
-      ip_list = []
-      while address:
-          ip_list.append(address)
-          address = ips.readline().strip()
+    self.make_structured_dict()  # structure the game objects into a structured dictionary
+    self.el_time = 0
+    self.localhost = False
 
+  def init_game(self):
     # build the initial data packet
     send_struct = {'game_obj': []}
     for game_obj in self.game_objects.values():
@@ -95,58 +78,70 @@ class MasterPlatformer(object):
         send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
                               game_obj.rect.height], "id": game_obj.id,
                      "constructor": type(game_obj).__name__}
-        if hasattr(game_obj,  "sprite_sheet"):
-           send_dict["sprite_sheet"] = game_obj.sprite_sheet
+        if hasattr(game_obj, "sprite_sheet"):
+          send_dict["sprite_sheet"] = game_obj.sprite_sheet
         send_struct['game_obj'].append(send_dict)
-
-    data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
-
-    self.socket_list = []
-    for ip in ip_list:
-      self.socket_list.append(socket.socket(socket.AF_INET, socket.SOCK_STREAM))
-      self.socket_list[-1].connect((ip, 2000))
-      self.socket_list[-1].sendall(data)
-
-    for node in self.socket_list:
-      self.get_whole_packet(node)
-
     self.state = 'load'
+    return send_struct
 
-  def run(self):
-    send_struct = {}
-    while True:
-      if self.state == 'play':
-        self.state, send_struct = self.play_frame(send_struct)
-      elif self.state == 'load':
-        self.state, send_struct = self.load()
-      else:
-        ipdb.set_trace()
-      FPS.tick(TICK)
-      # print(FPS.get_fps())
+  def setup_local_host(self):
+    # Testing one local node, read from the setting to find out which tile we are testing and read
+    # move the player to the correct place
+    # spawn each player in the corner of the screen
+    self.localhost = True
+    left_side = DISPLAY_SIZE["x"] * 0
+    top_side = DISPLAY_SIZE["y"] * 0
+    player1 = self.struct_game_dict['Player'][0]
+    player1.rect.x = left_side + 1000
+    player1.rect.y = top_side + 200
+    # player2 = game_dict['Player'][1]
+    # player2.rect.x = left_side + 900
+    # player2.rect.y = top_side + 200
+    print(player1.rect)
+    # print(player2.rect)
+
+  def win_state(self):
+    while True:  # wait until explicit shutdown
+      for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+          self.quit()
+          sys.exit()
+        elif event.type == KEYDOWN:
+          if event.key == K_ESCAPE:
+            self.quit()
+            sys.exit()
 
   def load(self):
     send_struct = {'state': 'load'}
     # clients handle the load state so wait for their response and play the game
-    self.send(send_struct)
-    self.struct_game_dict = self.structured_list()
-    game_objects_packets = []  # accumulator for the build_packet function
-    send_struct = {'state': 'play', 'deleted_objs': [], 'added_objs': []}
-    self.engine.map_attribute_flat(self.struct_game_dict['NetworkedObject'], 'build_packet', game_objects_packets)
-    send_struct['game_objects'] = game_objects_packets
-    # self.recv()
     return 'play', send_struct
+
+  def get_time(self):
+    minutes, milliseconds = divmod(self.el_time, 60000)
+    seconds = float(milliseconds) / 1000
+    real_minutes = GAME_LENGTH - minutes - 1
+    real_seconds = 60 - seconds
+    real_time = "%02i:%02.0f" % (real_minutes, real_seconds)
+    return real_time
+
+  def update(self, recieved_packet):
+    if self.state == 'play':
+      self.state, send_struct = self.play_frame(recieved_packet)
+    elif self.state == 'load':
+      self.state, send_struct = self.load()
+    elif self.state == 'kill':
+      return
+    return send_struct
 
   def handle_keypress_local(self, game_dict):
     player1 = game_dict['Player'][0]
     player2 = game_dict['Player'][1]
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
-        self.quit()
-        sys.exit()
+        return True
       elif event.type == KEYDOWN:
         if event.key == K_ESCAPE:
-          self.quit()
-          sys.exit()          
+          return True
         if event.key == K_LEFT:
           player1.move_left()
           player1.escape(1)
@@ -161,8 +156,10 @@ class MasterPlatformer(object):
           player1.throw_data()
         elif event.key == K_z:
           player1.jump()
-        
-        # player2
+        if event.key == K_r:
+          self.el_time = 0
+
+          # player2
         elif event.key == K_a:
           player2.move_left()
           player2.escape(1)
@@ -185,19 +182,21 @@ class MasterPlatformer(object):
         elif event.key == K_DOWN:
           player1.cancel_up_down_interact()
         elif event.key == K_d:
-          player2.stop_right()  
+          player2.stop_right()
+    return False
 
   def handle_keypress(self, game_dict):
     player1 = game_dict['Player'][0]
     player2 = game_dict['Player'][1]
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
-        self.quit()
-        sys.exit()
+        return True
       elif event.type == KEYDOWN:
         if event.key == K_ESCAPE:
-          self.quit()
-          sys.exit()          
+          return True
+        if event.key == K_r:
+          self.el_time = 0
+          print("restarted")
         if event.key == K_KP4:
           player1.move_left()
           player1.escape(1)
@@ -212,7 +211,7 @@ class MasterPlatformer(object):
           player1.interact(self.game_objects.values())  # TODO: We are passing in way to much data here, fix it.
         elif event.key == K_5:
           player1.jump()
-        
+
         # player2
         elif event.key == K_d:
           player2.move_left()
@@ -228,7 +227,6 @@ class MasterPlatformer(object):
           player2.jump()
         elif event.key == K_RIGHTBRACKET:
           player2.interact(self.game_objects.values())
-
 
       elif event.type == KEYUP:
         if event.key == K_KP4:
@@ -248,18 +246,13 @@ class MasterPlatformer(object):
         elif event.key == K_r:
           player2.cancel_up_down_interact()
 
-  def play_frame(self, send_struct):
-    self.recv()
-    self.send(send_struct)
-
-    # game_dict = self.structured_list()  # Structure the game object list to manage easier. n time should be fast
-    if network_settings['localhost']:
-      self.handle_keypress_local(self.struct_game_dict)
+  def play_frame(self, recieved_packets):
+    if self.localhost:
+      quit_game = self.handle_keypress_local(self.struct_game_dict)
     else:
-      self.handle_keypress(self.struct_game_dict)
-
-    # player1 = game_dict['Player'][0]
-    # player2 = game_dict['Player'][1]
+      quit_game = self.handle_keypress(self.struct_game_dict)
+    if quit_game:
+      return 'kill', ''
 
     self.engine.physics_simulation(self.game_objects.values(), [wd.SimpleScenery])
     self.engine.map_attribute_flat(self.game_objects.values(), 'update')
@@ -298,7 +291,7 @@ class MasterPlatformer(object):
     self.engine.map_attribute_flat(self.struct_game_dict['NetworkedObject'], 'build_packet', game_objects_packets)
     send_struct['game_objects'] = game_objects_packets
     send_struct['score'] = [self.blue_score, self.red_score]
-    # print(send_struct)
+    send_struct['time'] = self.get_time()
 
     return 'play', send_struct
 
@@ -311,6 +304,7 @@ class MasterPlatformer(object):
       self.struct_game_dict['AI'].append(game_obj)
     elif isinstance(game_obj, wd.Effect):
       self.struct_game_dict['Effect'].append(game_obj)
+
     if isinstance(game_obj, wd.MovableGameObject):
       self.struct_game_dict['MovableGameObject'].append(game_obj)
     if isinstance(game_obj, wd.NetworkedObject):
@@ -320,95 +314,31 @@ class MasterPlatformer(object):
     if isinstance(game_obj, wd.Meeting):
       self.struct_game_dict['Meeting'].append(game_obj)
 
-  def structured_list(self):
+  def make_structured_dict(self):
     """take the game object list and return a dict with the keys for static, AI, and player
     objects. An object can be added to multiple lists if it is multiple things i.e.
     a player is a movable game object"""
-    ret_dict = {'AI': [], 'StaticObject': [], 'Player': [], 'MovableGameObject': [],
-                'NetworkedObject': [], 'Meeting': [], 'ClimableObject': [],
-                'Effect':[]}
+    self.struct_game_dict = {'AI': [], 'StaticObject': [], 'Player': [],
+                             'MovableGameObject': [], 'NetworkedObject': [],
+                             'Meeting': [], 'ClimableObject': [], 'Effect': []}
+
     for game_obj in self.game_objects.values():
-      if isinstance(game_obj, wd.Player):
-        ret_dict['Player'].append(game_obj)
-      elif isinstance(game_obj, wd.SimpleScenery):
-        ret_dict['StaticObject'].append(game_obj)
-      elif isinstance(game_obj, wd.Follower):
-        ret_dict['AI'].append(game_obj)
-      elif isinstance(game_obj, wd.Effect):
-        ret_dict['Effect'].append(game_obj)
-      if isinstance(game_obj, wd.MovableGameObject):
-        ret_dict['MovableGameObject'].append(game_obj)
-      if isinstance(game_obj, wd.NetworkedObject):
-        ret_dict['NetworkedObject'].append(game_obj)
-      if isinstance(game_obj, wd.ClimableObject):
-        ret_dict['ClimableObject'].append(game_obj)
-      if isinstance(game_obj, wd.Meeting):
-        ret_dict['Meeting'].append(game_obj)
-      if isinstance(game_obj, wd.Door):
-        ret_dict['ClimableObject'].append(game_obj)
-    return ret_dict
+      self.add_to_structured_list(game_obj)
 
   def handle_localhost(self, follow_player):
     """special function used to handle things like switching the screens when playing on one local host"""
     # first, find out which tile player one is in. 
     tile_x = follow_player.rect.centerx / (DISPLAY_SIZE['x'] + BEZZEL_SIZE)
-    tile_y = follow_player.rect.bottom / (DISPLAY_SIZE['y']) 
+    tile_y = follow_player.rect.bottom / (DISPLAY_SIZE['y'])
     if tile_x == -1:
       tile_x = 0
     if tile_x > 4:
       tile_x = 4
 
-    return {'x':tile_x, 'y':tile_y}
-    # print(tile_x)
-    # print(tile_y)
-
+    return {'x': tile_x, 'y': tile_y}
 
   def add_to_world(self, game_obj):
     self.game_objects[game_obj.id] = game_obj
-
-  def get_whole_packet(self, sock):
-    """ensures that we receive the whole stream of data"""
-    data = ''.encode('utf-8')
-    while True:
-      data += sock.recv(4024)
-      split = data.split(SOCKET_DEL)  # split at newline, as per our custom protocol
-      if len(split) != 2:  # it should be 2 elements big if it got the whole message
-        pass
-      else:
-        x = pickle.loads(split[0])
-        return x
-
-  def serialize_and_sync(self, send_struct):
-    """serialize data and send it to the nodes."""
-    # serialize the data and send
-    data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
-    for node in self.socket_list:
-      node.sendall(data)
-
-    return_list = []
-    for node in self.socket_list:
-      return_list.append(self.get_whole_packet(node))
-    # TODO: return real data
-    return '', 'play'
-
-  def send(self, send_struct):
-    data = pickle.dumps(send_struct, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
-    for node in self.socket_list:
-      node.sendall(data)
-
-  def recv(self):
-    return_list = []
-    for node in self.socket_list:
-      return_list.append(self.get_whole_packet(node))
-
-
-
-  def quit(self):
-    data = pickle.dumps({'state': 'kill'}, pickle.HIGHEST_PROTOCOL) + '*ET*'.encode('utf-8')
-    for node in self.socket_list:
-      node.sendall(data)
-    time.sleep(2)
-
 
   def load_map(self):
     global config
@@ -429,7 +359,7 @@ class MasterPlatformer(object):
     # TODO: abstract this parsing to dynamically call the constructor based on the 
     # attribute (reuse map)
     for key in map_json:
-      print (key)
+      print(key)
       constructor = getattr(wd, key)
       print(constructor)
       for obj_dict in map_json[key]:
@@ -445,13 +375,13 @@ class MasterPlatformer(object):
           game_objects[tmp.id] = tmp
           continue
         if key == "Door":
-          tmp = self.handle_door(obj_dict, game_objects)
+          tmp = self._handle_door(obj_dict)
           game_objects[tmp.id] = tmp
           tmp.rect.x = x
           tmp.rect.y = y
           continue
         if key == "Stairs":
-          tmp = self._handle_stairs(game_objects, obj_dict, x, y)
+          self._handle_stairs(game_objects, obj_dict, x, y)
         if key not in asset_json:
           # "invisible object"
           if issubclass(constructor, wd.Constructor):
@@ -461,52 +391,53 @@ class MasterPlatformer(object):
           else:
             tmp = constructor(x, y, int(obj_dict['width']),
                               int(obj_dict['height']))
-            
 
         else:
           if 'team' in obj_dict:
             if obj_dict['team'] == 'red':
-              tmp =constructor(x, y, int(obj_dict['width']),
-                              int(obj_dict['height']), sprite_sheet=asset_json[key], team=obj_dict['team'])
+              tmp = constructor(x, y, int(obj_dict['width']),
+                                int(obj_dict['height']), sprite_sheet=asset_json[key], team=obj_dict['team'])
             else:
-              tmp =constructor(x, y, int(obj_dict['width']),
-                              int(obj_dict['height']), sprite_sheet=asset_json[key + '-blue'], team=obj_dict['team'])
+              tmp = constructor(x, y, int(obj_dict['width']),
+                                int(obj_dict['height']), sprite_sheet=asset_json[key + '-blue'], team=obj_dict['team'])
 
           else:
             tmp = constructor(x, y, int(obj_dict['width']),
-                            int(obj_dict['height']), sprite_sheet=asset_json[key])
-        
+                              int(obj_dict['height']), sprite_sheet=asset_json[key])
+
         if isinstance(tmp, wd.DataDevice):
           if isinstance(tmp, wd.Desk) and not isinstance(tmp, wd.PublishingHouse):
             timer = tmp.load_json(obj_dict, effect_json)
             game_objects[timer.id] = timer
-          else:  
+          else:
             if isinstance(tmp, wd.DataCruncher):
               effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json)
             else:
-              effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json, red_loc=obj_dict['timer-red-pos'], blue_loc=obj_dict['timer-blue-pos'])
+              effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json,
+                                                         red_loc=obj_dict['timer-red-pos'],
+                                                         blue_loc=obj_dict['timer-blue-pos'])
             game_objects[effect_blue.id] = effect_blue
             game_objects[effect_red.id] = effect_red
           if 'rawdata' in obj_dict:
             tmp.load_data(obj_dict['rawdata'], effect_json)
 
         game_objects[tmp.id] = tmp
-      # except Exception, e:
-      #   ipdb.set_trace()
     print(game_objects)
     return game_objects
 
-  def handle_door(self, obj_dict, game_objects):
+  def _handle_door(self, obj_dict):
     """portals are specail objects that need to be created two at a time and
     have there own setting structure"""
-    tmp = wd.Door(int(obj_dict['x']), int(obj_dict['y']), int(obj_dict['width']), int(obj_dict['height']), end_point=obj_dict['end_point'])
+    tmp = wd.Door(int(obj_dict['x']), int(obj_dict['y']), int(obj_dict['width']), int(obj_dict['height']),
+                  end_point=obj_dict['end_point'])
     return tmp
 
-  def _handle_effect(self, obj_dict, x, y,  effect_json):
+  def _handle_effect(self, obj_dict, x, y, effect_json):
     """handle loading the effect objects"""
     print(effect_json)
     animation_dict = effect_json[obj_dict['effect_name']]
-    tmp = wd.Effect(x, y, int(obj_dict['width']), int(obj_dict['height']), animation_dict, animation_time=int(obj_dict['animation-time']))
+    tmp = wd.Effect(x, y, int(obj_dict['width']), int(obj_dict['height']), animation_dict,
+                    animation_time=int(obj_dict['animation-time']))
     tmp.render = True
     tmp.pause = False
     tmp.clear = False
@@ -518,18 +449,8 @@ class MasterPlatformer(object):
     for step in steps_list:
       game_objects[step.id] = step
 
-
-
   def translate_to_tile(self, tile_x, pos_x, tile_y, pos_y):
     x = int(tile_x) * DISPLAY_SIZE['x'] + pos_x
     y = int(tile_y) * DISPLAY_SIZE['y'] + pos_y
     print(x, y)
     return x, y
-
-if __name__ == '__main__':
-  print(sys.argv)
-  if len(sys.argv) != 2:
-    game = MasterPlatformer(localhosts=1, ip_file=False)
-  else:
-    game = MasterPlatformer(localhosts=int(sys.argv[1]))
-  game.run()

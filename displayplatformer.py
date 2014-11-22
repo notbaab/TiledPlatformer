@@ -38,8 +38,7 @@ def draw_score(x, bottom, message, window, background=None):
   window.blit(font_to_render, font_rect)
   return font_rect
 
-
-class ClientPlatformer(NetworkGame):
+class ClientPlatformer(NetworkedTileGame):
   def __init__(self, tile, window_coordinates=None):
     """Sets up all the needed client settings"""
     super(ClientPlatformer, self).__init__(tile)
@@ -79,6 +78,9 @@ class ClientPlatformer(NetworkGame):
     """Get the initial configuration of the game from the master node."""
     for game_obj in data['game_obj']:
       constructor = getattr(wd, game_obj['constructor'])
+      if not issubclass(constructor, wd.NetworkedObject):
+        continue  # we really only need objects that won't be updated. This could be modified to include static objects
+                  #  that will stay on one tile and not move, but we really don't need even that.
       translate_pos = self.translate_to_local((game_obj['rect'][0], game_obj['rect'][1]))
       if constructor == wd.Player:
         print(translate_pos)
