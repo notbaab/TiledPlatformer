@@ -16,10 +16,13 @@ BEZEL_SIZE = 120
 GRAVITY_VELOCITY = 2
 FPS = pygame.time.Clock()
 X_FRICTION_CONSTANT = 2
-EDGES = (int(config['display_size'][0]) * ((int(config['grid_space'][0]) + 1)) + (BEZEL_SIZE * int(config['grid_space'][0]) + 1),
-         int(config['display_size'][1]) * ((int(config['grid_space'][1]) + 1)) + (BEZEL_SIZE * int(config['grid_space'][1]) + 1))
+EDGES = (
+  int(config['display_size'][0]) * (int(config['grid_space'][0]) + 1) +
+      (BEZEL_SIZE * int(config['grid_space'][0]) + 1),
+  int(config['display_size'][1]) * (int(config['grid_space'][1]) + 1) +
+      (BEZEL_SIZE * int(config['grid_space'][1]) + 1))
 
-WRAP_EDGES = (2000,2400)
+WRAP_EDGES = (2000, 2400)
 print(EDGES)
 pygame.font.init()
 FONT = pygame.font.SysFont('Arial', 100, 100)
@@ -119,7 +122,7 @@ class Engine(object):
     # and to create  a near objects list that the player will check when doing interactions3
     for game_object in objects:
       # if isinstance(game_object, wd.Player):
-      #   ipdb.set_trace()
+      # ipdb.set_trace()
       skip = False
       if not game_object.physics:
         continue
@@ -145,14 +148,14 @@ class Engine(object):
       # Check to make sure the object didn't move off the screen
       if game_object.rect.left < 0:
         if WRAP_EDGES[0] < game_object.rect.y < WRAP_EDGES[1]:
-           if game_object.rect.right < 0:
+          if game_object.rect.right < 0:
             game_object.rect.right = EDGES[0]
         else:
           game_object.rect.left = 0
       elif game_object.rect.right > EDGES[0]:
         if WRAP_EDGES[0] < game_object.rect.y < WRAP_EDGES[1]:
-           if game_object.rect.left > EDGES[0]:
-             game_object.rect.left = 0
+          if game_object.rect.left > EDGES[0]:
+            game_object.rect.left = 0
         else:
           game_object.rect.right = EDGES[0]
 
@@ -183,7 +186,6 @@ class Engine(object):
         if game_object.velocity.x > 0:
           # Can't friction backwards
           game_object.velocity.x = 0
-
 
   def load_animation(self, game_objects, background, window):
     """breaks the game objects into pieces and has them fly into their spots
@@ -235,7 +237,6 @@ class Engine(object):
     for game_obj, inner_step_dict in step_dict.items():
       for idx, (rect, area) in enumerate(game_pieces[game_obj]):
         window.blit(background, (rect.x, rect.y), rect)
-
 
   def split_sprite(self, game_obj, des_width_peices, des_height_peices):
     """split the sprite into various pieces

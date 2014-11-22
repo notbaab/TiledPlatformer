@@ -53,8 +53,6 @@ def draw_timer(game_obj, surface, ascending=True):
     timer_rect.width = TIMER_WIDTH * game_obj.timer
   else:
     timer_rect.width = 101 - TIMER_WIDTH * game_obj.timer  # off by one error fix later
-                                                           
-                                                           
 
   print(timer_rect.width)
 
@@ -129,7 +127,8 @@ class AnimateSpriteObject(object):
     frame_dict = {}
     self.animation_frames = {}
     self.sprite_sheets = {}
-    for animation_name, (filename, (width, height), vertical_offset, (frame_width, frame_height)) in animation_dict.items():
+    for animation_name, (
+            filename, (width, height), vertical_offset, (frame_width, frame_height)) in animation_dict.items():
       self.sprite_sheets[animation_name], self.animation_frames[animation_name] = self._get_frames(
         ASSET_FOLDER + filename, int(width),
         int(height), des_width=des_width,
@@ -167,13 +166,13 @@ class AnimateSpriteObject(object):
 
     previous_rect = self.rect.copy()
     self.current_animation = frame  # TODO: evaluate if we need this member
-    #TODO set self.rect based on first frame size, save and set center
-    #TODO pause and restart if needed
+    # TODO set self.rect based on first frame size, save and set center
+    # TODO pause and restart if needed
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
     self.rect = self.animation_frames[self.current_animation][0].copy()
     self.rect.centerx = previous_rect.centerx
     self.rect.bottom = previous_rect.bottom
-    
+
   def reverse_animation(self, direction):
     """take the current animation and point it in the other direction specified
     returns new animation name the object needs to change to or None"""
@@ -233,19 +232,20 @@ class AnimateSpriteObject(object):
     else:
       sheet = pygame.image.load(filename).convert()
     sheet_rect = sheet.get_rect()
-    full_frame_width = sheet_rect.width/columns    
-    left_offset = int((full_frame_width - frame_width)/2)
-    full_frame_height = sheet_rect.height/rows
-    
+    full_frame_width = sheet_rect.width / columns
+    left_offset = int((full_frame_width - frame_width) / 2)
+    full_frame_height = sheet_rect.height / rows
+
     # sheet = pygame.transform.smoothscale(sheet, (sheet_width, sheet_height))
     # sheet_rect = sheet.get_rect()
     frames = []
     for x in range(0, columns):
       # next for loop assumes vertical_offset is less than frame height
       for y in range(0, rows):
-        frames.append(pygame.Rect(x*full_frame_width+left_offset,
-                                  y*full_frame_height+vertical_offset, frame_width, frame_height))
+        frames.append(pygame.Rect(x * full_frame_width + left_offset,
+                                  y * full_frame_height + vertical_offset, frame_width, frame_height))
     return sheet, frames
+
 
 class Constructor(object):
   """A special object that contains a reference to the entire game. Inherited
@@ -319,7 +319,7 @@ class MovableGameObject(GameObject):
     """collisions with things that are in the background i.e. things you can
     jump on but walk through"""
     # if not self.on_ground:
-    #   ipdb.set_trace()
+    # ipdb.set_trace()
     if self.velocity.y >= 0 and self.last_rect.bottom <= obj.rect.top:
       # only collide going down (rember +y = down)
       self.rect.bottom = obj.rect.top
@@ -328,10 +328,10 @@ class MovableGameObject(GameObject):
 
   def update(self):
     # if self.last_rect.x == self.rect.x and self.last_rect.y == self.rect.y:
-    #   # didn't move, stop rendering
-    #   self.render = False
+    # # didn't move, stop rendering
+    # self.render = False
     # else:
-    #   self.render = True
+    # self.render = True
     self.last_rect = self.rect.copy()
     if self.velocity.y != 0:
       # no longer on ground 
@@ -401,7 +401,6 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.climbing = 0  # climbing modifier 1 for DOWN, -1 for up
     self.team = team
 
-
   def jump(self):
     print(self.on_ground)
     if not self.trapped and not self.stunned_timer and self.on_ground:
@@ -416,15 +415,15 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     for game_obj in climable_objects:
       # Check if the center of the player is inbwteen the left and right coordinates
       if self.rect.colliderect(game_obj.rect):
-      # if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and 
-      #     game_obj.rect.top < self.rect.centery < game_obj.rect.bottom):
-         # On ladder, turn off physics
-         self.physics = False
-         self.on_ladder = True
-         self.climbing = -1
-         self.ladder = game_obj
-         self.rect.centerx = self.ladder.rect.centerx
-         break
+        # if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and
+        # game_obj.rect.top < self.rect.centery < game_obj.rect.bottom):
+        # On ladder, turn off physics
+        self.physics = False
+        self.on_ladder = True
+        self.climbing = -1
+        self.ladder = game_obj
+        self.rect.centerx = self.ladder.rect.centerx
+        break
 
   def down_interact(self, climable_objects):
     """Player pressed up so may be attempting to climb something"""
@@ -434,25 +433,20 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       return
     for game_obj in climable_objects:
       # Check if the center of the player is inbwteen the left and right coordinates
-      if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and 
-         (game_obj.rect.top < self.rect.bottom < game_obj.rect.bottom or 
-          game_obj.rect.top == self.rect.bottom)):
-          # On ladder, turn off physics
-          self.physics = False
-          self.on_ladder = True
-          self.climbing = 1
-          self.ladder = game_obj
-          self.rect.centerx = self.ladder.rect.centerx
-          print("in ladder")
-          print(game_obj.rect)
-          print(game_obj)
-          print(self.rect)
-          break
+      if (game_obj.rect.left < self.rect.centerx < game_obj.rect.right and
+            (game_obj.rect.top < self.rect.bottom < game_obj.rect.bottom or
+                 game_obj.rect.top == self.rect.bottom)):
+        # On ladder, turn off physics
+        self.physics = False
+        self.on_ladder = True
+        self.climbing = 1
+        self.ladder = game_obj
+        self.rect.centerx = self.ladder.rect.centerx
+        break
 
   def do_door(self, door):
     self.rect.x = door.end_point[0]
     self.rect.y = door.end_point[1]
-
 
   def cancel_up_down_interact(self):
     self.climbing = 0
@@ -474,7 +468,6 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     if self.climbing:
       self.handle_ladddery_things()
       # self.rect.y += self.ladder.climb_speed.y
-
 
   def escape(self, direction):
     """mash a button to escape students"""
@@ -550,8 +543,6 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       throw_data = True
     else:
       throw_data = False
-      # self.throw_data()
-      # return
     interact_obj = None
     for game_obj in game_objs:
       if isinstance(game_obj, DataDevice):
@@ -580,10 +571,10 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       self._turn_physics_on()
 
   def _turn_physics_on(self):
-      self.physics = True
-      self.on_ladder = False
-      self.climbing = False
-    
+    self.physics = True
+    self.on_ladder = False
+    self.climbing = False
+
   def draw(self, surface):
     """Draws the player object onto surface
     :param surface: the surface to draw the object, typically the window
@@ -649,13 +640,8 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     if losing_player.data:
       losing_player.drop_data()
 
-
   def drop_data(self):
     self.throw_data()
-
-  def stun_event(self):
-    """ if something is happening the the player, """
-
 
   def throw_data(self):
     """Through the data that the player is holding"""
@@ -675,7 +661,6 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       self.data.velocity.y = PLAYER_THROW_SPEED.y
       self.data.unhide_object()
       self.data = None
-      # self.change_animation('')
 
 
 class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
@@ -696,7 +681,6 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
       game_obj = Data(20, 20, 40, 40, self.data_dict_blue, team='blue')
     else:
       game_obj = Data(20, 20, 40, 40, self.data_dict_red, team='red')
-    # print(game_obj)
     game_obj.rect.center = self.active_timer.rect.center
     game_obj.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
     game_obj.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
@@ -717,32 +701,33 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
       self.active_timer.send_data = True
       self.active_timer.clear = False
 
-
   def load_effects(self, effect_name, effect_json, red_loc=None, blue_loc=None):
     """load the effects for this data object and return effects loaded"""
     # print(effect_name)
     # print(effect_json)
     print(self)
-    animation_dict_blue = effect_json[effect_name +'-Blue']
-    animation_dict_red = effect_json[effect_name +'-Red']
-    self.blue_timer = Effect(self.rect.x + int(blue_loc[0]), self.rect.y - int(blue_loc[1]), 200, 
-                            200, animation_dict_blue)
+    animation_dict_blue = effect_json[effect_name + '-Blue']
+    animation_dict_red = effect_json[effect_name + '-Red']
+    self.blue_timer = Effect(self.rect.x + int(blue_loc[0]), self.rect.y - int(blue_loc[1]), 200,
+                             200, animation_dict_blue)
     self.blue_timer.physics = False
     self.blue_timer.collision = False
-    self.blue_timer.animation_time = DATA_DEVICE_TIMER / len(self.blue_timer.animation_frames[self.blue_timer.current_animation])
+    self.blue_timer.animation_time = DATA_DEVICE_TIMER / len(
+      self.blue_timer.animation_frames[self.blue_timer.current_animation])
     self.red_timer = Effect(self.rect.x + int(red_loc[0]), self.rect.y - int(red_loc[1]), 200, 200, animation_dict_red)
     self.red_timer.physics = False
     self.red_timer.collision = False
-    self.red_timer.animation_time = DATA_DEVICE_TIMER / len(self.red_timer.animation_frames[self.red_timer.current_animation])
-    self.timer_total = self.red_timer.animation_time * len(self.red_timer.animation_frames[self.red_timer.current_animation]) + self.red_timer.animation_time
+    self.red_timer.animation_time = DATA_DEVICE_TIMER / len(
+      self.red_timer.animation_frames[self.red_timer.current_animation])
+    self.timer_total = self.red_timer.animation_time * len(
+      self.red_timer.animation_frames[self.red_timer.current_animation]) + self.red_timer.animation_time
     print(self.timer_total)
     print(self.red_timer.animation_time)
     return self.blue_timer, self.red_timer
 
   def load_data(self, data_name, data_json):
-    self.data_dict_blue = data_json[data_name +'-Blue']
-    self.data_dict_red = data_json[data_name +'-Red']
-
+    self.data_dict_blue = data_json[data_name + '-Blue']
+    self.data_dict_red = data_json[data_name + '-Red']
 
   def draw(self, surface):
     self.render = False
@@ -763,13 +748,13 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
   def respond_to_collision(self, obj, axis=None):
     return
 
-  # def get_data(self, data):
-  #   self.timer = DATA_DEVICE_TIMER  # start timer
-  #   self.data = data
-  #   # TODO: Make a better hide/delete function
-  #   data.rect.x, data.rect.y = (-100, -100)
-  #   data.velocity.x = 0
-  #   data.velocity.y = 0
+    # def get_data(self, data):
+    # self.timer = DATA_DEVICE_TIMER  # start timer
+    # self.data = data
+    # # TODO: Make a better hide/delete function
+    # data.rect.x, data.rect.y = (-100, -100)
+    # data.velocity.x = 0
+    # data.velocity.y = 0
 
 
 class Desk(DataDevice):
@@ -798,18 +783,18 @@ class Desk(DataDevice):
           self.player = None
 
   def load_json(self, obj_dict, effect_json):
-    timer_name = obj_dict['timer'] +"-"+ obj_dict['team']
+    timer_name = obj_dict['timer'] + "-" + obj_dict['team']
     animation_dict = effect_json[timer_name]
     self.timer = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict)
     self.timer.rect.centerx, self.timer.rect.y = self.rect.centerx, self.rect.y - 300
     self.timer.physics = False
     self.timer.collision = False
     self.timer.animation_time = DATA_DEVICE_TIMER / len(self.timer.animation_frames[self.timer.current_animation])
-    self.timer_total = self.timer.animation_time * len(self.timer.animation_frames[self.timer.current_animation]) + self.timer.animation_time
-    self.player_sit_loc = (self.rect.x + int(obj_dict['chair'][0]) , self.rect.y + int(obj_dict['chair'][1]))
+    self.timer_total = self.timer.animation_time * len(
+      self.timer.animation_frames[self.timer.current_animation]) + self.timer.animation_time
+    self.player_sit_loc = (self.rect.x + int(obj_dict['chair'][0]), self.rect.y + int(obj_dict['chair'][1]))
     print(self.timer_total)
     return self.timer
-
 
   def generate_data(self):
     self.data.rect.centerx = self.rect.centerx
@@ -840,7 +825,6 @@ class Desk(DataDevice):
 
   def move_player(self, player):
     player.rect.x, player.rect.y = self.player_sit_loc
-
 
 
 class PublishingHouse(Desk):
@@ -889,7 +873,6 @@ class DataCruncher(PublishingHouse):
     self.amount_data_needed = amount_data_needed
     self.data_collected = 0
 
-
   def handle_data(self, game_obj):
     ipdb.set_trace()
     if game_obj.stage == self.accept_stage:
@@ -907,22 +890,25 @@ class DataCruncher(PublishingHouse):
       self.data.advance_data()
       self.data.hide_object()
 
-  def load_effects(self, effect_name, effect_json, red_loc=None, blue_loc= None):
+  def load_effects(self, effect_name, effect_json, red_loc=None, blue_loc=None):
     """load the effects for this data object and return effects loaded"""
     # print(effect_name)
     # print(effect_json)
     print(self)
-    animation_dict_blue = effect_json[effect_name +'-Blue']
-    animation_dict_red = effect_json[effect_name +'-Red']
+    animation_dict_blue = effect_json[effect_name + '-Blue']
+    animation_dict_red = effect_json[effect_name + '-Red']
     self.blue_timer = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict_blue)
     self.blue_timer.physics = False
     self.blue_timer.collision = False
-    self.blue_timer.animation_time = DATA_DEVICE_TIMER / len(self.blue_timer.animation_frames[self.blue_timer.current_animation])
-    self.red_timer = Effect(self.rect.x+40, self.rect.y, 200, 200, animation_dict_red)
+    self.blue_timer.animation_time = DATA_DEVICE_TIMER / len(
+      self.blue_timer.animation_frames[self.blue_timer.current_animation])
+    self.red_timer = Effect(self.rect.x + 40, self.rect.y, 200, 200, animation_dict_red)
     self.red_timer.physics = False
     self.red_timer.collision = False
-    self.red_timer.animation_time = DATA_DEVICE_TIMER / len(self.red_timer.animation_frames[self.red_timer.current_animation])
-    self.timer_total = self.red_timer.animation_time * len(self.red_timer.animation_frames[self.red_timer.current_animation]) + self.red_timer.animation_time
+    self.red_timer.animation_time = DATA_DEVICE_TIMER / len(
+      self.red_timer.animation_frames[self.red_timer.current_animation])
+    self.timer_total = self.red_timer.animation_time * len(
+      self.red_timer.animation_frames[self.red_timer.current_animation]) + self.red_timer.animation_time
     print(self.timer_total)
     print(self.red_timer.animation_time)
     return self.blue_timer, self.red_timer
@@ -936,9 +922,8 @@ class DataCruncher(PublishingHouse):
     self.data.unhide_object()
 
 
-
 class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
-  def __init__(self, startx, starty, width, height, sprite_sheet, team=None, obj_id=None ):
+  def __init__(self, startx, starty, width, height, sprite_sheet, team=None, obj_id=None):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height, convert_alpha=False)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'id', 'current_animation', 'render', 'stage'])
@@ -950,7 +935,6 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.frame = 'idle'
     self.player = None
     self.team = team
-
 
   def draw(self, surface):
     super(Data, self).draw(surface)  # animatedSpriteObject.draw
@@ -1036,7 +1020,8 @@ class Patroller(Follower):
   """class that patrols it's give x area"""
 
   def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, patrol_range=100, site_range=200):
-    super(Patroller, self).__init__(startx, starty, width, height, obj_id=obj_id, sprite_sheet=sprite_sheet, site_range=site_range)
+    super(Patroller, self).__init__(startx, starty, width, height, obj_id=obj_id, sprite_sheet=sprite_sheet,
+                                    site_range=site_range)
     self.patrol_range = patrol_range
     self.reset_patrol()
     self.direction = 1  # scaler to multiple speed by to get direction
@@ -1067,7 +1052,6 @@ class Patroller(Follower):
     self.velocity.x = PATROL_SPEED
 
 
-
 class Meeting(GameObject):
   """A meeting trap that will pull the players into at a certain range"""
 
@@ -1075,8 +1059,7 @@ class Meeting(GameObject):
     GameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     self.pulling_player = None
     self.timer = None
-    self.collision = False 
-
+    self.collision = False
 
   def check_player(self, players):
     """check if the player is close enough to be pulled in"""
@@ -1129,7 +1112,6 @@ class Meeting(GameObject):
       game_obj.trapper = self
       game_obj.change_animation('sitmeeting')
 
-
   def update(self):
     super(Meeting, self).update()
     if self.timer:
@@ -1138,12 +1120,9 @@ class Meeting(GameObject):
         self.timer = None
 
 
-def Portal(GameObject):
-  """a special object that contains a pointer to another portal object, creating a 
-  link in gamespace bewteen the two"""
-
 class ClimableObject(BackGroundScenery):
   """Simple ladder object"""
+
   def __init__(self, startx, starty, width, height, obj_id=None, clim_type='Vertical'):
     BackGroundScenery.__init__(self, startx, starty, width, height, obj_id=obj_id)
     if clim_type == 'Vertical':
@@ -1152,8 +1131,9 @@ class ClimableObject(BackGroundScenery):
       self.bottom = self.rect.bottom
       self.climb_speed = LADDER_CLIMB_SPEED
 
-  # def draw(self, surface):
-  #    pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+      # def draw(self, surface):
+      # pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+
 
 class Stairs(GameObject):
   def __init__(self, startx, starty, width, height, obj_id=None):
@@ -1163,20 +1143,20 @@ class Stairs(GameObject):
   def make_stairs(self, orientation):
     if orientation == 'right':
       bottom = self.rect.left, self.rect.bottom
-      top = self.rect.right, self.rect.top 
-      direct=1
+      top = self.rect.right, self.rect.top
+      direct = 1
     else:
       bottom = self.rect.right, self.rect.bottom
-      top = self.rect.left, self.rect.top 
+      top = self.rect.left, self.rect.top
       direct = -1
     return self.__make_steps(12, bottom, top, direct)
 
-  def __make_steps(self, num_of_steps, bottom, top, direct, width=102, height=36 ):
+  def __make_steps(self, num_of_steps, bottom, top, direct, width=102, height=36):
     self.steps = []
-    total_height = bottom[1] - top[1] 
+    total_height = bottom[1] - top[1]
     height_space = total_height / num_of_steps
     height_padding = height_space - height
-    total_width = abs(bottom[0] - top[0]) 
+    total_width = abs(bottom[0] - top[0])
     width_padding = total_width / num_of_steps
     print(direct)
     # ipdb.set_trace()
@@ -1187,8 +1167,8 @@ class Stairs(GameObject):
         startx = x * width_padding + (bottom[0])
 
       if startx != bottom[0]:
-        startx = startx - MAGIC_STAIR_CONSTANT
-      starty = bottom[1] - ((x+1)*height + (x+1)*height_padding)
+        startx -= MAGIC_STAIR_CONSTANT
+      starty = bottom[1] - ((x + 1) * height + (x + 1) * height_padding)
       self.steps.append(Step(startx, starty, width, height))
       if direct == -1:
         self.steps[-1].rect.right = startx
@@ -1197,17 +1177,17 @@ class Stairs(GameObject):
 
   def draw(self, surface):
     return
-     # pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+    # pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+
 
 class Step(BackGroundScenery):
-
   def __init__(self, startx, starty, widht, height, obj_id=None):
     BackGroundScenery.__init__(self, startx, starty, widht, height)
-    
+
   def draw(self, surface):
     self.render = False
     return
-     # pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
+    # pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
 
   def set_above_stair(self, next_stair):
     self.next_stair = next_stair
@@ -1219,7 +1199,9 @@ class Step(BackGroundScenery):
 class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
   """Effect objects. Just a simple object that doesn't interact with anything,
   its just a sprite that gets sent over the network and is told to stop or start"""
-  def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, total_time=120, animation_time=None):
+
+  def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, total_time=120,
+               animation_time=None):
     GameObject.__init__(self, startx, starty, width, height)
     AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id', 'render', 'clear'])
@@ -1234,7 +1216,7 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
     self.render_frames = 0
     self.clear = True
     self.collision = False
-  
+
   def animate(self):
     """Updates the animation timer goes to next frame in current animation cycle
     after the alloted animation time has passed."""
@@ -1250,7 +1232,6 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
     else:
       self.send_data = False
 
-
   def build_packet(self, accumulator):
     if self.send_data:
       if self.render:
@@ -1259,13 +1240,11 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
         super(Effect, self).build_packet(accumulator)
         self.clear = False
 
-
   def read_packet(self, packet):
     for attribute in self.attribute_list:
       self.__setattr__(attribute, packet[attribute])
     if self.clear:
       self.render = True
-
 
   def draw(self, surface, game):
     """Draws the player object onto surface
@@ -1283,6 +1262,7 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
 
 class Door(BackGroundScenery):
   """docstring for Door"""
+
   def __init__(self, startx, starty, width, height, obj_id=None, end_point=None):
     # ipdb.set_trace()
     super(Door, self).__init__(startx, starty, width, height, obj_id=obj_id)
