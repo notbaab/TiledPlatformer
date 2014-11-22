@@ -1,17 +1,12 @@
 Dependencies 
 ------------
-Python 3
-ipbd
+Python
 pygame 
 
 How To Run
 -----------
-You will need three terminal windows open to run locally
-To run on 2 windows, run the following commands in order on separate terminal windows
-python3 render_node.py
-python3 render_node1.py
-python3 game.py 2
+To run locally, set network_settings.json localhost to "True"
 
-To run on just one window run the following two commands
-python3 render_node.py
-python3 game.py
+Run render_node.py then master.py
+
+Runs best on linux :p
