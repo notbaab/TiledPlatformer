@@ -23,7 +23,6 @@ EDGES = (
       (BEZEL_SIZE * int(config['grid_space'][1]) + 1))
 
 WRAP_EDGES = (2000, 2400)
-print(EDGES)
 pygame.font.init()
 FONT = pygame.font.SysFont('Arial', 100, 100)
 

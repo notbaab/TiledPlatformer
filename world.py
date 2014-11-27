@@ -2,7 +2,7 @@ import pygame
 import engine as eng
 # from graphics import *
 from itertools import cycle
-# import ipdb
+import ipdb
 import random
 
 DATA_STAGES = {"raw": 1, "crunched": 2, "paper": 3}
@@ -31,36 +31,6 @@ STUN_LOSER_TIMER = 20
 LEFT_FRAME_ID = 'l_'
 LADDER_CLIMB_SPEED = eng.Vector(0, 30)
 MAGIC_STAIR_CONSTANT = 2  # DO NOT TOUCH, THIS IS MAGIC
-
-
-def draw_message(x, bottom, message, window):
-  """draw text somewhere on the screen"""
-  eng.FONT.set_bold(True)
-  font_to_render = eng.FONT.render(str(message), True, (0, 0, 0))
-  font_rect = font_to_render.get_rect()
-  font_rect.x = x
-  font_rect.bottom = bottom
-  window.blit(font_to_render, font_rect)
-  return font_rect
-
-
-def draw_timer(game_obj, surface, ascending=True):
-  outline_rect = pygame.Rect(0, 0, TIMER_WIDTH, 20)
-  outline_rect.centerx = game_obj.rect.centerx
-  outline_rect.centery = game_obj.rect.y - outline_rect.height
-  timer_rect = pygame.Rect(outline_rect)
-  if ascending:
-    timer_rect.width = TIMER_WIDTH * game_obj.timer
-  else:
-    timer_rect.width = 101 - TIMER_WIDTH * game_obj.timer  # off by one error fix later
-
-  print(timer_rect.width)
-
-  pygame.draw.rect(surface, (255, 0, 255), timer_rect)
-  pygame.draw.rect(surface, (128, 0, 128), outline_rect, 1)
-  if timer_rect.width == TIMER_WIDTH - 1 or not ascending:
-    # TODO: optimize the clearing of the timer if need be
-    return outline_rect
 
 
 # TODO: add more things to do
@@ -111,29 +81,24 @@ class AnimateSpriteObject(object):
   """a stand alone object that allows the inherited game object to have animation 
   sprites"""
 
-  def __init__(self, animation_dict, des_width, des_height, start_animation='idle', convert_alpha=True):
+  def __init__(self, animation_dict, start_animation='idle', convert_alpha=True):
     """Initilize all the frames of the animated sprite object
     :param animation_dict: a dictionary that is keyed on the name of the animation. The dictionary 
     contains a tuple pair, with the name of the file at [0] and the number of frames of the sprite sheet
     at [1][0] for the x and [1][1] for the y. So 
     animation_dict[animation_name] -> (sprite_sheet_filename, (sprite_sheet_x, sprite_sheet_y) 
     :type animation_dict: dict
-    :param des_width: the desired width of each frame 
-    :type des_width: int
-    :param des_height: the desired height of each frame
-    :type des_height: int
     """
     object.__init__(self)
     frame_dict = {}
     self.animation_frames = {}
     self.sprite_sheets = {}
-    for animation_name, (
-            filename, (width, height), vertical_offset, (frame_width, frame_height)) in animation_dict.items():
+    # not to self, don't ever unpack a tuple like this again
+    for animation_name, (filename, (width, height), vertical_offset, (frame_width, frame_height)) in animation_dict.items():
       self.sprite_sheets[animation_name], self.animation_frames[animation_name] = self._get_frames(
         ASSET_FOLDER + filename, int(width),
-        int(height), des_width=des_width,
-        des_height=des_height, vertical_offset=int(vertical_offset),
-        frame_width=int(frame_width), frame_height=int(frame_height), convert_alpha=convert_alpha)
+        int(height), vertical_offset=int(vertical_offset),frame_width=int(frame_width), 
+        frame_height=int(frame_height), convert_alpha=convert_alpha)
 
       # get the left facing sprite
       left_animation = LEFT_FRAME_ID + animation_name
@@ -201,8 +166,8 @@ class AnimateSpriteObject(object):
     :type surface: pygame.Surface"""
     surface.blit(self.sprite_sheets[self.current_animation], self.rect, area=self.current_frame)
 
-  def _get_frames(self, filename, columns, rows, des_width=30, des_height=30,
-                  vertical_offset=None, frame_width=None, frame_height=None, convert_alpha=True):
+  def _get_frames(self, filename, columns, rows,vertical_offset=None, frame_width=None, 
+                  frame_height=None, convert_alpha=True):
     """returns a new sprite sheet and a list of rectangular coordinates in the
     file that correspond to frames in the file name. It also manipulates the spritesheet 
     so each frame will have the des_width and des_height
@@ -212,10 +177,6 @@ class AnimateSpriteObject(object):
     :type columns: int
     :param rows: the number of rows in the sprite sheet
     :type rows: int
-    :param des_width: the desired width of a single frame
-    :type des_width: int
-    :param des_height: the desired height of a single frame
-    :type des_height: int
     :param vertical_offset: how far down to crop out the frames
     :type frame_width: int
     :param frame_width: the native width of a single frame
@@ -349,32 +310,43 @@ class BackGroundScenery(GameObject):
   def draw(self, surface):
     pygame.draw.rect(surface, (128, 0, 128), self.rect, 3)
 
+  @classmethod
+  def create_from_dict(self, obj_dict):
+    startx = int(obj_dict.get('x'))
+    starty = int(obj_dict.get('y'))
+    width = int(obj_dict.get('width'))
+    height = int(obj_dict.get('height'))
+    obj_id = obj_dict.get('id') 
+    obj_id = int(obj_id) if obj_id else None
+    return self(startx, starty, width, height, obj_id=obj_id) 
+
 
 class SimpleScenery(GameObject):
   """Simple SimpleScenery object. Game objects that are just simple shapes"""
 
-  def __init__(self, startx, starty, width, height, color=None, obj_id=None):
+  def __init__(self, startx, starty, width, height, obj_id=None):
     super(SimpleScenery, self).__init__(startx, starty, width, height, obj_id=obj_id)
-    self.color = color
 
-  def draw(self, surface):
-    """Draw the simple scenery object"""
-    if self.message_str:
-      # message_rect = pygame.Rect(0,0,0,0)
-      x = self.rect.centerx
-      bottom = self.rect.top - 10
-      # message_rect.bottom = self.rect.top - 10
-      return draw_message(x, bottom, self.message_str, surface)
+  @classmethod
+  def create_from_dict(self, obj_dict):
+    startx = int(obj_dict.get('x'))
+    starty = int(obj_dict.get('y'))
+    width = int(obj_dict.get('width'))
+    height = int(obj_dict.get('height'))
+    obj_id = obj_dict.get('id') 
+    obj_id = int(obj_id) if obj_id else None
+    return self(startx, starty, width, height, obj_id=obj_id) 
+
+
 
 
 class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
-  def __init__(self, startx, starty, width, height, sprite_sheet=None, color=None, obj_id=None, team='blue'):
+  def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, team='blue'):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
-    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
+    AnimateSpriteObject.__init__(self, sprite_sheet)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id',
                                     'render'])
-    self.color = color
-    self.rect = pygame.Rect((startx, starty, width, height))
+    self.rect = self.animation_frames[self.current_animation][0].copy()
     self.sprite_sheet = sprite_sheet
     self.data = None
     self.direction = 1
@@ -401,8 +373,18 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.climbing = 0  # climbing modifier 1 for DOWN, -1 for up
     self.team = team
 
+  @classmethod
+  def create_from_dict(self, obj_dict):
+    startx = int(obj_dict.get('x'))
+    starty = int(obj_dict.get('y'))
+    team = obj_dict.get('team')
+    sprite_sheet = obj_dict.get('sprite_sheet')
+    obj_id = obj_dict.get('id') 
+    obj_id = int(obj_id) if obj_id else None
+    return self(startx, starty, 1, 1, sprite_sheet=sprite_sheet, obj_id=obj_id, team=team) 
+
+
   def jump(self):
-    print(self.on_ground)
     if not self.trapped and not self.stunned_timer and self.on_ground:
       self.jumping = True
       self.velocity.y = JUMP_VELOCITY
@@ -688,7 +670,6 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     return game_obj
 
   def interact(self, player, timer=DATA_DEVICE_TIMER):
-    # ipdb.set_trace()
     if not self.active_timer:  # only allow one timer at a time
       if player.team == 'blue':
         self.active_timer = self.blue_timer
@@ -701,29 +682,22 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
       self.active_timer.send_data = True
       self.active_timer.clear = False
 
-  def load_effects(self, effect_name, effect_json, red_loc=None, blue_loc=None):
+  def load_effects(self, effect_name, effect_json, red_loc=(0,0), blue_loc=(0,0)):
     """load the effects for this data object and return effects loaded"""
-    # print(effect_name)
-    # print(effect_json)
-    print(self)
-    animation_dict_blue = effect_json[effect_name + '-Blue']
-    animation_dict_red = effect_json[effect_name + '-Red']
-    self.blue_timer = Effect(self.rect.x + int(blue_loc[0]), self.rect.y - int(blue_loc[1]), 200,
-                             200, animation_dict_blue)
-    self.blue_timer.physics = False
-    self.blue_timer.collision = False
-    self.blue_timer.animation_time = DATA_DEVICE_TIMER / len(
-      self.blue_timer.animation_frames[self.blue_timer.current_animation])
-    self.red_timer = Effect(self.rect.x + int(red_loc[0]), self.rect.y - int(red_loc[1]), 200, 200, animation_dict_red)
-    self.red_timer.physics = False
-    self.red_timer.collision = False
-    self.red_timer.animation_time = DATA_DEVICE_TIMER / len(
-      self.red_timer.animation_frames[self.red_timer.current_animation])
+    self.red_timer = self.__load_effect(effect_name, effect_json, 'Red', red_loc)
+    self.blue_timer = self.__load_effect(effect_name, effect_json, 'Blue', blue_loc)
     self.timer_total = self.red_timer.animation_time * len(
-      self.red_timer.animation_frames[self.red_timer.current_animation]) + self.red_timer.animation_time
-    print(self.timer_total)
-    print(self.red_timer.animation_time)
+                       self.red_timer.animation_frames[self.red_timer.current_animation]) + self.red_timer.animation_time
     return self.blue_timer, self.red_timer
+
+  def __load_effect(self, effect_name, effect_json, team, location):
+    animation_dict = effect_json[effect_name + '-' + team]
+    effect = Effect(self.rect.x + int(location[0]), self.rect.y - int(location[1]), 200,
+                    200, animation_dict)
+    effect.physics = False
+    effect.collision = False
+    effect.animation_time = DATA_DEVICE_TIMER / len(effect.animation_frames[effect.current_animation])
+    return effect
 
   def load_data(self, data_name, data_json):
     self.data_dict_blue = data_json[data_name + '-Blue']
@@ -731,7 +705,6 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
 
   def draw(self, surface):
     self.render = False
-    # BackGroundScenery.draw(self, surface)  # SimpleScenery.draw
 
   def update(self):
     if self.active_timer:
@@ -744,17 +717,6 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
         self.active_timer.clear = True
         self.active_timer = None
         self.timer_count = 0
-
-  def respond_to_collision(self, obj, axis=None):
-    return
-
-    # def get_data(self, data):
-    # self.timer = DATA_DEVICE_TIMER  # start timer
-    # self.data = data
-    # # TODO: Make a better hide/delete function
-    # data.rect.x, data.rect.y = (-100, -100)
-    # data.velocity.x = 0
-    # data.velocity.y = 0
 
 
 class Desk(DataDevice):
@@ -925,7 +887,7 @@ class DataCruncher(PublishingHouse):
 class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def __init__(self, startx, starty, width, height, sprite_sheet, team=None, obj_id=None):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
-    AnimateSpriteObject.__init__(self, sprite_sheet, width, height, convert_alpha=False)
+    AnimateSpriteObject.__init__(self, sprite_sheet, convert_alpha=False)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'id', 'current_animation', 'render', 'stage'])
     self.rect = self.animation_frames[self.current_animation][0].copy()
     self.sprite_sheet = sprite_sheet
@@ -960,7 +922,7 @@ class Follower(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
   def __init__(self, startx, starty, width, height, color=None, sprite_sheet=None, obj_id=None, site_range=200):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
-    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
+    AnimateSpriteObject.__init__(self, sprite_sheet)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'id', 'render'])
     self.color = color
     self.leader = None
@@ -1131,14 +1093,25 @@ class ClimableObject(BackGroundScenery):
       self.bottom = self.rect.bottom
       self.climb_speed = LADDER_CLIMB_SPEED
 
-      # def draw(self, surface):
-      # pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
-
 
 class Stairs(GameObject):
   def __init__(self, startx, starty, width, height, obj_id=None):
     GameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     self.collision = False
+
+
+  @classmethod
+  def create_from_dict(self, obj_dict):
+    startx = int(obj_dict.get('x'))
+    starty = int(obj_dict.get('y'))
+    width = int(obj_dict.get('width'))
+    height = int(obj_dict.get('height'))
+    obj_id = obj_dict.get('id') 
+    obj_id = int(obj_id) if obj_id else None
+    stairs = self(startx, starty, width, height, obj_id=obj_id) 
+    steps = stairs.make_stairs(obj_dict['dir'])
+
+    return [stairs] + steps
 
   def make_stairs(self, orientation):
     if orientation == 'right':
@@ -1158,7 +1131,6 @@ class Stairs(GameObject):
     height_padding = height_space - height
     total_width = abs(bottom[0] - top[0])
     width_padding = total_width / num_of_steps
-    print(direct)
     # ipdb.set_trace()
     for x in range(0, num_of_steps):
       if direct == -1:
@@ -1172,12 +1144,10 @@ class Stairs(GameObject):
       self.steps.append(Step(startx, starty, width, height))
       if direct == -1:
         self.steps[-1].rect.right = startx
-    # ipdb.set_trace()
     return self.steps
 
   def draw(self, surface):
     return
-    # pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
 
 
 class Step(BackGroundScenery):
@@ -1203,7 +1173,7 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
   def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, total_time=120,
                animation_time=None):
     GameObject.__init__(self, startx, starty, width, height)
-    AnimateSpriteObject.__init__(self, sprite_sheet, width, height)
+    AnimateSpriteObject.__init__(self, sprite_sheet)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id', 'render', 'clear'])
     self.sprite_sheet = sprite_sheet
     # total time is in frames cause I'm bad at time.

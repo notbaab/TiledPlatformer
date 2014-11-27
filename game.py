@@ -1,10 +1,9 @@
 import pygame
 import sys
-# import ipdb
+import ipdb
 from pygame.locals import *
 import world as wd
 import engine as eng
-# import socket
 from networking import NetworkedMasterGame
 
 if sys.version_info > (3, 0):
@@ -42,6 +41,8 @@ class MasterPlatformer(NetworkedMasterGame):
   """Class for the platformer head node"""
 
   def __init__(self):
+    """initialize the game and all the game objects.
+    """
     global config, network_settings
     super(MasterPlatformer, self).__init__()
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0, 0)  # move window to upper left corner
@@ -71,7 +72,10 @@ class MasterPlatformer(NetworkedMasterGame):
     self.localhost = False
 
   def init_game(self):
-    # build the initial data packet
+    """ 
+    build the initial data packet and return the dictionary that will be
+        sent to the display nodes
+    """
     send_struct = {'game_obj': []}
     for game_obj in self.game_objects.values():
       if isinstance(game_obj, wd.NetworkedObject):
@@ -85,9 +89,11 @@ class MasterPlatformer(NetworkedMasterGame):
     return send_struct
 
   def setup_local_host(self):
-    # Testing one local node, read from the setting to find out which tile we are testing and read
-    # move the player to the correct place
-    # spawn each player in the corner of the screen
+    """
+    Testing one local node, read from the setting to find out which tile we are testing and read
+        move the player to the correct place
+        spawn each player in the corner of the screen
+    """
     self.localhost = True
     left_side = DISPLAY_SIZE["x"] * 0
     top_side = DISPLAY_SIZE["y"] * 0
@@ -97,10 +103,11 @@ class MasterPlatformer(NetworkedMasterGame):
     # player2 = game_dict['Player'][1]
     # player2.rect.x = left_side + 900
     # player2.rect.y = top_side + 200
-    print(player1.rect)
+    # print(player1.rect)
     # print(player2.rect)
 
   def win_state(self):
+    """The win state stays in a frozen state until the explicit kill event is triggered"""
     while True:  # wait until explicit shutdown
       for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -112,11 +119,15 @@ class MasterPlatformer(NetworkedMasterGame):
             sys.exit()
 
   def load(self):
-    send_struct = {'state': 'load'}
-    # clients handle the load state so wait for their response and play the game
+    """
+    The load state of the game is sent to the display nodes. On the master it's
+        simply sending the state load
+    """
+    send_struct = {'state': 'load'}  # Clients do most of the load state 
     return 'play', send_struct
 
   def get_time(self):
+    """Returns the real time string of the elapsed time"""
     minutes, milliseconds = divmod(self.el_time, 60000)
     seconds = float(milliseconds) / 1000
     real_minutes = GAME_LENGTH - minutes - 1
@@ -125,6 +136,12 @@ class MasterPlatformer(NetworkedMasterGame):
     return real_time
 
   def update(self, recieved_packet):
+    """
+    Update the game and return the next packet to be sent to the clients
+
+    :param recieved_packet: the packets received from the display nodes.
+    :type recieved_packet: list[dict]
+    """
     if self.state == 'play':
       self.state, send_struct = self.play_frame(recieved_packet)
     elif self.state == 'load':
@@ -134,6 +151,14 @@ class MasterPlatformer(NetworkedMasterGame):
     return send_struct
 
   def handle_keypress_local(self, game_dict):
+    """
+    Handles keypresses from the a keyboard
+
+    :param game_dict: The organized game_object dictionary
+    :type game_dict: dict[GameObjects]
+    :returns: Kill signal
+    :rtype: bool
+    """
     player1 = game_dict['Player'][0]
     player2 = game_dict['Player'][1]
     for event in pygame.event.get():
@@ -186,6 +211,14 @@ class MasterPlatformer(NetworkedMasterGame):
     return False
 
   def handle_keypress(self, game_dict):
+    """
+    Handles keypresses from the ArcadeX tankstick    
+
+    :param game_dict: The organized game_object dictionary
+    :type game_dict: dict[GameObjects]
+    :returns: Kill signal
+    :rtype: bool
+    """
     player1 = game_dict['Player'][0]
     player2 = game_dict['Player'][1]
     for event in pygame.event.get():
@@ -247,6 +280,11 @@ class MasterPlatformer(NetworkedMasterGame):
           player2.cancel_up_down_interact()
 
   def play_frame(self, recieved_packets):
+    """
+    
+
+    :param recieved_packets: 
+    """
     if self.localhost:
       quit_game = self.handle_keypress_local(self.struct_game_dict)
     else:
@@ -296,6 +334,12 @@ class MasterPlatformer(NetworkedMasterGame):
     return 'play', send_struct
 
   def add_to_structured_list(self, game_obj):
+    """
+    Add to the maintained structured GameObject dictionary
+
+    :param game_obj: the GameObject to be added
+    :type game_dict: GameObject
+    """
     if isinstance(game_obj, wd.Player):
       self.struct_game_dict['Player'].append(game_obj)
     elif isinstance(game_obj, wd.SimpleScenery):
@@ -315,9 +359,11 @@ class MasterPlatformer(NetworkedMasterGame):
       self.struct_game_dict['Meeting'].append(game_obj)
 
   def make_structured_dict(self):
-    """take the game object list and return a dict with the keys for static, AI, and player
-    objects. An object can be added to multiple lists if it is multiple things i.e.
-    a player is a movable game object"""
+    """
+    take the game object list and return a dict with the keys for static, AI, and player
+        objects. An object can be added to multiple lists if it is multiple things i.e.
+        a player is a movable game object
+    """
     self.struct_game_dict = {'AI': [], 'StaticObject': [], 'Player': [],
                              'MovableGameObject': [], 'NetworkedObject': [],
                              'Meeting': [], 'ClimableObject': [], 'Effect': []}
@@ -326,7 +372,12 @@ class MasterPlatformer(NetworkedMasterGame):
       self.add_to_structured_list(game_obj)
 
   def handle_localhost(self, follow_player):
-    """special function used to handle things like switching the screens when playing on one local host"""
+    """
+    special function used to handle things like switching the screens when playing on one local host
+
+    :param follow_player: The player that the screens should be following
+    :type follow_player: Player
+    """
     # first, find out which tile player one is in. 
     tile_x = follow_player.rect.centerx / (DISPLAY_SIZE['x'] + BEZZEL_SIZE)
     tile_y = follow_player.rect.bottom / (DISPLAY_SIZE['y'])
@@ -338,17 +389,27 @@ class MasterPlatformer(NetworkedMasterGame):
     return {'x': tile_x, 'y': tile_y}
 
   def add_to_world(self, game_obj):
+    """
+    Adds a game object to game_object dictionary
+
+    :param game_obj: The game object to be added to the world
+    :type game_obj: GameObject
+
+    """
     self.game_objects[game_obj.id] = game_obj
 
   def load_map(self):
+    """ """
     global config
-    """this function is stupid as shit. I hope you look back at this and feel 
-    bad about how awful you approached this. You deserve to feel bad for writing it 
-    like this.
-    I did look back at it past me and I made it worse so fuck you past me and 
-    fuck you future me. Fuck present me for having to deal with this. I am probably
-    never going to be hired if anyone ever looks at this code as an example of my 
-    ability. """
+    """
+    this function is stupid as shit. I hope you look back at this and feel 
+        bad about how awful you approached this. You deserve to feel bad for writing it 
+        like this.
+        I did look back at it past me and I made it worse so fuck you past me and 
+        fuck you future me. Fuck present me for having to deal with this. I am probably
+        never going to be hired if anyone ever looks at this code as an example of my 
+        ability. 
+    """
     # load map
     game_objects = {}
 
@@ -359,30 +420,35 @@ class MasterPlatformer(NetworkedMasterGame):
     # TODO: abstract this parsing to dynamically call the constructor based on the 
     # attribute (reuse map)
     for key in map_json:
-      print(key)
       constructor = getattr(wd, key)
       print(constructor)
       for obj_dict in map_json[key]:
+        done = False
         if "tile" in obj_dict:
           # tranlate the x and y coordinates
-          x, y = self.translate_to_tile(obj_dict['tile'][0], int(obj_dict['x']),
+          obj_dict['x'], obj_dict['y'] = self.translate_to_tile(obj_dict['tile'][0], int(obj_dict['x']),
                                         obj_dict['tile'][1], int(obj_dict['y']))
         else:
-          print("nope")
-          x, y = int(obj_dict['x']), int(obj_dict['y'])
-        if key == "Effect":
-          tmp = self._handle_effect(obj_dict, x, y, effect_json)
-          game_objects[tmp.id] = tmp
-          continue
+          obj_dict['x'], obj_dict['y'] = int(obj_dict['x']), int(obj_dict['y'])
+        x, y = obj_dict['x'], obj_dict['y']
         if key == "Door":
           tmp = self._handle_door(obj_dict)
           game_objects[tmp.id] = tmp
           tmp.rect.x = x
           tmp.rect.y = y
           continue
-        if key == "Stairs":
-          self._handle_stairs(game_objects, obj_dict, x, y)
-        if key not in asset_json:
+        if constructor == wd.Player or key == "Stairs" or constructor == wd.BackGroundScenery or constructor == wd.SimpleScenery:
+          if issubclass(constructor, wd.AnimateSpriteObject):
+            obj_dict['sprite_sheet'] = asset_json[key +  "-" + obj_dict['team']]
+          tmp = constructor.create_from_dict(obj_dict)
+          if isinstance(tmp, list):
+            for obj in tmp:
+              game_objects[obj.id] = obj
+          else:
+            game_objects[tmp.id] = tmp
+          done = True
+
+        else:
           # "invisible object"
           if issubclass(constructor, wd.Constructor):
 
@@ -391,19 +457,6 @@ class MasterPlatformer(NetworkedMasterGame):
           else:
             tmp = constructor(x, y, int(obj_dict['width']),
                               int(obj_dict['height']))
-
-        else:
-          if 'team' in obj_dict:
-            if obj_dict['team'] == 'red':
-              tmp = constructor(x, y, int(obj_dict['width']),
-                                int(obj_dict['height']), sprite_sheet=asset_json[key], team=obj_dict['team'])
-            else:
-              tmp = constructor(x, y, int(obj_dict['width']),
-                                int(obj_dict['height']), sprite_sheet=asset_json[key + '-blue'], team=obj_dict['team'])
-
-          else:
-            tmp = constructor(x, y, int(obj_dict['width']),
-                              int(obj_dict['height']), sprite_sheet=asset_json[key])
 
         if isinstance(tmp, wd.DataDevice):
           if isinstance(tmp, wd.Desk) and not isinstance(tmp, wd.PublishingHouse):
@@ -421,19 +474,35 @@ class MasterPlatformer(NetworkedMasterGame):
           if 'rawdata' in obj_dict:
             tmp.load_data(obj_dict['rawdata'], effect_json)
 
-        game_objects[tmp.id] = tmp
-    print(game_objects)
+        if not done: 
+          game_objects[tmp.id] = tmp
     return game_objects
 
   def _handle_door(self, obj_dict):
-    """portals are specail objects that need to be created two at a time and
-    have there own setting structure"""
+    """
+    portals are special objects that need to be created two at a time and
+        have there own setting structure
+
+    :param obj_dict: The json dictionary read from map.json containing the attributes of the door object
+    :type obj_dict: dict[str]
+    """
     tmp = wd.Door(int(obj_dict['x']), int(obj_dict['y']), int(obj_dict['width']), int(obj_dict['height']),
                   end_point=obj_dict['end_point'])
     return tmp
 
   def _handle_effect(self, obj_dict, x, y, effect_json):
-    """handle loading the effect objects"""
+    """
+    handle loading the effect objects. Effects can be things from timers to electricity dancing.
+
+    :param obj_dict: The json dictionary read from map.json containing the attributes of the door object
+    :type obj_dict: dict[str]
+    :param x: x location of the effect
+    :type x: int
+    :param y: y location of the effect
+    :type y: int
+    :param effect_json: json dictionary containing the animation frame information for every effect
+    :type effect_json: dict[str]
+    """
     print(effect_json)
     animation_dict = effect_json[obj_dict['effect_name']]
     tmp = wd.Effect(x, y, int(obj_dict['width']), int(obj_dict['height']), animation_dict,
@@ -443,14 +512,19 @@ class MasterPlatformer(NetworkedMasterGame):
     tmp.clear = False
     return tmp
 
-  def _handle_stairs(self, game_objects, stair_dict, startx, starty):
-    stairs = wd.Stairs(startx, starty, int(stair_dict['width']), int(stair_dict['height']))
-    steps_list = stairs.make_stairs(stair_dict['dir'])
-    for step in steps_list:
-      game_objects[step.id] = step
-
   def translate_to_tile(self, tile_x, pos_x, tile_y, pos_y):
+    """
+    Tranlate global coordinates to relative positions to a tile
+
+    :param tile_x: The x coordinates of the tile to translate to 
+    :type tile_x: int
+    :param pos_x: The global x coordinates to be translated
+    :type pos_x: int
+    :param tile_y: The y coordinates of the tile to translate to 
+    :type tile_y: int
+    :param pos_y: The global y coordinates to be translated
+    :type pos_y: int
+    """
     x = int(tile_x) * DISPLAY_SIZE['x'] + pos_x
     y = int(tile_y) * DISPLAY_SIZE['y'] + pos_y
-    print(x, y)
     return x, y

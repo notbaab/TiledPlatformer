@@ -61,3 +61,7 @@ test.py
 
 Final list of things needed.txt
 network_settings.json
+
+*.patch
+
+CSE 190pa1.xml

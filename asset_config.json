@@ -1,5 +1,5 @@
 {
-  "Player":
+  "Player-red":
     {
       "moving": ["gameelements/Character Sprites/Running/Running - Female (Red).png",["7", "1"], "30", ["240", "320"]], 
       "idle":   ["gameelements/Character Sprites/Standing/Standing - Female (Red).png",["1", "1"], "38", ["240", "320"]],
@@ -20,10 +20,6 @@
       "moving": ["gameelements/Character Sprites/Running/Running - Male (Blue).png",["7", "1"], "30", ["240", "320"]], 
       "idle":   ["gameelements/Character Sprites/Standing/Standing - Male (Blue).png",["1", "1"], "38", ["240", "320"]],
       "ladder":   ["gameelements/Character Sprites/Ladder Climb/Ladder Climb - Male (Blue).png",["2", "1"], "60", ["120", "320"]]
-    },
-  "Data":
-    {
-      "idle": ["light_blue.png", ["1", "1"]]    
     },
   "Patroller":
     {

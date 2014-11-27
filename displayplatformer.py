@@ -52,7 +52,6 @@ class ClientPlatformer(NetworkedTileGame):
     self.bg_map = json.load(bg_map_file)
     bg_map_file.close()
     bg_file = self.bg_map['dir'] + self.bg_map[str(self.tile[0]) + str(self.tile[1])]
-    print(bg_file)
     if os.path.isfile(bg_file):
       self.background = pygame.image.load(bg_file).convert()
     else:
@@ -86,7 +85,6 @@ class ClientPlatformer(NetworkedTileGame):
 
       self.game_objects[game_obj['id']].render = to_render
 
-    print(self.game_objects)
     self.clear_rects = []
     self.old_time = None
     return data
