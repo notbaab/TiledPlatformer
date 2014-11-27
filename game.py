@@ -421,7 +421,7 @@ class MasterPlatformer(NetworkedMasterGame):
     # attribute (reuse map)
     for key in map_json:
       constructor = getattr(wd, key)
-      print(constructor)
+      # print(constructor)
       for obj_dict in map_json[key]:
         done = False
         if "tile" in obj_dict:
@@ -431,13 +431,8 @@ class MasterPlatformer(NetworkedMasterGame):
         else:
           obj_dict['x'], obj_dict['y'] = int(obj_dict['x']), int(obj_dict['y'])
         x, y = obj_dict['x'], obj_dict['y']
-        if key == "Door":
-          tmp = self._handle_door(obj_dict)
-          game_objects[tmp.id] = tmp
-          tmp.rect.x = x
-          tmp.rect.y = y
-          continue
-        if constructor == wd.Player or key == "Stairs" or constructor == wd.BackGroundScenery or constructor == wd.SimpleScenery:
+        if (constructor == wd.Player or key == "Stairs" or constructor == wd.BackGroundScenery or constructor == wd.SimpleScenery
+           or constructor == wd.Door or constructor == wd.Meeting or constructor == wd.ClimableObject):
           if issubclass(constructor, wd.AnimateSpriteObject):
             obj_dict['sprite_sheet'] = asset_json[key +  "-" + obj_dict['team']]
           tmp = constructor.create_from_dict(obj_dict)
@@ -450,14 +445,8 @@ class MasterPlatformer(NetworkedMasterGame):
 
         else:
           # "invisible object"
-          if issubclass(constructor, wd.Constructor):
-
-            tmp = constructor(x, y, int(obj_dict['width']),
-                              int(obj_dict['height']), game=self)
-          else:
-            tmp = constructor(x, y, int(obj_dict['width']),
-                              int(obj_dict['height']))
-
+          tmp = constructor(x, y, int(obj_dict['width']),
+                            int(obj_dict['height']), game=self)
         if isinstance(tmp, wd.DataDevice):
           if isinstance(tmp, wd.Desk) and not isinstance(tmp, wd.PublishingHouse):
             timer = tmp.load_json(obj_dict, effect_json)
@@ -477,18 +466,6 @@ class MasterPlatformer(NetworkedMasterGame):
         if not done: 
           game_objects[tmp.id] = tmp
     return game_objects
-
-  def _handle_door(self, obj_dict):
-    """
-    portals are special objects that need to be created two at a time and
-        have there own setting structure
-
-    :param obj_dict: The json dictionary read from map.json containing the attributes of the door object
-    :type obj_dict: dict[str]
-    """
-    tmp = wd.Door(int(obj_dict['x']), int(obj_dict['y']), int(obj_dict['width']), int(obj_dict['height']),
-                  end_point=obj_dict['end_point'])
-    return tmp
 
   def _handle_effect(self, obj_dict, x, y, effect_json):
     """

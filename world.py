@@ -1023,6 +1023,16 @@ class Meeting(GameObject):
     self.timer = None
     self.collision = False
 
+  @classmethod
+  def create_from_dict(self, obj_dict):
+    startx = int(obj_dict.get('x'))
+    starty = int(obj_dict.get('y'))
+    width = int(obj_dict.get('width'))
+    height = int(obj_dict.get('height'))
+    obj_id = obj_dict.get('id') 
+    obj_id = int(obj_id) if obj_id else None
+    return self(startx, starty, width, height, obj_id=obj_id) 
+
   def check_player(self, players):
     """check if the player is close enough to be pulled in"""
     if self.timer:
@@ -1081,17 +1091,24 @@ class Meeting(GameObject):
       if self.timer >= 1:
         self.timer = None
 
-
 class ClimableObject(BackGroundScenery):
   """Simple ladder object"""
 
-  def __init__(self, startx, starty, width, height, obj_id=None, clim_type='Vertical'):
+  def __init__(self, startx, starty, width, height, obj_id=None):
     BackGroundScenery.__init__(self, startx, starty, width, height, obj_id=obj_id)
-    if clim_type == 'Vertical':
-      # ladder set the start and end points to the top and bottom
-      self.top = self.rect.top
-      self.bottom = self.rect.bottom
-      self.climb_speed = LADDER_CLIMB_SPEED
+    self.top = self.rect.top
+    self.bottom = self.rect.bottom
+    self.climb_speed = LADDER_CLIMB_SPEED
+
+  @classmethod
+  def create_from_dict(self, obj_dict):
+    startx = int(obj_dict.get('x'))
+    starty = int(obj_dict.get('y'))
+    width = int(obj_dict.get('width'))
+    height = int(obj_dict.get('height'))
+    obj_id = obj_dict.get('id') 
+    obj_id = int(obj_id) if obj_id else None
+    return self(startx, starty, width, height, obj_id=obj_id) 
 
 
 class Stairs(GameObject):
@@ -1238,3 +1255,14 @@ class Door(BackGroundScenery):
     super(Door, self).__init__(startx, starty, width, height, obj_id=obj_id)
     if end_point:
       self.end_point = int(end_point[0]), int(end_point[1])
+
+  @classmethod
+  def create_from_dict(self, obj_dict):
+    startx = int(obj_dict.get('x'))
+    starty = int(obj_dict.get('y'))
+    width = int(obj_dict.get('width'))
+    height = int(obj_dict.get('height'))
+    end_point = obj_dict.get('end_point')
+    obj_id = obj_dict.get('id') 
+    obj_id = int(obj_id) if obj_id else None
+    return self(startx, starty, width, height, obj_id=obj_id, end_point=end_point) 
