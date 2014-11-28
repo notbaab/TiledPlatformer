@@ -533,7 +533,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
     if not interact_obj and throw_data:
       self.throw_data()
-    elif isinstance(interact_obj, Desk) and self.data:
+    elif isinstance(interact_obj, DataCruncher) and self.data:
       interact_obj.interact(self)
     elif isinstance(interact_obj, DataDevice) and self.data:
       self.throw_data()
@@ -717,46 +717,16 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
         self.active_timer.clear = True
         self.active_timer = None
         self.timer_count = 0
+        return True  # tell the sub classes that the timer is done
+    return False
 
-
-class Desk(DataDevice):
-  """Where the player will sit and write the paper after collecting data"""
-
-  def __init__(self, startx, starty, width, height, accept_stage=2, obj_id=None,
-               game=None):
-    super(Desk, self).__init__(startx, starty, width, height, obj_id=obj_id, game=game)
+class DataCruncher(DataDevice):
+  """Second stage of collecting data"""
+  ACCEPT_STAGE = 1
+  def __init__(self, startx, starty, width, height, obj_id=None, game=None):
+    super(DataCruncher, self).__init__(startx, starty, width, height, obj_id=obj_id, game=game)
     self.player = None
     self.collision = True  # for now, only interaction comes with explicit buttons
-    self.accept_stage = accept_stage
-
-  def update(self):
-    if self.active_timer:
-      self.timer_count += 1
-      if self.timer_count >= self.timer_total:
-        self.generate_data()
-        self.active_timer.render = False
-        self.active_timer.reset_current_animation()
-        self.active_timer.pause_animation()
-        self.active_timer.clear = True
-        self.active_timer = None
-        self.timer_count = 0
-        if self.player:
-          self.player.trapped = False
-          self.player = None
-
-  def load_json(self, obj_dict, effect_json):
-    timer_name = obj_dict['timer'] + "-" + obj_dict['team']
-    animation_dict = effect_json[timer_name]
-    self.timer = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict)
-    self.timer.rect.centerx, self.timer.rect.y = self.rect.centerx, self.rect.y - 300
-    self.timer.physics = False
-    self.timer.collision = False
-    self.timer.animation_time = DATA_DEVICE_TIMER / len(self.timer.animation_frames[self.timer.current_animation])
-    self.timer_total = self.timer.animation_time * len(
-      self.timer.animation_frames[self.timer.current_animation]) + self.timer.animation_time
-    self.player_sit_loc = (self.rect.x + int(obj_dict['chair'][0]), self.rect.y + int(obj_dict['chair'][1]))
-    print(self.timer_total)
-    return self.timer
 
   def generate_data(self):
     self.data.rect.centerx = self.rect.centerx
@@ -765,123 +735,67 @@ class Desk(DataDevice):
     self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
     self.data.advance_data()
     self.data.unhide_object()
+    self.data = None
 
   def interact(self, player):
-    # ipdb.set_trace()
-    if not self.player and player.data and player.data.stage == self.accept_stage:
-      # player hasn't interacted yet and has data
-      self.player = player
-      self.player.trapped = True
-      self.player.escape_hit = 0
-      self.active_timer = self.timer
-      self.timer_count = 0
-      self.active_timer.reset_current_animation()
-      self.active_timer.render = True
-      self.active_timer.pause = False
-      self.active_timer.clear = False
+    return self._interact(player, DataCruncher.ACCEPT_STAGE)
 
-      # self.player.rect.x, self.player.rect.y = self.player_sit_loc
-      self.move_player(player)
+  def _interact(self, player, accept_stage):
+    if (not self.player and player.data and player.data.stage == accept_stage and 
+        not self.active_timer):
+      super(DataCruncher, self).interact(player)
+      self.player = player
       self.data = self.player.data
       self.player.data = None
+      return True
+    return False
+
+
+class Desk(DataCruncher):
+  """Where the player will sit and write the paper after collecting data"""
+  ACCEPT_STAGE = 2
+
+  @classmethod
+  def create_from_dict(self, obj_dict):
+    obj_list = super(Desk, self).create_from_dict(obj_dict)
+    if 'chair' in obj_dict:
+      class_obj = obj_list[0]  # the first object is the 'main' object
+      class_obj.player_sit_loc = (class_obj.rect.x + int(obj_dict['chair'][0]), class_obj.rect.y + int(obj_dict['chair'][1]))
+    return obj_list
+
+  def update(self):
+    if super(Desk, self).update():
+      self.player.trapped = False
+      self.player = None
+    if self.player:
+      self.player.escape_hit = 0  # keep them trapped!!!
+      self.player.trapped = True
+
+  def interact(self, player):
+    if super(Desk, self)._interact(player, Desk.ACCEPT_STAGE):
+      self.player.trapped = True
+      self.player.escape_hit = 0
+      self.move_player(player)
 
   def move_player(self, player):
     player.rect.x, player.rect.y = self.player_sit_loc
 
 
-class PublishingHouse(Desk):
+class PublishingHouse(DataCruncher):
   """Where the player brings the final paper"""
-
-  def __init__(self, startx, starty, width, height, accept_stage=3, obj_id=None,
-               game=None):
-    super(PublishingHouse, self).__init__(startx, starty, width, height, accept_stage=accept_stage,
-                                          game=game)
-
+  ACCEPT_STAGE = 3
+  
   def generate_data(self):
-    # TODO: make a scoring mechanic
     if self.scoring_team == 'blue':
       self.game.blue_score += 1
     else:
       self.game.red_score += 1
-    print(self.game.red_score)
-    print(self.game.blue_score)
+    print("red's score " + str(self.game.red_score))
+    print("blue's score " + str(self.game.blue_score))
 
   def interact(self, player):
-    if not self.active_timer:  # only allow one timer at a time
-      if player.team == 'blue':
-        self.timer = self.blue_timer
-      else:
-        self.timer = self.red_timer
-    super(PublishingHouse, self).interact(player)
-    if self.player:
-      # we no need no sticking player
-      self.player.trapped = False
+    if super(PublishingHouse, self)._interact(player, PublishingHouse.ACCEPT_STAGE):
       self.scoring_team = player.team
-      self.player = None
-
-  def move_player(self, player):
-    return
-
-
-class DataCruncher(PublishingHouse):
-  """Second stage of collecting data"""
-
-  def __init__(self, startx, starty, width, height, accept_stage=1, amount_data_needed=1,
-               concurrent_data=1, obj_id=None,
-               game=None):
-    super(DataCruncher, self).__init__(startx, starty, width, height, obj_id=obj_id, game=None)
-    # Constructor.__init__(self, game)
-    self.accept_stage = accept_stage
-    self.amount_data_needed = amount_data_needed
-    self.data_collected = 0
-
-  def handle_data(self, game_obj):
-    ipdb.set_trace()
-    if game_obj.stage == self.accept_stage:
-      self.data_collected += 1
-      if game_obj.player.team == 'blue':
-        self.active_timer = self.blue_timer
-      else:
-        self.active_timer = self.red_timer
-      self.active_timer.reset_current_animation()
-      self.active_timer.render = True
-      self.active_timer.pause = False
-
-      # TODO: THis is wrong, need a destructor 
-      self.data = game_obj
-      self.data.advance_data()
-      self.data.hide_object()
-
-  def load_effects(self, effect_name, effect_json, red_loc=None, blue_loc=None):
-    """load the effects for this data object and return effects loaded"""
-    # print(effect_name)
-    # print(effect_json)
-    print(self)
-    animation_dict_blue = effect_json[effect_name + '-Blue']
-    animation_dict_red = effect_json[effect_name + '-Red']
-    self.blue_timer = Effect(self.rect.x, self.rect.y, 200, 200, animation_dict_blue)
-    self.blue_timer.physics = False
-    self.blue_timer.collision = False
-    self.blue_timer.animation_time = DATA_DEVICE_TIMER / len(
-      self.blue_timer.animation_frames[self.blue_timer.current_animation])
-    self.red_timer = Effect(self.rect.x + 40, self.rect.y, 200, 200, animation_dict_red)
-    self.red_timer.physics = False
-    self.red_timer.collision = False
-    self.red_timer.animation_time = DATA_DEVICE_TIMER / len(
-      self.red_timer.animation_frames[self.red_timer.current_animation])
-    self.timer_total = self.red_timer.animation_time * len(
-      self.red_timer.animation_frames[self.red_timer.current_animation]) + self.red_timer.animation_time
-    print(self.timer_total)
-    print(self.red_timer.animation_time)
-    return self.blue_timer, self.red_timer
-
-  def generate_data(self):
-    self.data.rect.centerx = self.rect.centerx
-    self.data.rect.bottom = self.rect.top
-    self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
-    self.data.velocity.x = random.randint(-EJECT_SPEED.x, EJECT_SPEED.x)
-    self.data.advance_data()
-    self.data.unhide_object()
 
 
 class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
@@ -1091,6 +1005,7 @@ class Meeting(GameObject):
       if self.timer >= 1:
         self.timer = None
 
+
 class ClimableObject(BackGroundScenery):
   """Simple ladder object"""
 
@@ -1203,6 +1118,8 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
     self.render_frames = 0
     self.clear = True
     self.collision = False
+    self.physics = False
+
 
   def animate(self):
     """Updates the animation timer goes to next frame in current animation cycle
