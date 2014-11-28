@@ -33,6 +33,15 @@ LADDER_CLIMB_SPEED = eng.Vector(0, 30)
 MAGIC_STAIR_CONSTANT = 2  # DO NOT TOUCH, THIS IS MAGIC
 
 
+def extract_dict(obj_dict):
+  """get the width, height, x and y from a json dict"""
+  x = int(obj_dict.get('x'))
+  y = int(obj_dict.get('y'))
+  width = int(obj_dict.get('width'))
+  height = int(obj_dict.get('height'))
+  return x, y, width, height
+
+
 # TODO: add more things to do
 class GameObject(object):
   """the top level game object. All game objects inherit from this class."""
@@ -338,8 +347,6 @@ class SimpleScenery(GameObject):
     return self(startx, starty, width, height, obj_id=obj_id) 
 
 
-
-
 class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, team='blue'):
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
@@ -562,7 +569,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     :param surface: the surface to draw the object, typically the window
     :type surface: pygame.Surface"""
     AnimateSpriteObject.draw(self, surface)
-    # pygame.draw.rect(surface, (128, 0, 128), self.rect, 1)
+
 
   def respond_to_collision(self, obj, axis=None):
     """Contains the callback for the collision between a player object and a game object passed in. Axis is needed
@@ -658,6 +665,21 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     self.data = None
     self.collision = False  # for now, only interaction comes with explicit buttons
 
+  @classmethod
+  def create_from_dict(self, obj_dict):
+    startx, starty, width, height = extract_dict(obj_dict)
+    game = obj_dict.get('game')
+    obj_id = obj_dict.get('id') 
+    obj_id = int(obj_id) if obj_id else None
+    tmp = self(startx, starty, width, height, obj_id=obj_id, game=game) 
+    effect_json = obj_dict['effect_json']
+    timer_blue, timer_red = tmp.load_effects(obj_dict['timer'], effect_json,
+                                             obj_dict['timer-red-pos'], obj_dict['timer-blue-pos'])
+    if 'rawdata' in obj_dict:
+      tmp.load_data(obj_dict['rawdata'], effect_json)
+    return [tmp, timer_red, timer_blue]
+
+
   def generate_data(self):
     if self.active_timer == self.blue_timer:
       game_obj = Data(20, 20, 40, 40, self.data_dict_blue, team='blue')
@@ -704,7 +726,7 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     self.data_dict_red = data_json[data_name + '-Red']
 
   def draw(self, surface):
-    self.render = False
+    self.render = False  # nothing to draw. Should never be called but just a safefy net
 
   def update(self):
     if self.active_timer:

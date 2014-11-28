@@ -416,55 +416,27 @@ class MasterPlatformer(NetworkedMasterGame):
     map_json = self.engine.parse_json(config['global_map_file'])
     asset_json = self.engine.parse_json(config['asset_file'])
     effect_json = self.engine.parse_json(config['effect_file'])
-
-    # TODO: abstract this parsing to dynamically call the constructor based on the 
-    # attribute (reuse map)
+    
     for key in map_json:
       constructor = getattr(wd, key)
-      # print(constructor)
       for obj_dict in map_json[key]:
-        done = False
         if "tile" in obj_dict:
-          # tranlate the x and y coordinates
+          # translate the x and y coordinates
           obj_dict['x'], obj_dict['y'] = self.translate_to_tile(obj_dict['tile'][0], int(obj_dict['x']),
                                         obj_dict['tile'][1], int(obj_dict['y']))
         else:
           obj_dict['x'], obj_dict['y'] = int(obj_dict['x']), int(obj_dict['y'])
-        x, y = obj_dict['x'], obj_dict['y']
-        if (constructor == wd.Player or key == "Stairs" or constructor == wd.BackGroundScenery or constructor == wd.SimpleScenery
-           or constructor == wd.Door or constructor == wd.Meeting or constructor == wd.ClimableObject):
-          if issubclass(constructor, wd.AnimateSpriteObject):
-            obj_dict['sprite_sheet'] = asset_json[key +  "-" + obj_dict['team']]
-          tmp = constructor.create_from_dict(obj_dict)
-          if isinstance(tmp, list):
-            for obj in tmp:
-              game_objects[obj.id] = obj
-          else:
-            game_objects[tmp.id] = tmp
-          done = True
+        obj_dict['sprite_sheet'] = asset_json.get(key +  "-" + obj_dict.get('team', ''))
+        obj_dict['effect_json'] = effect_json
+        obj_dict['game'] = self
 
+        tmp = constructor.create_from_dict(obj_dict)
+        if isinstance(tmp, list):
+          for obj in tmp:
+            game_objects[obj.id] = obj
         else:
-          # "invisible object"
-          tmp = constructor(x, y, int(obj_dict['width']),
-                            int(obj_dict['height']), game=self)
-        if isinstance(tmp, wd.DataDevice):
-          if isinstance(tmp, wd.Desk) and not isinstance(tmp, wd.PublishingHouse):
-            timer = tmp.load_json(obj_dict, effect_json)
-            game_objects[timer.id] = timer
-          else:
-            if isinstance(tmp, wd.DataCruncher):
-              effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json)
-            else:
-              effect_blue, effect_red = tmp.load_effects(obj_dict['timer'], effect_json,
-                                                         red_loc=obj_dict['timer-red-pos'],
-                                                         blue_loc=obj_dict['timer-blue-pos'])
-            game_objects[effect_blue.id] = effect_blue
-            game_objects[effect_red.id] = effect_red
-          if 'rawdata' in obj_dict:
-            tmp.load_data(obj_dict['rawdata'], effect_json)
-
-        if not done: 
           game_objects[tmp.id] = tmp
+
     return game_objects
 
   def _handle_effect(self, obj_dict, x, y, effect_json):
