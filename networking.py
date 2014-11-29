@@ -137,12 +137,13 @@ class Server(object):
     self.send(initial_packet)  # ack handled in the run function
 
   def run(self):
+    recieved_packets = {}
     while True:
-      recieved_packets = self.recv()
       send_struct = self.game.update(recieved_packets)
       if not send_struct:
         # nothing recieved indicates a kill order to the nodes
         self.kill()
+      recieved_packets = self.recv()
       self.send(send_struct)
 
   def _read_ip_file(self, file):
