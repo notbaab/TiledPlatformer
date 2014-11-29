@@ -65,24 +65,14 @@ class ClientPlatformer(NetworkedTileGame):
       if not issubclass(constructor, wd.NetworkedObject):
         continue  # we really only need objects that won't be updated. This could be modified to include static objects
                   #  that will stay on one tile and not move, but we really don't need even that.
-      translate_pos = self.translate_to_local((game_obj['rect'][0], game_obj['rect'][1]))
+      translate_pos = self.translate_to_local((game_obj['x'], game_obj['y']))
       if translate_pos != 0:
-        startx, starty = translate_pos[0], translate_pos[1]
+        game_obj['rect'][0], game_obj['rect'][1] = translate_pos[0], translate_pos[1]
         to_render = True
       else:
-        startx, starty = game_obj['rect'][0], game_obj['rect'][1]
         to_render = False
-
-      if 'sprite_sheet' in game_obj:
-        self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2],
-                                                        game_obj['rect'][3],
-                                                        sprite_sheet=game_obj['sprite_sheet'],
-                                                        obj_id=game_obj['id'])
-      else:
-        self.game_objects[game_obj['id']] = constructor(startx, starty, game_obj['rect'][2],
-                                                        game_obj['rect'][3],
-                                                        obj_id=game_obj['id'])
-
+      
+      self.game_objects[game_obj['id']] = constructor.create_from_dict(game_obj)
       self.game_objects[game_obj['id']].render = to_render
 
     self.clear_rects = []

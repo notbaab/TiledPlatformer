@@ -79,8 +79,8 @@ class MasterPlatformer(NetworkedMasterGame):
     send_struct = {'game_obj': []}
     for game_obj in self.game_objects.values():
       if isinstance(game_obj, wd.NetworkedObject):
-        send_dict = {"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
-                              game_obj.rect.height], "id": game_obj.id,
+        send_dict = {"x": game_obj.rect.x, "y":game_obj.rect.y, "width": game_obj.rect.width,
+                      "height":game_obj.rect.height, "id": game_obj.id,
                      "constructor": type(game_obj).__name__}
         if hasattr(game_obj, "sprite_sheet"):
           send_dict["sprite_sheet"] = game_obj.sprite_sheet
@@ -100,11 +100,6 @@ class MasterPlatformer(NetworkedMasterGame):
     player1 = self.struct_game_dict['Player'][0]
     player1.rect.x = left_side + 1000
     player1.rect.y = top_side + 200
-    # player2 = game_dict['Player'][1]
-    # player2.rect.x = left_side + 900
-    # player2.rect.y = top_side + 200
-    # print(player1.rect)
-    # print(player2.rect)
 
   def win_state(self):
     """The win state stays in a frozen state until the explicit kill event is triggered"""
@@ -295,7 +290,7 @@ class MasterPlatformer(NetworkedMasterGame):
     self.engine.physics_simulation(self.game_objects.values(), [wd.SimpleScenery])
     self.engine.map_attribute_flat(self.game_objects.values(), 'update')
 
-    self.engine.map_attribute_flat(self.game_objects.values(), 'animate')
+    self.engine.map_attribute_flat(self.struct_game_dict['AnimateSpriteObject'], 'animate')
 
     # update the AI after the players have been updated
     self.engine.map_attribute_flat(self.struct_game_dict['AI'], 'check_for_leader', self.struct_game_dict['Player'])
@@ -357,6 +352,8 @@ class MasterPlatformer(NetworkedMasterGame):
       self.struct_game_dict['ClimableObject'].append(game_obj)
     if isinstance(game_obj, wd.Meeting):
       self.struct_game_dict['Meeting'].append(game_obj)
+    if isinstance(game_obj, wd.AnimateSpriteObject):
+      self.struct_game_dict['AnimateSpriteObject'].append(game_obj)
 
   def make_structured_dict(self):
     """
@@ -366,7 +363,8 @@ class MasterPlatformer(NetworkedMasterGame):
     """
     self.struct_game_dict = {'AI': [], 'StaticObject': [], 'Player': [],
                              'MovableGameObject': [], 'NetworkedObject': [],
-                             'Meeting': [], 'ClimableObject': [], 'Effect': []}
+                             'Meeting': [], 'ClimableObject': [], 'Effect': [],
+                             'AnimateSpriteObject':[]}
 
     for game_obj in self.game_objects.values():
       self.add_to_structured_list(game_obj)
