@@ -73,8 +73,11 @@ class MasterPlatformer(NetworkedMasterGame):
 
   def init_game(self):
     """ 
-    build the initial data packet and return the dictionary that will be
+    Build the initial data packet and return the dictionary that will be
         sent to the display nodes
+
+    :returns: The initial data packet to send to all the nodes
+    :rytpe: dict
     """
     send_struct = {'game_obj': []}
     for game_obj in self.game_objects.values():
