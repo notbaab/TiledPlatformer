@@ -34,7 +34,12 @@ MAGIC_STAIR_CONSTANT = 2  # DO NOT TOUCH, THIS IS MAGIC
 
 
 def extract_dict(obj_dict):
-  """get the width, height, x and y from a json dict"""
+  """
+  get the width, height, x and y from a json dict
+
+  :param obj_dict: A dictionary containing rect data
+  :type obj_dict: dict
+  """
   x = int(obj_dict.get('x'))
   y = int(obj_dict.get('y'))
   width = int(obj_dict.get('width'))
@@ -44,10 +49,25 @@ def extract_dict(obj_dict):
 
 # TODO: add more things to do
 class GameObject(object):
-  """the top level game object. All game objects inherit from this class."""
+
   id = 0
 
   def __init__(self, startx, starty, width, height, obj_id=None):
+    """
+    The top level game object. All game objects inherit from this class.
+        Creates a game object with at least a Pygame rect and other attributes that are needed
+        by all game object types
+    :param startx: the starting x position of the object
+    :type startx: int
+    :param starty: the starting y position of the object
+    :type starty: int
+    :param width: width of the object (sometimes not used in the child object, specifically sprite objects)
+    :type width: int
+    :param height: height of the object (sometimes not used in the child object, specifically sprite objects)
+    :type height: int
+    :param obj_id: a specified id, useful for making an object on the client side with the same id
+    :type obj_id: int
+    """
     self.rect = pygame.Rect((startx, starty, width, height))
     if not obj_id:
       self.id = GameObject.id  # assign
@@ -55,26 +75,36 @@ class GameObject(object):
     else:
       self.id = obj_id
     self.render = True
-    self.message_str = None  # info that is displayed above the object
     self.to_del = False
     self.physics = False  # Does this class need physics? i.e. movement
     self.collision = True  # Does this class need collisions
     self.dirt_sprite = True  # only draw sprite if dirty
 
   def update(self):
-    """anything that the object needs to do every frame"""
-    return
-
-  def animate(self):
+    """Called every frame. Put behavior that the object needs to do every frame"""
     return
 
 
 class NetworkedObject(object):
+
   def __init__(self, attribute_list):
+    """
+    An object that builds and reads packets. Packets are in the form of dictionaries with the 
+        attribute as the key. Packets are NOT binary strings but python dicts, the serialization 
+        of the objects is handled at a lower level. 
+    :param attribute_list: the list of attributes that the object wants to send in the build packet methods
+    :type attribute_list: list[str]
+    """
     self.attribute_list = attribute_list
     self.send_data = True
 
   def build_packet(self, accumulator):
+    """
+    Builds the packet if send data is true. 
+
+    :param accumulator: the running list to add this packet too. 
+    :type accumulator: list[dict]
+    """
     if self.send_data:
       packet = {}
       for attribute in self.attribute_list:
@@ -82,20 +112,27 @@ class NetworkedObject(object):
       accumulator.append(packet)
 
   def read_packet(self, packet):
+    """
+    Reads the packet and updates this objects attributes. 
+
+    :param packet: a packet containing the updated attributes
+    :type packet: dict
+    """
     for attribute in self.attribute_list:
       self.__setattr__(attribute, packet[attribute])
 
 
 class AnimateSpriteObject(object):
-  """a stand alone object that allows the inherited game object to have animation 
-  sprites"""
 
   def __init__(self, animation_dict, start_animation='idle', convert_alpha=True):
-    """Initilize all the frames of the animated sprite object
+    """
+    A stand alone object that allows the inherited game object to have animation sprites
+        Initilize all the frames of the animated sprite object
+
     :param animation_dict: a dictionary that is keyed on the name of the animation. The dictionary 
-    contains a tuple pair, with the name of the file at [0] and the number of frames of the sprite sheet
-    at [1][0] for the x and [1][1] for the y. So 
-    animation_dict[animation_name] -> (sprite_sheet_filename, (sprite_sheet_x, sprite_sheet_y) 
+      contains a tuple pair, with the name of the file at [0] and the number of frames of the sprite sheet
+      at [1][0] for the x and [1][1] for the y. So animation_dict[animation_name] -> (sprite_sheet_filename, 
+      (sprite_sheet_x, sprite_sheet_y) 
     :type animation_dict: dict
     """
     object.__init__(self)
@@ -123,33 +160,45 @@ class AnimateSpriteObject(object):
     self.pause_frame = None
 
   def pause_animation(self):
+    """Pauses the current animation by setting it's pause attribute true"""
     self.pause = True
 
   def stop_pause_animation(self):
+    """
+    Unsets pause. Yes I know this isn't java and a getter and setter are dumb but I forgot why I 
+        did this so I'm just leaving it here cause I am not coding anymore on this project merely 
+        documenting it and crying as I see my mistakes and mishaps. 
+    """
     self.pause = False
 
   def reset_current_animation(self):
+    """
+    Resets the current animation to the start
+    """
     self.change_animation(self.current_animation)
 
   def change_animation(self, frame):
-    """change the frames that player object is currently cycling through.
+    """
+    change the frames that player object is currently cycling through.
+
     :param frame: a key that maps to a list of animation frames in self.animation_frames
-    :type frame: str"""
+    :type frame: str
+    """
     if not frame in self.animation_frames:
       frame = 'idle'
 
     previous_rect = self.rect.copy()
     self.current_animation = frame  # TODO: evaluate if we need this member
-    # TODO set self.rect based on first frame size, save and set center
-    # TODO pause and restart if needed
     self.current_cycle = cycle(self.animation_frames[self.current_animation])
     self.rect = self.animation_frames[self.current_animation][0].copy()
     self.rect.centerx = previous_rect.centerx
     self.rect.bottom = previous_rect.bottom
 
   def reverse_animation(self, direction):
-    """take the current animation and point it in the other direction specified
-    returns new animation name the object needs to change to or None"""
+    """
+    take the current animation and point it in the other direction specified
+        returns new animation name the object needs to change to or None
+    """
     is_left = True if LEFT_FRAME_ID in self.current_animation else False
     new_animation = None
     if direction == -1 and not is_left:
@@ -161,8 +210,10 @@ class AnimateSpriteObject(object):
     return new_animation
 
   def animate(self):
-    """Updates the animation timer goes to next frame in current animation cycle
-    after the alloted animation time has passed."""
+    """
+    Updates the animation timer goes to next frame in current animation cycle
+        after the alloted animation time has passed.
+    """
     if not self.pause:
       self.animation_timer += 1
       if self.animation_timer == self.animation_time:
@@ -177,9 +228,10 @@ class AnimateSpriteObject(object):
 
   def _get_frames(self, filename, columns, rows,vertical_offset=None, frame_width=None, 
                   frame_height=None, convert_alpha=True):
-    """returns a new sprite sheet and a list of rectangular coordinates in the
-    file that correspond to frames in the file name. It also manipulates the spritesheet 
-    so each frame will have the des_width and des_height
+    """
+    Returns a new sprite sheet and a list of rectangular coordinates in the
+      file that correspond to frames in the file name. It also manipulates the spritesheet 
+      so each frame will have the des_width and des_height
     :param filename: sprite sheet file
     :type filename: str
     :param columns: the number of columns in the sprite sheet
@@ -193,7 +245,21 @@ class AnimateSpriteObject(object):
     :param frame_height: the native width of a single frame
     :type frame_height: int
     """
+    # OLD code cause rick insisted on using actual sizes but was a neat bit of code for resizing 
+    # sprite sheets dynamically so I can't part with it
+    # if convert_alpha:
+    #   sheet = pygame.image.load(filename).convert_alpha()
+    # else:
+    #   sheet = pygame.image.load(filename).convert()
+    # sheet_rect = sheet.get_rect()
+    # sheet_width = columns * des_width
+    # sheet_height = rows * des_height
 
+    # sheet = pygame.transform.smoothscale(sheet, (sheet_width, sheet_height))
+    # sheet_rect = sheet.get_rect()
+    # for x in range(0, sheet_rect.width, des_width):
+    #  for y in range(0, sheet_rect.height, des_height):
+    #    frames.append(pygame.Rect(x, y, des_width, des_height))
     # Note: des_width and des_height are ignored, assuming sprites are at
     # correct size already.
 
@@ -206,8 +272,6 @@ class AnimateSpriteObject(object):
     left_offset = int((full_frame_width - frame_width) / 2)
     full_frame_height = sheet_rect.height / rows
 
-    # sheet = pygame.transform.smoothscale(sheet, (sheet_width, sheet_height))
-    # sheet_rect = sheet.get_rect()
     frames = []
     for x in range(0, columns):
       # next for loop assumes vertical_offset is less than frame height
@@ -218,14 +282,25 @@ class AnimateSpriteObject(object):
 
 
 class Constructor(object):
-  """A special object that contains a reference to the entire game. Inherited
-  by classes that need to construct objects in the game world"""
 
   def __init__(self, game):
+    """
+    A special object that contains a reference to the entire game. Inherited
+        by classes that need to construct objects in the game world
+
+    :param game: an instance of a game object
+    :type game: MasterPlatformer
+    """
     object.__init__(self)
     self.game = game
 
   def add_to_world(self, obj):
+    """
+    Adds the object to the games added list. Note, the game object needs an added list attribute
+
+    :param obj: a game object to be added to the game world
+    :type obj: GameObject
+    """
     if self.game:
       self.game.added.append(obj)
     else:
@@ -233,9 +308,22 @@ class Constructor(object):
 
 
 class MovableGameObject(GameObject):
-  """any game object that moves"""
 
   def __init__(self, startx, starty, width, height, obj_id=None):
+    """
+    Any game object that moves can. 
+
+    :param startx: the starting x position of the object
+    :type startx: int
+    :param starty: the starting y position of the object
+    :type starty: int
+    :param width: width of the object (sometimes not used in the child object, specifically sprite objects)
+    :type width: int
+    :param height: height of the object (sometimes not used in the child object, specifically sprite objects)
+    :type height: int
+    :param obj_id: a specified id, useful for making an object on the client side with the same id
+    :type obj_id: int
+    """
     super(MovableGameObject, self).__init__(startx, starty, width, height, obj_id=obj_id)
     self.velocity = eng.Vector(0, 0)
     self.physics = True  # most movable game objects need physics
@@ -243,30 +331,42 @@ class MovableGameObject(GameObject):
     self.on_ground = True
 
   def move(self, velocity):
+    """
+    sets the objects velocity. Movement is handled by the physics engine
+
+    :param velocity: the velocity vector along the x and they y axis
+    :type velocity: Vector
+    """
     self.velocity = velocity
 
   def stop(self):
-    self.velocity = [0, 0]
+    """Sets the objects velocity to 0"""
+    self.velocity = eng.Vector(0, 0)
 
   def hide_object(self):
-    """moves turns of physics and rendering for the object"""
+    """Hides the object and turns off physics"""
     self.render = False
     self.physics = False
     self.rect.x, self.rect.y = -1000, -1000  # move somewhere far off screen to
 
   def unhide_object(self):
-    """moves turns of physics and rendering for the object"""
+    """
+    Unhides object by turning on phyics and rendering. Function calling will need to 
+        move the object into view though.
+    """
     self.render = True
     self.physics = True
 
   def respond_to_collision(self, obj, axis=None):
-    """Contains the callback for the collision between a move able object and the
-    object passed in. If the object passed in is the environment (i.e. SimpleScenery)
-    it will treate the environment as a wall and stop the object.
+    """
+    Contains the callback for the collision between a move able object and the
+        object passed in. If the object passed in is the environment (i.e. SimpleScenery)
+        it will treate the environment as a wall and stop the object.
     :param obj: object player is colliding with
     :type obj: GameObject
     :param axis: which axis was the player moving along.
-    :type axis: String """
+    :type axis: str 
+    """
     if isinstance(obj, BackGroundScenery):
       if axis == 'y':
         self._handle_background_collision(obj)
@@ -286,10 +386,10 @@ class MovableGameObject(GameObject):
       self.velocity.y = 0
 
   def _handle_background_collision(self, obj):
-    """collisions with things that are in the background i.e. things you can
-    jump on but walk through"""
-    # if not self.on_ground:
-    # ipdb.set_trace()
+    """
+    collisions with things that are in the background i.e. things you can
+        jump on but walk through
+    """
     if self.velocity.y >= 0 and self.last_rect.bottom <= obj.rect.top:
       # only collide going down (rember +y = down)
       self.rect.bottom = obj.rect.top
@@ -297,11 +397,7 @@ class MovableGameObject(GameObject):
       self.on_ground = True
 
   def update(self):
-    # if self.last_rect.x == self.rect.x and self.last_rect.y == self.rect.y:
-    # # didn't move, stop rendering
-    # self.render = False
-    # else:
-    # self.render = True
+    """Update the last rect attribute and checks if the object is no longer on the ground"""
     self.last_rect = self.rect.copy()
     if self.velocity.y != 0:
       # no longer on ground 
@@ -309,18 +405,27 @@ class MovableGameObject(GameObject):
 
 
 class BackGroundScenery(GameObject):
-  """objects that you can jump on top of but can run through. Think of them as
-  in the background that the play jumps up on. For example a platform in mario. 
-  Doesn't update during gameplay so no need to inherit network object"""
-
-  def __init(self, startx, starty, width, height, obj_id=None):
-    super(BackGroundScenery, self).__init__(startx, starty, width, height, obj_id=obj_id)
+  """
+  objects that you can jump on top of but can run through. Think of them as
+      in the background that the player jumps up on. For example a platform in mario. 
+      TODO: This is should really just be incorporated as an attribute of simple 
+      scenery as the backgroundness of the object comes from other objects checking
+      if it's a BackGroundScenery type.  
+  """
 
   def draw(self, surface):
     pygame.draw.rect(surface, (128, 0, 128), self.rect, 3)
 
   @classmethod
   def create_from_dict(self, obj_dict):
+    """
+    Create an instance of this object from a dictionary
+
+    :param obj_dict: dictionary containing various inital values needed to instantiate object
+    :type obj_dict: dict
+    :returns: an instance of this object
+    :rtype: BackGroundScenery
+    """
     startx = int(obj_dict.get('x'))
     starty = int(obj_dict.get('y'))
     width = int(obj_dict.get('width'))
@@ -331,13 +436,24 @@ class BackGroundScenery(GameObject):
 
 
 class SimpleScenery(GameObject):
-  """Simple SimpleScenery object. Game objects that are just simple shapes"""
-
-  def __init__(self, startx, starty, width, height, obj_id=None):
-    super(SimpleScenery, self).__init__(startx, starty, width, height, obj_id=obj_id)
+  """
+  Simple SimpleScenery object. Game objects that are just simple shapes, don't 
+      move and can't have objects pass through them.
+      TODO: Why does this and BackGroundScenery exist? It seems like it's just
+      to allow other objects to check for this type in collision, maybe it would 
+      be better served as an attribute in gameobject?
+  """
 
   @classmethod
   def create_from_dict(self, obj_dict):
+    """
+    Create an instance of this object from a dictionary
+
+    :param obj_dict: dictionary containing various inital values needed to instantiate object
+    :type obj_dict: dict
+    :returns: an instance of this object
+    :rtype: SimpleScenery
+    """
     startx = int(obj_dict.get('x'))
     starty = int(obj_dict.get('y'))
     width = int(obj_dict.get('width'))
@@ -349,10 +465,26 @@ class SimpleScenery(GameObject):
 
 class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
   def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, team='blue'):
+    """
+    The object that that the user controls. 
+
+    :param startx: the starting x position of the object
+    :type startx: int
+    :param starty: the starting y position of the object
+    :type starty: int
+    :param width: width of the object (ignored)
+    :type width: int
+    :param height: height of the object (ignored)
+    :type height: int
+    :param sprites_heet: the spritesheet dict of the object
+    :type sprite_sheet: dict
+    :param obj_id: a specified id, useful for making an object on the client side with the same id
+    :type obj_id: int
+    """
+
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     AnimateSpriteObject.__init__(self, sprite_sheet)
-    NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id',
-                                    'render'])
+    NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id', 'render'])
     self.rect = self.animation_frames[self.current_animation][0].copy()
     self.sprite_sheet = sprite_sheet
     self.data = None
@@ -367,7 +499,6 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.mash_right = False
     self.escape_hit = 0
     self.score = 0
-    self.message_str = "hello"
     self.movement_event = False  # set to true if another object is mucking with the players velocity
     self.escape_mash_number = PLAYER_MASH_NUMBER
     self.stunned_timer = 0
@@ -382,6 +513,14 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
   @classmethod
   def create_from_dict(self, obj_dict):
+    """
+    Create an instance of this object from a dictionary
+
+    :param obj_dict: dictionary containing various inital values needed to instantiate object
+    :type obj_dict: dict
+    :returns: an instance of this object
+    :rtype: Player
+    """
     startx = int(obj_dict.get('x'))
     starty = int(obj_dict.get('y'))
     team = obj_dict.get('team')
@@ -392,12 +531,19 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
 
   def jump(self):
+    """Sets the player y velocity up"""
     if not self.trapped and not self.stunned_timer and self.on_ground:
       self.jumping = True
       self.velocity.y = JUMP_VELOCITY
 
   def up_interact(self, climable_objects):
-    """Player pressed up so may be attempting to climb something"""
+    """
+    Player pressed up so may be attempting to climb something. Checks the objects
+        to see if any objects are close enough to climb
+
+    :param climable_objects: a list of objects that the player can climb
+    :type climable_objects: list[ClimableObject]
+    """
     if self.on_ladder:
       self.climbing = -1
       return
@@ -415,7 +561,14 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
         break
 
   def down_interact(self, climable_objects):
-    """Player pressed up so may be attempting to climb something"""
+    """
+    Player pressed up so may be attempting to climb something. Checks the objects
+        to see if any objects are close enough to climb
+
+    :param climable_objects: a list of objects that the player can climb
+    :type climable_objects: list[ClimableObject]
+
+    """
     # ipdb.set_trace()
     if self.on_ladder:
       self.climbing = 1
@@ -434,10 +587,17 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
         break
 
   def do_door(self, door):
+    """
+    Do door like things, like go to the doors end_point
+
+    :param door: the doo the player is walking through
+    :type door: Door
+    """
     self.rect.x = door.end_point[0]
     self.rect.y = door.end_point[1]
 
   def cancel_up_down_interact(self):
+    """stop climbing"""
     self.climbing = 0
 
   def update(self):
@@ -459,7 +619,14 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       # self.rect.y += self.ladder.climb_speed.y
 
   def escape(self, direction):
-    """mash a button to escape students"""
+    """
+    mash a button to escape students or meetings. An escape hit is only added when
+        the player hits both left and right. 
+
+    :param direction: The direction the player is pressing.
+    :type direction: int
+
+    """
     if self.trapped:
       if direction == 1:
         self.mash_left = True
@@ -479,9 +646,6 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
         self.invincible_timer = 60
         self.invincible = True
 
-  def write_paper(self):
-    return
-
   def move_right(self):
     """DEPRICATED: use move(1): sets velocity of player to move right"""
     self.move(1)
@@ -491,7 +655,12 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.move(-1)
 
   def move(self, direction):
-    """sets move to the direction passed in"""
+    """
+    Sets move to the direction passed in.
+
+    :param direction: the direction to move the player. -1  for left, 1 for right
+    :type direction: int
+    """
     if self.on_ladder:
       self._turn_physics_on()  # cancel being on ladder so we can move
     self.direction = direction
@@ -517,17 +686,24 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       self.change_animation('idle')
 
   def read_packet(self, packet):
+    """
+    Same as the NetworkedObject read packet but a little more work to change the 
+        animation
+    :param packet: the packet containing updated information for the player
+    :type packet: dict
+    """
     if packet['current_animation'] != self.current_frame:
       self.change_animation(packet['current_animation'])
     super(Player, self).read_packet(packet)
 
   def interact(self, game_objs):
-    """a catch all function that called when hitting the interact button. It will
-    look through the game_objs and if it's with a minimum threshold(self.interact_dist), call specific functions
-    based on what the objects are.
-    :param game_objs: A list of game objects that the player can potentially interact
-    with
-    :type game_objs: list of GameObject"""
+    """
+    a catch all function that called when hitting the interact button. It will
+        look through the game_objs and if it's with a minimum threshold(self.interact_dist), call specific functions
+        based on what the objects are.
+    :param game_objs: A list of game objects that the player can potentially interact with
+    :type game_objs: list of GameObject
+    """
     if self.data:
       throw_data = True
     else:
@@ -548,6 +724,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       interact_obj.interact(self)
 
   def handle_ladddery_things(self):
+    """do laddery things like climb up and down"""
     self.rect.y += (self.ladder.climb_speed.y * self.climbing)
     if self.rect.bottom <= self.ladder.top:  # hit the top
       self.last_rect = self.rect.copy()
@@ -560,24 +737,31 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       self._turn_physics_on()
 
   def _turn_physics_on(self):
+    """turn the player physics on"""
     self.physics = True
     self.on_ladder = False
     self.climbing = False
 
   def draw(self, surface):
-    """Draws the player object onto surface
+    """
+    Draws the player object onto surface
+
     :param surface: the surface to draw the object, typically the window
-    :type surface: pygame.Surface"""
+    :type surface: pygame.Surface
+    """
     AnimateSpriteObject.draw(self, surface)
 
 
   def respond_to_collision(self, obj, axis=None):
-    """Contains the callback for the collision between a player object and a game object passed in. Axis is needed
-    for collisions that halt movement
+    """
+    Contains the callback for the collision between a player object and a game object passed in. Axis is needed
+        for collisions that halt movement
+
     :param obj: object player is colliding with
     :type obj: GameObject
     :param axis: which axis was the player moving along.
-    :type axis: String """
+    :type axis: str 
+    """
     if type(obj) == Data:
       if self.data is None and obj.team == self.team:
         self.data = obj
@@ -630,6 +814,7 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       losing_player.drop_data()
 
   def drop_data(self):
+    """drop the data by calling the throw data funciton."""
     self.throw_data()
 
   def throw_data(self):
@@ -653,34 +838,58 @@ class Player(AnimateSpriteObject, MovableGameObject, NetworkedObject):
 
 
 class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
-  """Devices that are scenery, but output data when interacted with"""
 
-  def __init__(self, startx, starty, width, height, color=None, obj_id=None, game=None):
+  def __init__(self, startx, starty, width, height, obj_id=None, game=None):
+    """
+    Devices that are scenery, but output data when interacted with. The inte
+
+    :param startx: the starting x position of the object
+    :type startx: int
+    :param starty: the starting y position of the object
+    :type starty: int
+    :param width: width of the object 
+    :type width: int
+    :param height: height of the object 
+    :type height: int
+    :param obj_id: a specified id, useful for making an object on the client side with the same id
+    :type obj_id: int
+    """
     BackGroundScenery.__init__(self, startx, starty, width, height, obj_id=obj_id)
     Constructor.__init__(self, game)
-    NetworkedObject.__init__(self, ['rect', 'id', 'message_str'])
+    NetworkedObject.__init__(self, ['rect', 'id'])
     self.active_timer = None
     self.timer_count = 0
-    self.color = color
     self.data = None
     self.collision = False  # for now, only interaction comes with explicit buttons
 
   @classmethod
   def create_from_dict(self, obj_dict):
+    """
+    Create an instance of this object from a dictionary
+
+    :param obj_dict: dictionary containing various inital values needed to instantiate object
+    :type obj_dict: dict
+    :returns: an instance of this object
+    :rtype: SimpleScenery
+    """
     startx, starty, width, height = extract_dict(obj_dict)
     game = obj_dict.get('game')
     obj_id = obj_dict.get('id') 
     obj_id = int(obj_id) if obj_id else None
     tmp = self(startx, starty, width, height, obj_id=obj_id, game=game) 
-    effect_json = obj_dict['effect_json']
-    timer_blue, timer_red = tmp.load_effects(obj_dict['timer'], effect_json,
-                                             obj_dict['timer-red-pos'], obj_dict['timer-blue-pos'])
+    effect_json = obj_dict.get('effect_json')
     if 'rawdata' in obj_dict:
       tmp.load_data(obj_dict['rawdata'], effect_json)
-    return [tmp, timer_red, timer_blue]
+    if effect_json:
+      timer_blue, timer_red = tmp.load_effects(obj_dict['timer'], effect_json,
+                                               obj_dict['timer-red-pos'], obj_dict['timer-blue-pos'])
+      return [tmp, timer_red, timer_blue]
+    else:
+      return tmp
 
 
   def generate_data(self):
+    """Create a data object and eject it """
     if self.active_timer == self.blue_timer:
       game_obj = Data(20, 20, 40, 40, self.data_dict_blue, team='blue')
     else:
@@ -691,7 +900,13 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     self.add_to_world(game_obj)
     return game_obj
 
-  def interact(self, player, timer=DATA_DEVICE_TIMER):
+  def interact(self, player):
+    """
+    Called when a player is trying to start a timer on this object. 
+
+    :param player: the player that is trying to start a timer
+    :type player: Player
+    """
     if not self.active_timer:  # only allow one timer at a time
       if player.team == 'blue':
         self.active_timer = self.blue_timer
@@ -704,16 +919,31 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
       self.active_timer.send_data = True
       self.active_timer.clear = False
 
-  def load_effects(self, effect_name, effect_json, red_loc=(0,0), blue_loc=(0,0)):
-    """load the effects for this data object and return effects loaded"""
-    self.red_timer = self.__load_effect(effect_name, effect_json, 'Red', red_loc)
-    self.blue_timer = self.__load_effect(effect_name, effect_json, 'Blue', blue_loc)
+  def load_effects(self, effect_name, effect_dict, red_loc=(0,0), blue_loc=(0,0)):
+    """
+    Load the effects for this data object. Effects are stored
+        as the red and blue timer.
+
+    :param effect_name: the name of the timer to load
+    :type effect_name: str
+    :param effect_dict: the dict containing all the effect information. 
+    :type effect_dict: dict
+    :param red_loc: the location to place the red timer
+    :type red_loc: tuple
+    :param blue_loc: the location to place the blue timer
+    :type blue_loc: tuple
+    :returns: the blue and red timer objects
+    :rtype: Effect
+    """
+    self.red_timer = self.__load_effect(effect_name, effect_dict, 'Red', red_loc)
+    self.blue_timer = self.__load_effect(effect_name, effect_dict, 'Blue', blue_loc)
     self.timer_total = self.red_timer.animation_time * len(
                        self.red_timer.animation_frames[self.red_timer.current_animation]) + self.red_timer.animation_time
     return self.blue_timer, self.red_timer
 
-  def __load_effect(self, effect_name, effect_json, team, location):
-    animation_dict = effect_json[effect_name + '-' + team]
+  def __load_effect(self, effect_name, effect_dict, team, location):
+    """Loads effects based on the team passed in."""
+    animation_dict = effect_dict[effect_name + '-' + team]
     effect = Effect(self.rect.x + int(location[0]), self.rect.y - int(location[1]), 200,
                     200, animation_dict)
     effect.physics = False
@@ -722,13 +952,29 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     return effect
 
   def load_data(self, data_name, data_json):
+    """
+    Stores the data_dict that is needed later to create a data object after a timer expires
+
+    :param data_name: the name of the data object, used as a key in data json + teamname
+    :type data_name: str
+    :param data_json: the dict containing all the sprite information of the data objects
+    :type data_json: dict
+    """
     self.data_dict_blue = data_json[data_name + '-Blue']
     self.data_dict_red = data_json[data_name + '-Red']
 
   def draw(self, surface):
+    """should never be called, but just in case, set render to false so it wouldn't be called"""
     self.render = False  # nothing to draw. Should never be called but just a safefy net
 
   def update(self):
+    """
+    Checks if a timer is running and ticks down if that is the case. Genereates data 
+        once the timer runs down
+
+    :returns: Whether or not the the timer finished and created more data
+    :rtype: bool
+    """
     if self.active_timer:
       self.timer_count += 1
       if self.timer_count >= self.timer_total:
@@ -743,14 +989,32 @@ class DataDevice(BackGroundScenery, Constructor, NetworkedObject):
     return False
 
 class DataCruncher(DataDevice):
-  """Second stage of collecting data"""
   ACCEPT_STAGE = 1
   def __init__(self, startx, starty, width, height, obj_id=None, game=None):
+    """
+    Second stage of collecting data. Works like a data device in terms of timer 
+        creation but doesn't create data, only advances it.
+
+    :param startx: the starting x position of the object
+    :type startx: int
+    :param starty: the starting y position of the object
+    :type starty: int
+    :param width: width of the object (ignored)
+    :type width: int
+    :param height: height of the object (ignored)
+    :type height: int
+    :param obj_id: the id of the object
+    :type obj_id: int
+    :param game: An instance of a game to be used for adding data to the game world
+    :type game: int
+
+    """
     super(DataCruncher, self).__init__(startx, starty, width, height, obj_id=obj_id, game=game)
     self.player = None
     self.collision = True  # for now, only interaction comes with explicit buttons
 
   def generate_data(self):
+    """Advances and ejects the data"""
     self.data.rect.centerx = self.rect.centerx
     self.data.rect.bottom = self.rect.top
     self.data.velocity.y = random.randint(EJECT_SPEED.y, EJECT_SPEED.y / 2)
@@ -760,9 +1024,16 @@ class DataCruncher(DataDevice):
     self.data = None
 
   def interact(self, player):
+    """
+    Starts a timer if the player has data and its the correct stage
+
+    :param player: the player interacting with the object
+    :type player: Player
+    """
     return self._interact(player, DataCruncher.ACCEPT_STAGE)
 
   def _interact(self, player, accept_stage):
+    """Starts a timer if the data is at the accept_stage"""
     if (not self.player and player.data and player.data.stage == accept_stage and 
         not self.active_timer):
       super(DataCruncher, self).interact(player)
@@ -779,6 +1050,15 @@ class Desk(DataCruncher):
 
   @classmethod
   def create_from_dict(self, obj_dict):
+    """
+    Create an instance of this object from a dictionary
+
+    :param obj_dict: dictionary containing various inital values needed to instantiate object
+    :type obj_dict: dict
+    :returns: an instance of this object
+    :rtype: SimpleScenery
+    """
+
     obj_list = super(Desk, self).create_from_dict(obj_dict)
     if 'chair' in obj_dict:
       class_obj = obj_list[0]  # the first object is the 'main' object
@@ -786,6 +1066,7 @@ class Desk(DataCruncher):
     return obj_list
 
   def update(self):
+    """Update the timer and release the player if the timer is up"""
     if super(Desk, self).update():
       self.player.trapped = False
       self.player = None
@@ -794,20 +1075,28 @@ class Desk(DataCruncher):
       self.player.trapped = True
 
   def interact(self, player):
+    """
+    Starts a timer and traps the player. It's a desk, you gotta sit down to use it!
+
+    :param player: the player interacting with the desk
+    :type player: Player
+    """
     if super(Desk, self)._interact(player, Desk.ACCEPT_STAGE):
       self.player.trapped = True
       self.player.escape_hit = 0
       self.move_player(player)
 
   def move_player(self, player):
+    """move the player to the sitting locaiton"""
     player.rect.x, player.rect.y = self.player_sit_loc
 
 
 class PublishingHouse(DataCruncher):
-  """Where the player brings the final paper"""
+  """Where the player brings the final paper and scores a point"""
   ACCEPT_STAGE = 3
-  
+
   def generate_data(self):
+    """score a point"""
     if self.scoring_team == 'blue':
       self.game.blue_score += 1
     else:
@@ -816,12 +1105,33 @@ class PublishingHouse(DataCruncher):
     print("blue's score " + str(self.game.blue_score))
 
   def interact(self, player):
+    """A player is trying to score a paper"""
     if super(PublishingHouse, self)._interact(player, PublishingHouse.ACCEPT_STAGE):
       self.scoring_team = player.team
 
 
 class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
+
   def __init__(self, startx, starty, width, height, sprite_sheet, team=None, obj_id=None):
+    """
+    Data is an objects that the player is trying to gather and analyze
+
+
+    :param startx: the starting x position of the object
+    :type startx: int
+    :param starty: the starting y position of the object
+    :type starty: int
+    :param width: width of the object (ignored)
+    :type width: int
+    :param height: height of the object (ignored)
+    :type height: int
+    :param sprites_heet: the spritesheet dict of the object
+    :type sprite_sheet: dict
+    :param team: the team that data is associated with
+    :type team: str
+    :param obj_id: a specified id, useful for making an object on the client side with the same id
+    :type obj_id: int
+    """
     MovableGameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     AnimateSpriteObject.__init__(self, sprite_sheet, convert_alpha=False)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'id', 'current_animation', 'render', 'stage'])
@@ -834,11 +1144,16 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
     self.player = None
     self.team = team
 
-  def draw(self, surface):
-    super(Data, self).draw(surface)  # animatedSpriteObject.draw
-
   def respond_to_collision(self, obj, axis=None):
-    # ipdb.set_trace()
+    """
+    A data object behaves normally with collision except when it encounters a 
+        player object
+
+    :param obj: object data is colliding with
+    :type obj: GameObject
+    :param axis: which axis was the data moving along.
+    :type axis: str 
+    """
     if isinstance(obj, Player):
       if obj.team == self.team:
         obj.respond_to_collision(self)
@@ -847,7 +1162,7 @@ class Data(AnimateSpriteObject, MovableGameObject, NetworkedObject):
       super(Data, self).respond_to_collision(obj, axis)
 
   def advance_data(self):
-    # TODO: hacked for now with no sprite sheet
+    """Move the data to the next stage and change it's animation"""    
     self.stage += 1
     self.frame = str(self.stage)
     self.change_animation(str(self.stage))
@@ -954,6 +1269,18 @@ class Meeting(GameObject):
   """A meeting trap that will pull the players into at a certain range"""
 
   def __init__(self, startx, starty, width, height, obj_id=None):
+    """
+    A meeting object traps a player object when they get close enough
+
+    :param startx: the starting x position of the object
+    :type startx: int
+    :param starty: the starting y position of the object
+    :type starty: int
+    :param width: width of the object (ignored)
+    :type width: int
+    :param height: height of the object (ignored)
+    :type height: int
+    """
     GameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     self.pulling_player = None
     self.timer = None
@@ -961,6 +1288,15 @@ class Meeting(GameObject):
 
   @classmethod
   def create_from_dict(self, obj_dict):
+    """
+    Create an instance of this object from a dictionary
+
+    :param obj_dict: dictionary containing various inital values needed to instantiate object
+    :type obj_dict: dict
+    :returns: an instance of this object
+    :rtype: SimpleScenery
+    """
+
     startx = int(obj_dict.get('x'))
     starty = int(obj_dict.get('y'))
     width = int(obj_dict.get('width'))
@@ -1015,12 +1351,19 @@ class Meeting(GameObject):
     game_obj.change_animation('running')
 
   def trap(self, game_obj):
+    """
+    Trap the game object if their is no timer
+
+    :param game_obj: the game object to trap
+    :type game_obj: Player
+    """
     if not self.timer:
       game_obj.trapped = True
       game_obj.trapper = self
       game_obj.change_animation('sitmeeting')
 
   def update(self):
+    """Tick down cooldown timer if active"""
     super(Meeting, self).update()
     if self.timer:
       self.timer += MEETING_TIMER
@@ -1029,9 +1372,21 @@ class Meeting(GameObject):
 
 
 class ClimableObject(BackGroundScenery):
-  """Simple ladder object"""
 
   def __init__(self, startx, starty, width, height, obj_id=None):
+    """
+    Simple ladder object. The player can climb up and down it
+
+
+    :param startx: the starting x position of the object
+    :type startx: int
+    :param starty: the starting y position of the object
+    :type starty: int
+    :param width: width of the object (ignored)
+    :type width: int
+    :param height: height of the object (ignored)
+    :type height: int
+    """
     BackGroundScenery.__init__(self, startx, starty, width, height, obj_id=obj_id)
     self.top = self.rect.top
     self.bottom = self.rect.bottom
@@ -1039,6 +1394,14 @@ class ClimableObject(BackGroundScenery):
 
   @classmethod
   def create_from_dict(self, obj_dict):
+    """
+    Create an instance of this object from a dictionary
+
+    :param obj_dict: dictionary containing various inital values needed to instantiate object
+    :type obj_dict: dict
+    :returns: an instance of this object
+    :rtype: SimpleScenery
+    """
     startx = int(obj_dict.get('x'))
     starty = int(obj_dict.get('y'))
     width = int(obj_dict.get('width'))
@@ -1050,12 +1413,34 @@ class ClimableObject(BackGroundScenery):
 
 class Stairs(GameObject):
   def __init__(self, startx, starty, width, height, obj_id=None):
+    """
+    A wrapper that makes a step objects from the bottom to the top of the object
+
+
+    :param startx: the starting x position of the object
+    :type startx: int
+    :param starty: the starting y position of the object
+    :type starty: int
+    :param width: width of the object (ignored)
+    :type width: int
+    :param height: height of the object (ignored)
+    :type height: int
+    """
     GameObject.__init__(self, startx, starty, width, height, obj_id=obj_id)
     self.collision = False
 
 
   @classmethod
   def create_from_dict(self, obj_dict):
+    """
+    Create an instance of this object from a dictionary
+
+    :param obj_dict: dictionary containing various inital values needed to instantiate object
+    :type obj_dict: dict
+    :returns: an instance of this object
+    :rtype: SimpleScenery
+    """
+
     startx = int(obj_dict.get('x'))
     starty = int(obj_dict.get('y'))
     width = int(obj_dict.get('width'))
@@ -1068,6 +1453,13 @@ class Stairs(GameObject):
     return [stairs] + steps
 
   def make_stairs(self, orientation):
+    """
+    make step objects from the bottom to the top of this object in the orientation
+        passed in. The steps will be equally spaced from each other
+
+    :param orientation: the direction to make the stairs
+    :type orientation: str
+    """
     if orientation == 'right':
       bottom = self.rect.left, self.rect.bottom
       top = self.rect.right, self.rect.top
@@ -1079,6 +1471,7 @@ class Stairs(GameObject):
     return self.__make_steps(12, bottom, top, direct)
 
   def __make_steps(self, num_of_steps, bottom, top, direct, width=102, height=36):
+    """Makes the step objects and returns them"""
     self.steps = []
     total_height = bottom[1] - top[1]
     height_space = total_height / num_of_steps
@@ -1100,32 +1493,41 @@ class Stairs(GameObject):
         self.steps[-1].rect.right = startx
     return self.steps
 
-  def draw(self, surface):
-    return
-
-
 class Step(BackGroundScenery):
-  def __init__(self, startx, starty, widht, height, obj_id=None):
-    BackGroundScenery.__init__(self, startx, starty, widht, height)
+  def __init__(self, startx, starty, width, height, obj_id=None):
+    """
+    A simple block spanning the rect passed in
 
-  def draw(self, surface):
-    self.render = False
-    return
-    # pygame.draw.rect(surface, (128, 128, 0), self.rect, 3)
-
-  def set_above_stair(self, next_stair):
-    self.next_stair = next_stair
-
-  def set_previous_stair(self, prev_stair):
-    self.prev_stair = prev_stair
-
+    :param startx: the starting x position of the object
+    :type startx: int
+    :param starty: the starting y position of the object
+    :type starty: int
+    :param width: width of the object (ignored)
+    :type width: int
+    :param height: height of the object (ignored)
+    :type height: int
+    """
+    BackGroundScenery.__init__(self, startx, starty, width, height)
 
 class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
-  """Effect objects. Just a simple object that doesn't interact with anything,
-  its just a sprite that gets sent over the network and is told to stop or start"""
 
   def __init__(self, startx, starty, width, height, sprite_sheet=None, obj_id=None, total_time=120,
                animation_time=None):
+    """
+    Effect objects. Just a simple object that doesn't interact with anything,
+        its just a sprite that gets sent over the network and is told to stop or start
+
+    :param startx: the starting x position of the object
+    :type startx: int
+    :param starty: the starting y position of the object
+    :type starty: int
+    :param width: width of the object (ignored)
+    :type width: int
+    :param sprite_sheet: the dict containing the spritesheet information
+    :type sprite_sheet: dict
+    :param height: height of the object (ignored)
+    :type height: int
+    """
     GameObject.__init__(self, startx, starty, width, height)
     AnimateSpriteObject.__init__(self, sprite_sheet)
     NetworkedObject.__init__(self, ['rect', 'current_frame', 'current_animation', 'id', 'render', 'clear'])
@@ -1142,10 +1544,31 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
     self.collision = False
     self.physics = False
 
+  @classmethod
+  def create_from_dict(self, obj_dict):
+    """
+    Create an instance of this object from a dictionary
+
+    :param obj_dict: dictionary containing various inital values needed to instantiate object
+    :type obj_dict: dict
+    :returns: an instance of this object
+    :rtype: Effect
+    """
+    startx = int(obj_dict.get('x'))
+    starty = int(obj_dict.get('y'))
+    width = int(obj_dict.get('width'))
+    height = int(obj_dict.get('height'))
+    sprite_sheet = obj_dict.get('sprite_sheet')
+    obj_id = obj_dict.get('id') 
+    obj_id = int(obj_id) if obj_id else None
+    return self(startx, starty, width, height, sprite_sheet=sprite_sheet, obj_id=obj_id) 
+
 
   def animate(self):
-    """Updates the animation timer goes to next frame in current animation cycle
-    after the alloted animation time has passed."""
+    """
+    Updates the animation timer goes to next frame in current animation cycle
+        after the alloted animation time has passed.
+    """
     if not self.pause:
       self.animation_timer += 1
       self.render = False
@@ -1187,9 +1610,12 @@ class Effect(AnimateSpriteObject, NetworkedObject, GameObject):
 
 
 class Door(BackGroundScenery):
-  """docstring for Door"""
 
   def __init__(self, startx, starty, width, height, obj_id=None, end_point=None):
+    """
+    A door object has an end point that the player is tranported to when they walk
+        through the door
+    """
     # ipdb.set_trace()
     super(Door, self).__init__(startx, starty, width, height, obj_id=obj_id)
     if end_point:
@@ -1197,6 +1623,15 @@ class Door(BackGroundScenery):
 
   @classmethod
   def create_from_dict(self, obj_dict):
+    """
+    Create an instance of this object from a dictionary
+
+    :param obj_dict: dictionary containing various inital values needed to instantiate object
+    :type obj_dict: dict
+    :returns: an instance of this object
+    :rtype: Door
+    """
+
     startx = int(obj_dict.get('x'))
     starty = int(obj_dict.get('y'))
     width = int(obj_dict.get('width'))

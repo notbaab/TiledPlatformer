@@ -102,7 +102,9 @@ class MasterPlatformer(NetworkedMasterGame):
     player1.rect.y = top_side + 200
 
   def win_state(self):
-    """The win state stays in a frozen state until the explicit kill event is triggered"""
+    """
+    The win state stays in a frozen state until the explicit kill event is triggered
+    """
     while True:  # wait until explicit shutdown
       for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -136,6 +138,8 @@ class MasterPlatformer(NetworkedMasterGame):
 
     :param recieved_packet: the packets received from the display nodes.
     :type recieved_packet: list[dict]
+    :returns: Data to be sent to the display nodes
+    :rtype: dict
     """
     if self.state == 'play':
       self.state, send_struct = self.play_frame(recieved_packet)
@@ -144,6 +148,210 @@ class MasterPlatformer(NetworkedMasterGame):
     elif self.state == 'kill':
       return
     return send_struct
+
+  def play_frame(self, recieved_packets):
+    """
+    Play one frame of game play. Main game 'loop'
+
+    :param recieved_packets: packets that are sent from the display nodes (not used for anything but could be)
+    :type recieved_packets: list[dict]
+    :returns: Updated game objects 
+    :rtype: list[dict]
+    """
+    if self.localhost:
+      quit_game = self.handle_keypress_local(self.struct_game_dict)
+    else:
+      quit_game = self.handle_keypress(self.struct_game_dict)
+    if quit_game:
+      return 'kill', ''
+
+    self.engine.physics_simulation(self.game_objects.values(), [wd.SimpleScenery])
+    self.engine.map_attribute_flat(self.game_objects.values(), 'update')
+
+    self.engine.map_attribute_flat(self.struct_game_dict['AnimateSpriteObject'], 'animate')
+
+    # update the AI after the players have been updated
+    self.engine.map_attribute_flat(self.struct_game_dict['AI'], 'check_for_leader', self.struct_game_dict['Player'])
+
+    # update meetings/traps
+    self.engine.map_attribute_flat(self.struct_game_dict['Meeting'], 'check_player', self.struct_game_dict['Player'])
+
+    # construct packet
+    send_struct = {'state': 'play', 'deleted_objs': [], 'added_objs': []}
+    if network_settings['localhost']:
+      send_struct['localhost'] = self.handle_localhost(self.struct_game_dict['Player'][0])
+
+    # check for objects that have been created and add them to the dict
+    for game_obj in self.added:
+      self.game_objects[game_obj.id] = game_obj
+      self.add_to_structured_list(game_obj)
+      send_struct['added_objs'].append({"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
+                                                 game_obj.rect.height], "id": game_obj.id,
+                                        "sprite_sheet": game_obj.sprite_sheet,
+                                        "constructor": type(game_obj).__name__})
+
+    for game_obj_id in self.deleted:
+      send_struct['deleted_objs'].append(game_obj_id)
+      del self.game_objects[game_obj_id]
+
+    # clear lists
+    self.added = []
+    self.deleted = []
+
+    game_objects_packets = []  # accumulator for the build_packet function
+    self.engine.map_attribute_flat(self.struct_game_dict['NetworkedObject'], 'build_packet', game_objects_packets)
+    send_struct['game_objects'] = game_objects_packets
+    send_struct['score'] = [self.blue_score, self.red_score]
+    send_struct['time'] = self.get_time()
+
+    return 'play', send_struct
+
+  def add_to_structured_list(self, game_obj):
+    """
+    Add to the maintained structured GameObject dictionary
+
+    :param game_obj: the GameObject to be added
+    :type game_dict: GameObject
+    """
+    if isinstance(game_obj, wd.Player):
+      self.struct_game_dict['Player'].append(game_obj)
+    elif isinstance(game_obj, wd.SimpleScenery):
+      self.struct_game_dict['StaticObject'].append(game_obj)
+    elif isinstance(game_obj, wd.Follower):
+      self.struct_game_dict['AI'].append(game_obj)
+    elif isinstance(game_obj, wd.Effect):
+      self.struct_game_dict['Effect'].append(game_obj)
+
+    if isinstance(game_obj, wd.MovableGameObject):
+      self.struct_game_dict['MovableGameObject'].append(game_obj)
+    if isinstance(game_obj, wd.NetworkedObject):
+      self.struct_game_dict['NetworkedObject'].append(game_obj)
+    if isinstance(game_obj, wd.ClimableObject):
+      self.struct_game_dict['ClimableObject'].append(game_obj)
+    if isinstance(game_obj, wd.Meeting):
+      self.struct_game_dict['Meeting'].append(game_obj)
+    if isinstance(game_obj, wd.AnimateSpriteObject):
+      self.struct_game_dict['AnimateSpriteObject'].append(game_obj)
+
+  def make_structured_dict(self):
+    """
+    take the game object list and return a dict with the keys for static, AI, and player
+        objects. An object can be added to multiple lists if it is multiple things i.e.
+        a player is a movable game object
+    """
+    self.struct_game_dict = {'AI': [], 'StaticObject': [], 'Player': [],
+                             'MovableGameObject': [], 'NetworkedObject': [],
+                             'Meeting': [], 'ClimableObject': [], 'Effect': [],
+                             'AnimateSpriteObject':[]}
+
+    for game_obj in self.game_objects.values():
+      self.add_to_structured_list(game_obj)
+
+  def handle_localhost(self, follow_player):
+    """
+    special function used to handle things like switching the screens when playing on one local host
+
+    :param follow_player: The player that the screens should be following
+    :type follow_player: Player
+    """
+    # first, find out which tile player one is in. 
+    tile_x = follow_player.rect.centerx / (DISPLAY_SIZE['x'] + BEZZEL_SIZE)
+    tile_y = follow_player.rect.bottom / (DISPLAY_SIZE['y'])
+    if tile_x == -1:
+      tile_x = 0
+    if tile_x > 4:
+      tile_x = 4
+
+    return {'x': tile_x, 'y': tile_y}
+
+  def add_to_world(self, game_obj):
+    """
+    Adds a game object to game_object dictionary
+
+    :param game_obj: The game object to be added to the world
+    :type game_obj: GameObject
+
+    """
+    self.game_objects[game_obj.id] = game_obj
+
+  def load_map(self):
+    """
+    this function is stupid as shit. I hope you look back at this and feel 
+        bad about how awful you approached this. You deserve to feel bad for writing it 
+        like this.
+        I did look back at it past me and I made it worse so fuck you past me and 
+        fuck you future me. Fuck present me for having to deal with this. I am probably
+        never going to be hired if anyone ever looks at this code as an example of my 
+        ability. 
+    """
+    global config
+    # load map
+    game_objects = {}
+
+    map_json = self.engine.parse_json(config['global_map_file'])
+    asset_json = self.engine.parse_json(config['asset_file'])
+    effect_json = self.engine.parse_json(config['effect_file'])
+
+    for key in map_json:
+      constructor = getattr(wd, key)
+      for obj_dict in map_json[key]:
+        if "tile" in obj_dict:
+          # translate the x and y coordinates
+          obj_dict['x'], obj_dict['y'] = self.translate_to_tile(obj_dict['tile'][0], int(obj_dict['x']),
+                                        obj_dict['tile'][1], int(obj_dict['y']))
+        else:
+          obj_dict['x'], obj_dict['y'] = int(obj_dict['x']), int(obj_dict['y'])
+        obj_dict['sprite_sheet'] = asset_json.get(key +  "-" + obj_dict.get('team', ''))
+        obj_dict['effect_json'] = effect_json
+        obj_dict['game'] = self
+
+        tmp = constructor.create_from_dict(obj_dict)
+        if isinstance(tmp, list):
+          for obj in tmp:
+            game_objects[obj.id] = obj
+        else:
+          game_objects[tmp.id] = tmp
+
+    return game_objects
+
+  def _handle_effect(self, obj_dict, x, y, effect_json):
+    """
+    handle loading the effect objects. Effects can be things from timers to electricity dancing.
+
+    :param obj_dict: The json dictionary read from map.json containing the attributes of the door object
+    :type obj_dict: dict[str]
+    :param x: x location of the effect
+    :type x: int
+    :param y: y location of the effect
+    :type y: int
+    :param effect_json: json dictionary containing the animation frame information for every effect
+    :type effect_json: dict[str]
+    """
+    print(effect_json)
+    animation_dict = effect_json[obj_dict['effect_name']]
+    tmp = wd.Effect(x, y, int(obj_dict['width']), int(obj_dict['height']), animation_dict,
+                    animation_time=int(obj_dict['animation-time']))
+    tmp.render = True
+    tmp.pause = False
+    tmp.clear = False
+    return tmp
+
+  def translate_to_tile(self, tile_x, pos_x, tile_y, pos_y):
+    """
+    Tranlate global coordinates to relative positions to a tile
+
+    :param tile_x: The x coordinates of the tile to translate to 
+    :type tile_x: int
+    :param pos_x: The global x coordinates to be translated
+    :type pos_x: int
+    :param tile_y: The y coordinates of the tile to translate to 
+    :type tile_y: int
+    :param pos_y: The global y coordinates to be translated
+    :type pos_y: int
+    """
+    x = int(tile_x) * DISPLAY_SIZE['x'] + pos_x
+    y = int(tile_y) * DISPLAY_SIZE['y'] + pos_y
+    return x, y
 
   def handle_keypress_local(self, game_dict):
     """
@@ -273,205 +481,3 @@ class MasterPlatformer(NetworkedMasterGame):
           player2.cancel_up_down_interact()
         elif event.key == K_r:
           player2.cancel_up_down_interact()
-
-  def play_frame(self, recieved_packets):
-    """
-    
-
-    :param recieved_packets: 
-    """
-    if self.localhost:
-      quit_game = self.handle_keypress_local(self.struct_game_dict)
-    else:
-      quit_game = self.handle_keypress(self.struct_game_dict)
-    if quit_game:
-      return 'kill', ''
-
-    self.engine.physics_simulation(self.game_objects.values(), [wd.SimpleScenery])
-    self.engine.map_attribute_flat(self.game_objects.values(), 'update')
-
-    self.engine.map_attribute_flat(self.struct_game_dict['AnimateSpriteObject'], 'animate')
-
-    # update the AI after the players have been updated
-    self.engine.map_attribute_flat(self.struct_game_dict['AI'], 'check_for_leader', self.struct_game_dict['Player'])
-
-    # update meetings/traps
-    self.engine.map_attribute_flat(self.struct_game_dict['Meeting'], 'check_player', self.struct_game_dict['Player'])
-
-    # construct packet
-    send_struct = {'state': 'play', 'deleted_objs': [], 'added_objs': []}
-    if network_settings['localhost']:
-      send_struct['localhost'] = self.handle_localhost(self.struct_game_dict['Player'][0])
-
-    # check for objects that have been created and add them to the dict
-    for game_obj in self.added:
-      self.game_objects[game_obj.id] = game_obj
-      self.add_to_structured_list(game_obj)
-      send_struct['added_objs'].append({"rect": [game_obj.rect.x, game_obj.rect.y, game_obj.rect.width,
-                                                 game_obj.rect.height], "id": game_obj.id,
-                                        "sprite_sheet": game_obj.sprite_sheet,
-                                        "constructor": type(game_obj).__name__})
-
-    for game_obj_id in self.deleted:
-      send_struct['deleted_objs'].append(game_obj_id)
-      del self.game_objects[game_obj_id]
-
-    # clear lists
-    self.added = []
-    self.deleted = []
-
-    game_objects_packets = []  # accumulator for the build_packet function
-    self.engine.map_attribute_flat(self.struct_game_dict['NetworkedObject'], 'build_packet', game_objects_packets)
-    send_struct['game_objects'] = game_objects_packets
-    send_struct['score'] = [self.blue_score, self.red_score]
-    send_struct['time'] = self.get_time()
-
-    return 'play', send_struct
-
-  def add_to_structured_list(self, game_obj):
-    """
-    Add to the maintained structured GameObject dictionary
-
-    :param game_obj: the GameObject to be added
-    :type game_dict: GameObject
-    """
-    if isinstance(game_obj, wd.Player):
-      self.struct_game_dict['Player'].append(game_obj)
-    elif isinstance(game_obj, wd.SimpleScenery):
-      self.struct_game_dict['StaticObject'].append(game_obj)
-    elif isinstance(game_obj, wd.Follower):
-      self.struct_game_dict['AI'].append(game_obj)
-    elif isinstance(game_obj, wd.Effect):
-      self.struct_game_dict['Effect'].append(game_obj)
-
-    if isinstance(game_obj, wd.MovableGameObject):
-      self.struct_game_dict['MovableGameObject'].append(game_obj)
-    if isinstance(game_obj, wd.NetworkedObject):
-      self.struct_game_dict['NetworkedObject'].append(game_obj)
-    if isinstance(game_obj, wd.ClimableObject):
-      self.struct_game_dict['ClimableObject'].append(game_obj)
-    if isinstance(game_obj, wd.Meeting):
-      self.struct_game_dict['Meeting'].append(game_obj)
-    if isinstance(game_obj, wd.AnimateSpriteObject):
-      self.struct_game_dict['AnimateSpriteObject'].append(game_obj)
-
-  def make_structured_dict(self):
-    """
-    take the game object list and return a dict with the keys for static, AI, and player
-        objects. An object can be added to multiple lists if it is multiple things i.e.
-        a player is a movable game object
-    """
-    self.struct_game_dict = {'AI': [], 'StaticObject': [], 'Player': [],
-                             'MovableGameObject': [], 'NetworkedObject': [],
-                             'Meeting': [], 'ClimableObject': [], 'Effect': [],
-                             'AnimateSpriteObject':[]}
-
-    for game_obj in self.game_objects.values():
-      self.add_to_structured_list(game_obj)
-
-  def handle_localhost(self, follow_player):
-    """
-    special function used to handle things like switching the screens when playing on one local host
-
-    :param follow_player: The player that the screens should be following
-    :type follow_player: Player
-    """
-    # first, find out which tile player one is in. 
-    tile_x = follow_player.rect.centerx / (DISPLAY_SIZE['x'] + BEZZEL_SIZE)
-    tile_y = follow_player.rect.bottom / (DISPLAY_SIZE['y'])
-    if tile_x == -1:
-      tile_x = 0
-    if tile_x > 4:
-      tile_x = 4
-
-    return {'x': tile_x, 'y': tile_y}
-
-  def add_to_world(self, game_obj):
-    """
-    Adds a game object to game_object dictionary
-
-    :param game_obj: The game object to be added to the world
-    :type game_obj: GameObject
-
-    """
-    self.game_objects[game_obj.id] = game_obj
-
-  def load_map(self):
-    """ """
-    global config
-    """
-    this function is stupid as shit. I hope you look back at this and feel 
-        bad about how awful you approached this. You deserve to feel bad for writing it 
-        like this.
-        I did look back at it past me and I made it worse so fuck you past me and 
-        fuck you future me. Fuck present me for having to deal with this. I am probably
-        never going to be hired if anyone ever looks at this code as an example of my 
-        ability. 
-    """
-    # load map
-    game_objects = {}
-
-    map_json = self.engine.parse_json(config['global_map_file'])
-    asset_json = self.engine.parse_json(config['asset_file'])
-    effect_json = self.engine.parse_json(config['effect_file'])
-    
-    for key in map_json:
-      constructor = getattr(wd, key)
-      for obj_dict in map_json[key]:
-        if "tile" in obj_dict:
-          # translate the x and y coordinates
-          obj_dict['x'], obj_dict['y'] = self.translate_to_tile(obj_dict['tile'][0], int(obj_dict['x']),
-                                        obj_dict['tile'][1], int(obj_dict['y']))
-        else:
-          obj_dict['x'], obj_dict['y'] = int(obj_dict['x']), int(obj_dict['y'])
-        obj_dict['sprite_sheet'] = asset_json.get(key +  "-" + obj_dict.get('team', ''))
-        obj_dict['effect_json'] = effect_json
-        obj_dict['game'] = self
-
-        tmp = constructor.create_from_dict(obj_dict)
-        if isinstance(tmp, list):
-          for obj in tmp:
-            game_objects[obj.id] = obj
-        else:
-          game_objects[tmp.id] = tmp
-
-    return game_objects
-
-  def _handle_effect(self, obj_dict, x, y, effect_json):
-    """
-    handle loading the effect objects. Effects can be things from timers to electricity dancing.
-
-    :param obj_dict: The json dictionary read from map.json containing the attributes of the door object
-    :type obj_dict: dict[str]
-    :param x: x location of the effect
-    :type x: int
-    :param y: y location of the effect
-    :type y: int
-    :param effect_json: json dictionary containing the animation frame information for every effect
-    :type effect_json: dict[str]
-    """
-    print(effect_json)
-    animation_dict = effect_json[obj_dict['effect_name']]
-    tmp = wd.Effect(x, y, int(obj_dict['width']), int(obj_dict['height']), animation_dict,
-                    animation_time=int(obj_dict['animation-time']))
-    tmp.render = True
-    tmp.pause = False
-    tmp.clear = False
-    return tmp
-
-  def translate_to_tile(self, tile_x, pos_x, tile_y, pos_y):
-    """
-    Tranlate global coordinates to relative positions to a tile
-
-    :param tile_x: The x coordinates of the tile to translate to 
-    :type tile_x: int
-    :param pos_x: The global x coordinates to be translated
-    :type pos_x: int
-    :param tile_y: The y coordinates of the tile to translate to 
-    :type tile_y: int
-    :param pos_y: The global y coordinates to be translated
-    :type pos_y: int
-    """
-    x = int(tile_x) * DISPLAY_SIZE['x'] + pos_x
-    y = int(tile_y) * DISPLAY_SIZE['y'] + pos_y
-    return x, y
